@@ -1,0 +1,102 @@
+#!/usr/bin/env Rscript
+
+argv <- commandArgs(trailingOnly = TRUE)
+
+ld.file <- argv[1]                      # e.g., 'stat/IGAP/ld/hs-fqtl/19.obs_ld.gz'
+sum.file <- argv[2]                     # e.g., 'stat/IGAP/hs-fqtl/19.obs_bed.gz'
+plink.hdr <- argv[3]                    # e.g., '1kg/chr19' # geno/rosmap1709-chr19'
+ld.idx <- as.integer(argv[4])           # e.g., 117
+gwas.sample.size <- as.numeric(argv[5]) # e.g., 74000
+qtl.sample.size <- as.numeric(argv[6])  # e.g., 300
+out.hdr <- argv[7]                      # e.g., 'temp'
+
+dir.create(dirname(out.hdr), recursive = TRUE)
+
+zqtl.num.boot <- 101
+
+source('util.R')
+options(stringsAsFactors = FALSE)
+
+z.out.file <- out.hdr %&&% '.zqtl.txt.gz'
+egger.out.file <- out.hdr %&&% '.egger.txt.gz'
+rot.egger.out.file <- out.hdr %&&% '.rot.egger.txt.gz'
+
+if(file.exists(z.out.file)) {
+    log.msg('File exists : %s\n\n\n', z.out.file)
+    q()
+}
+
+library(zqtl)
+library(dplyr)
+library(methods)
+library(broom)
+source('mediation.R')
+
+################################################################
+ld.tab <- read.table(ld.file, col.names = c('chr', 'ld.lb', 'ld.ub', 'n.snp.ld', 'n.qtl.ld'))
+ld.info <- ld.tab[ld.idx, ]
+
+################################################################
+## temporary directory
+dir.create(dirname(out.hdr), recursive = TRUE, showWarnings = FALSE)
+temp.dir <- system('mktemp -d ' %&&% dirname(out.hdr) %&&% '/temp.XXXX',
+                   intern = TRUE, ignore.stderr = TRUE)
+
+plink <- subset.plink(ld.info, temp.dir)
+x.bim <- data.frame(plink$BIM, x.pos = 1:nrow(plink$BIM))
+
+sum.stat.out <- extract.sum.stat(ld.info, sum.file, x.bim, temp.dir)
+sum.stat <- sum.stat.out$sum.stat
+genes <- sum.stat.out$genes
+
+zqtl.data <- make.zqtl.data(plink, sum.stat, genes)
+
+################################################################
+## 1. run gene-by-gene Egger regression
+egger.tab <- sum.stat %>% group_by(ensg) %>% do(egger = mr.egger(.)) %>%
+    tidy(egger) %>% filter(.rownames != 'b.qtl') %>% dplyr::select(-.rownames) %>%
+        rename(egger.theta=Estimate, egger.se=Std..Error, egger.t=t.value, egger.p.val=Pr...t..)
+
+egger.tab <- egger.tab %>% left_join(genes, by = 'ensg')
+
+log.msg('Finished EGGER\n\n\n')
+
+################################################################
+## 2. run rotated Egger regression
+rot.egger.tab <- take.rot.egger(zqtl.data, genes)
+
+log.msg('Finished Rotated EGGER\n\n\n')
+
+################################################################
+## 3. zqtl
+vb.opt <- list(pi.lb = -4, pi.ub = -1, tol = 1e-8, gammax = 1e4,
+               vbiter = 7500, do.stdize = TRUE, eigen.tol = 1e-2,
+               rate = 1e-2, decay = -1e-2,
+               print.interv = 500, nboot = zqtl.num.boot)
+
+z.out <- fit.med.zqtl(zqtl.data$gwas.theta, zqtl.data$gwas.se,
+                      zqtl.data$qtl.theta, zqtl.data$qtl.se,
+                      X = zqtl.data$X, n = gwas.sample.size,
+                      n.med = qtl.sample.size, options = vb.opt)
+
+boot.tab <- melt.effect(list(lodds.boot.mean = z.out$boot.mediated.lodds.mean,
+                             lodds.boot.se = sqrt(z.out$boot.mediated.lodds.var),
+                             theta.boot.mean = z.out$boot.mediated.theta.mean,
+                             theta.boot.se = sqrt(z.out$boot.mediated.theta.var)),
+                        genes$ensg, 'boot') %>%
+                            rename(ensg = Var1) %>% dplyr::select(-Var2)
+
+out.tab <- melt.effect(z.out$param.mediated, genes$ensg, 'obs') %>%
+    rename(ensg = Var1) %>% dplyr::select(-Var2) %>%
+        left_join(genes, by = 'ensg') %>%
+            left_join(boot.tab, by = 'ensg')
+
+out.tab <- out.tab %>%
+    mutate(lodds.l10p = l10.p.one((lodds - lodds.boot.mean)/(1e-2 + lodds.boot.se))) %>%
+        mutate(theta.l10p = l10.p.two(abs(theta - theta.boot.mean)/(1e-2 + theta.boot.se)))
+
+write.tab.named(out.tab, file = gzfile(z.out.file))
+write.tab.named(egger.tab, file = gzfile(egger.out.file))
+write.tab.named(rot.egger.tab, file = gzfile(rot.egger.out.file))
+
+log.msg('Finished zQTL\n\n\n')
