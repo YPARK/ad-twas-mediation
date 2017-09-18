@@ -15,7 +15,8 @@ if(file.exists(out.file)) q()
 dir.create(dirname(out.file), recursive = TRUE)
 
 library(dplyr)
-options(stringsAsFactors = FALSE)
+options(stringsAsFactors = FALSE, scipen=999)
+
 .read.tab <- function(.file, .cols) read.table(.file, col.names = .cols, sep = '\t')
 
 snp.cols <- c('chr', 'rs', '.', 'snp.loc', 'qtl.a1', 'qtl.a2')

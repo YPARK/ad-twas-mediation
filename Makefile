@@ -61,7 +61,7 @@ batches/%.txt.gz:
 # % = $(qtl_data)/$(chr)
 stat/IGAP/%.obs_bed.gz:
 	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
-	(ls -1 $(TEMP)/matched/obs/IGAP/$*/b*.data.gz | xargs zcat) | sort -k1,1 -k2,2n | gzip > $@
+	(ls -1 $(TEMP)/matched/obs/IGAP/$*/b*.data.gz | xargs zcat) | awk -F'\t' '{ printf $$1 FS int($$2) FS int($$3); for(j=4; j<=NF; ++j) printf FS $$j; printf "\n" }' | sort -k1,1 -k2,2n | gzip > $@
 
 # % = $(qtl_data)/$(chr)
 stat/IGAP/ld/%.obs_ld.gz : stat/IGAP/%.obs_bed.gz
@@ -71,7 +71,7 @@ stat/IGAP/ld/%.obs_ld.gz : stat/IGAP/%.obs_bed.gz
 # % = $(qtl_data)/$(chr)
 stat/IGAP/%.perm_bed.gz:
 	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
-	(ls -1 $(TEMP)/matched/perm/IGAP/$*/b*.data.gz | xargs zcat) | sort -k1,1 -k2,2n | gzip > $@
+	(ls -1 $(TEMP)/matched/perm/IGAP/$*/b*.data.gz | xargs zcat) | awk -F'\t' '{ printf $$1 FS int($$2) FS int($$3); for(j=4; j<=NF; ++j) printf FS $$j; printf "\n" }' | sort -k1,1 -k2,2n | gzip > $@
 
 # % = $(qtl_data)/$(chr)
 stat/IGAP/ld/%.perm_ld.gz : stat/IGAP/%.perm_bed.gz
@@ -83,10 +83,14 @@ stat/IGAP/ld/%.perm_ld.gz : stat/IGAP/%.perm_bed.gz
 # distribute LD jobs
 step3: jobs/step3-jobs.txt.gz
 
+step3-resubmit:
+	zcat jobs/step3-jobs.txt.gz | awk '(system("[ ! -f " $$NF ".zqtl.txt.gz ]") == 0) && (system("[ ! -f " $$NF " ]") == 0)' | gzip > jobs/step3-jobs-resubmit.txt.gz
+	@[ $$(zcat jobs/step3-jobs-resubmit.txt.gz | wc -l) -lt 1 ] || qsub -t 1-$$(zcat jobs/step3-jobs-resubmit.txt.gz | wc -l) -N ZQTL -binding "linear:1" -q long -l h_vmem=4g -P compbio_lab -V -cwd -o /dev/null -b y -j y ./run_rscript.sh jobs/step3-jobs-resubmit.txt.gz
+
 jobs/step3-jobs.txt.gz: $(foreach chr, $(CHR), jobs/step3/obs-$(chr).jobs)
 	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
 	@cat $^ | gzip > $@
-	@[ $$(zcat $@ | wc -l) -lt 1 ] || qsub -t 1-$$(zcat $@ | wc -l) -N zqtl -binding "linear:1" -q short -l h_vmem=4g -P compbio_lab -V -cwd -o /dev/null -b y -j y ./run_rscript.sh $@
+	@[ $$(zcat $@ | wc -l) -lt 1 ] || qsub -t 1-$$(zcat $@ | wc -l) -N ZQTL -binding "linear:1" -q short -l h_vmem=4g -P compbio_lab -V -cwd -o /dev/null -b y -j y ./run_rscript.sh $@
 	@rm $^
 
 jobs/step3/obs-%.jobs:

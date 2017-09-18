@@ -32,8 +32,7 @@ ld.info <- ld.tab[ld.idx, ]
 
 ################################################################
 ## temporary directory
-dir.create(dirname(out.hdr), recursive = TRUE, showWarnings = FALSE)
-temp.dir <- system('mktemp -d ' %&&% dirname(out.hdr) %&&% '/temp.XXXX',
+temp.dir <- system('mktemp -d ' %&&% z.out.file %&&% 'temp.XXXX',
                    intern = TRUE, ignore.stderr = TRUE)
 
 plink <- subset.plink(ld.info, temp.dir)
@@ -50,7 +49,7 @@ zqtl.data <- make.zqtl.data(plink, sum.stat, genes)
 vb.opt <- list(pi.lb = -4, pi.ub = 0, tol = 1e-8, gammax = 1e4,
                vbiter = 7500, do.stdize = TRUE, eigen.tol = 1e-2,
                rate = 1e-2, decay = -1e-2,
-               print.interv = 500, n.boot = 0)
+               print.interv = 500, nboot = 0)
 
 z.marg <- fit.zqtl(zqtl.data$gwas.theta, zqtl.data$gwas.se, X = zqtl.data$X,
                   n = gwas.sample.size, options = vb.opt)
@@ -81,4 +80,5 @@ out.tab <- melt.effect(z.out$param.mediated, genes$ensg, 'permuted') %>%
 
 write.tab(out.tab, file = gzfile(z.out.file))
 
+system('rm -r ' %&&% temp.dir)
 log.msg('Finished zQTL\n\n\n')

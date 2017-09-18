@@ -38,8 +38,7 @@ ld.info <- ld.tab[ld.idx, ]
 
 ################################################################
 ## temporary directory
-dir.create(dirname(out.hdr), recursive = TRUE, showWarnings = FALSE)
-temp.dir <- system('mktemp -d ' %&&% dirname(out.hdr) %&&% '/temp.XXXX',
+temp.dir <- system('mktemp -d ' %&&% out.hdr %&&% '-temp.XXXX',
                    intern = TRUE, ignore.stderr = TRUE)
 
 plink <- subset.plink(ld.info, temp.dir)
@@ -93,10 +92,11 @@ out.tab <- melt.effect(z.out$param.mediated, genes$ensg, 'obs') %>%
 
 out.tab <- out.tab %>%
     mutate(lodds.l10p = l10.p.one((lodds - lodds.boot.mean)/(1e-2 + lodds.boot.se))) %>%
-        mutate(theta.l10p = l10.p.two(abs(theta - theta.boot.mean)/(1e-2 + theta.boot.se)))
+        mutate(theta.l10p = l10.p.two(abs(theta / (1e-2 + sqrt(theta.var)) - theta.boot.mean)/(1e-2 + theta.boot.se)))
 
-write.tab.named(out.tab, file = gzfile(z.out.file))
-write.tab.named(egger.tab, file = gzfile(egger.out.file))
-write.tab.named(rot.egger.tab, file = gzfile(rot.egger.out.file))
+write.tab(out.tab, file = gzfile(z.out.file))
+write.tab(egger.tab, file = gzfile(egger.out.file))
+write.tab(rot.egger.tab, file = gzfile(rot.egger.out.file))
 
+system('rm -r ' %&&% temp.dir)
 log.msg('Finished zQTL\n\n\n')
