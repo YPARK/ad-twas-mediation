@@ -1,5 +1,5 @@
 ## subset summary stat data
-extract.sum.stat <- function(ld.info, sum.file, x.bim, temp.dir, qtl.cutoff = 2) {
+extract.sum.stat <- function(ld.info, sum.file, x.bim, temp.dir, is.eqtl = TRUE) {
 
     bedtools.result <- temp.dir %&&% '/stat.ucsc_bed.gz'
     bedtools.hdr <- 'source /broad/software/scripts/useuse > /dev/null; reuse -q BEDTools'
@@ -8,13 +8,21 @@ extract.sum.stat <- function(ld.info, sum.file, x.bim, temp.dir, qtl.cutoff = 2)
     sum.cmd <- sprintf('%s; printf "%s" | %s', bedtools.hdr, paste(ld.info, collapse = '\t'),
                        bedtools.cmd)
     
-    system(sum.cmd, intern = TRUE, ignore.stderr = TRUE)
-    
-    sum.stat.cols <- c('chr', 'snp.loc.1', 'snp.loc', 'rs',
-                       'qtl.a1', 'qtl.a2', 'qtl.theta', 'qtl.z',
-                       'gwas.theta', 'gwas.se', 'gwas.z',
-                       'ld', 'ensg', 'hgnc', 'tss', 'tes', 'strand')
-    
+    flag <- system(sum.cmd, intern = TRUE, ignore.stderr = TRUE)
+    stopifnot(flag == 0)
+
+    if(is.eqtl){
+        sum.stat.cols <- c('chr', 'snp.loc.1', 'snp.loc', 'rs',
+                           'qtl.a1', 'qtl.a2', 'qtl.theta', 'qtl.z',
+                           'gwas.theta', 'gwas.se', 'gwas.z',
+                           'ld', 'med.id', 'hgnc', 'tss', 'tes', 'strand')
+    } else {
+        sum.stat.cols <- c('chr', 'snp.loc.1', 'snp.loc', 'rs',
+                           'qtl.a1', 'qtl.a2', 'qtl.theta', 'qtl.z',
+                           'gwas.theta', 'gwas.se', 'gwas.z',
+                           'ld', 'med.id', 'cg.loc')
+    }
+
     sum.stat <- read.table(bedtools.result, col.names = sum.stat.cols, sep = '\t') %>%
         mutate(qtl.se = qtl.theta / qtl.z) %>%
             left_join(x.bim, by = c('chr', 'rs', 'snp.loc'))
@@ -31,22 +39,35 @@ extract.sum.stat <- function(ld.info, sum.file, x.bim, temp.dir, qtl.cutoff = 2)
             rename(gwas.z = gwas.z.flip, gwas.theta = gwas.theta.flip,
                    qtl.z = qtl.z.flip, qtl.theta = qtl.theta.flip)
 
-    sum.stat <- sum.stat %>% filter(abs(qtl.z) >= qtl.cutoff)
+    ## sum.stat <- sum.stat %>% filter(abs(qtl.z) >= qtl.cutoff)
+    if(is.eqtl) {
+        mediators <-
+            sum.stat %>% group_by(med.id) %>%
+                slice(which.max(abs(gwas.z))) %>%
+                    dplyr::select(med.id, hgnc, tss, tes, strand, gwas.theta, gwas.z) %>%
+                        arrange(tss)
+        
+        sum.stat <- sum.stat %>%
+            mutate(y.pos = match(med.id, mediators$med.id)) %>%
+                na.omit()
+        return(list(sum.stat = sum.stat, mediators = mediators))
+    } else {
 
-    genes <-
-        sum.stat %>% group_by(ensg) %>%
-            slice(which.max(abs(gwas.z))) %>%
-                dplyr::select(ensg, hgnc, tss, tes, strand, gwas.theta, gwas.z) %>%
-                    arrange(tss)
-    
-    sum.stat <- sum.stat %>%
-        mutate(y.pos = match(ensg, genes$ensg)) %>%
-            na.omit()
+        mediators <-
+            sum.stat %>% group_by(med.id) %>%
+                slice(which.max(abs(gwas.z))) %>%
+                    dplyr::select(med.id, cg.loc, gwas.theta, gwas.z) %>%
+                        arrange(cg.loc)
+        
+        sum.stat <- sum.stat %>%
+            mutate(y.pos = match(med.id, mediators$med.id)) %>%
+                na.omit()
 
-    return(list(sum.stat = sum.stat, genes = genes))
+        return(list(sum.stat = sum.stat, mediators = mediators))
+    }
 }
 
-subset.plink <- function(ld.info, temp.dir) {
+subset.plink <- function(ld.info, temp.dir, plink.hdr) {
 
     ## read plink
     plink.lb <- ld.info$ld.lb
@@ -86,10 +107,18 @@ make.zqtl.data <- function(plink, sum.stat, genes) {
     gwas.theta <- gwas.theta %r% valid.x.loc
     gwas.se <- gwas.se %r% valid.x.loc
 
+    snps <- data.frame(plink$BIM, gwas.theta = NA, gwas.se = NA)
+    snps[gwas.stat$x.pos, 'gwas.theta'] <- gwas.stat$gwas.theta
+    snps[gwas.stat$x.pos, 'gwas.se'] <- gwas.stat$gwas.se
+
+    snps <- (snps %r% valid.x.loc) %>%
+        select(chr, rs, snp.loc, plink.a1, plink.a2, gwas.theta, gwas.se)
+
     X <- X %c% valid.x.loc
 
     return(list(X = X, qtl.theta = qtl.theta, qtl.se = qtl.se,
-                gwas.theta = gwas.theta, gwas.se = gwas.se))
+                gwas.theta = gwas.theta, gwas.se = gwas.se,
+                snps = snps))
 }
 
 melt.effect <- function(effect.obj, .rnames, .cnames) {
@@ -143,10 +172,15 @@ take.rot.egger <- function(zqtl.data, genes) {
 
     wlm.out <- apply(qtl.rot, 2, function(qrot, grot, d) {
         ret <- coefficients(summary(lm(grot ~ qrot, weights = 1/d^2)))
-        ret[2, ]
+        if(nrow(ret) < 2){
+            ret <- rep(NA, 4)
+        } else {
+            ret <- ret[2, ]
+        }
+        names(ret) <- c('egger.theta', 'egger.se', 'egger.t', 'egger.p.val')
+        return(ret)
     }, grot = gwas.rot[, 1], d = svd.out$D)
 
-    data.frame(genes, t(wlm.out)) %>%
-        rename(egger.theta=Estimate, egger.se=Std..Error, egger.t=t.value, egger.p.val=Pr...t..)        
+    data.frame(genes, t(wlm.out))
 }
 

@@ -35,7 +35,7 @@ ld.info <- ld.tab[ld.idx, ]
 temp.dir <- system('mktemp -d ' %&&% z.out.file %&&% 'temp.XXXX',
                    intern = TRUE, ignore.stderr = TRUE)
 
-plink <- subset.plink(ld.info, temp.dir)
+plink <- subset.plink(ld.info, temp.dir, plink.hdr)
 x.bim <- data.frame(plink$BIM, x.pos = 1:nrow(plink$BIM))
 
 sum.stat.out <- extract.sum.stat(ld.info, sum.file, x.bim, temp.dir)
