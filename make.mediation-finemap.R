@@ -52,14 +52,16 @@ mediators <- sum.stat.out$mediators
 ## Only work on sufficiently large LD blocks
 n.snps <- sum.stat %>% select(snp.loc) %>% unique() %>% nrow()
 if(n.snps < n.snp.cutoff) {
-    log.msg('This LD block is too small : %d SNPs < %d\n', n.snps, n.snp.cutoff)
+    log.msg('This LD block is too small : %d SNPs < %d\n\n\n', n.snps, n.snp.cutoff)
+    system('echo | gzip > ' %&&% z.out.file)
+    system('rm -r ' %&&% temp.dir)
     q()
 }
 
 zqtl.data <- make.zqtl.data(plink, sum.stat, mediators)
 
 ## Just run the zQTL w/o bootstrapping, but finemap
-vb.opt <- list(pi = -0, tau = -4, do.hyper = FALSE, tol = 1e-8, gammax = 1e4,
+vb.opt <- list(pi = -2, tau = -4, do.hyper = FALSE, tol = 1e-8, gammax = 1e4,
                vbiter = 5000, do.stdize = TRUE, eigen.tol = 1e-2,
                rate = 1e-2, decay = -1e-2, nsample = 10, print.interv = 100,
                nboot = 0, med.finemap = TRUE, med.lodds.cutoff = 0,
@@ -72,8 +74,7 @@ z.out <- fit.med.zqtl(zqtl.data$gwas.theta, zqtl.data$gwas.se,
 
 phase.1 <- melt.effect(z.out$param.mediated, mediators$med.id, 1) %>%
     rename(med.id = Var1) %>%
-        mutate(theta.se = theta.var) %>%
-            dplyr::select(med.id, theta, theta.se, lodds, -theta.var, -Var2)
+        dplyr::select(med.id, theta, theta.var, lodds)
 
 if('param.mediated' %in% names(z.out$finemap)) {
 

@@ -54,6 +54,8 @@ eqtl.mediators <- eqtl.stat$mediators
 n.snps <- eqtl.sum.stat %>% select(snp.loc) %>% unique() %>% nrow()
 if(n.snps < n.snp.cutoff) {
     log.msg('This LD block is too small : %d SNPs < %d\n', n.snps, n.snp.cutoff)
+    system('echo | gzip > ' %&&% z.out.file)
+    system('rm -r ' %&&% temp.dir)
     q()
 }
 
@@ -69,7 +71,7 @@ m2t <- match(.zqtl.data.mqtl$snps$rs, zqtl.data.eqtl$snps$rs)
 zqtl.data.mqtl <- lapply(.zqtl.data.mqtl, function(xx) xx %r% m2t)
 
 ## Just run the zQTL w/o bootstrapping, but finemap
-vb.opt <- list(pi = -0, tau = -4, do.hyper = FALSE, tol = 1e-8, gammax = 1e4,
+vb.opt <- list(pi = -2, tau = -4, do.hyper = FALSE, tol = 1e-8, gammax = 1e4,
                vbiter = 5000, do.stdize = TRUE, eigen.tol = 1e-2,
                rate = 1e-2, decay = -1e-2, nsample = 10, print.interv = 100,
                nboot = 0, med.finemap = TRUE, med.lodds.cutoff = 0)
