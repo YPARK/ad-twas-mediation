@@ -112,7 +112,7 @@ make.zqtl.data <- function(plink, sum.stat, genes) {
     snps[gwas.stat$x.pos, 'gwas.se'] <- gwas.stat$gwas.se
 
     snps <- (snps %r% valid.x.loc) %>%
-        select(chr, rs, snp.loc, plink.a1, plink.a2, gwas.theta, gwas.se)
+        dplyr::select(chr, rs, snp.loc, plink.a1, plink.a2, gwas.theta, gwas.se)
 
     X <- X %c% valid.x.loc
 

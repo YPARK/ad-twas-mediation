@@ -7,11 +7,11 @@ if(length(argv) < 9) q()
 ld.file <- argv[1]                      # e.g., ld.file = 'stat/IGAP/ld/1.ld.gz'
 sum.file <- argv[2]                     # e.g., sum.file = 'stat/IGAP/data/hs-lm/1.eqtl_bed.gz'
 plink.hdr <- argv[3]                    # e.g., plink.hdr = 'geno/rosmap1709-chr1'
-ld.idx <- as.integer(argv[4])           # e.g., ld.idx = 69
+ld.idx <- as.integer(argv[4])           # e.g., ld.idx = 37
 gwas.sample.size <- as.numeric(argv[5]) # e.g., gwas.sample.size = 74000
-qtl.sample.size <- as.numeric(argv[6])  # e.g., qtl.sample.size = 350
+qtl.sample.size <- as.numeric(argv[6])  # e.g., qtl.sample.size = 356
 is.eqtl <- as.logical(argv[7])          # e.g., is.eqtl = TRUE
-boot.null.model <- argv[8]              # e.g., boot.null.model = 'direct'
+boot.null.model <- argv[8]              # e.g., boot.null.model = 'marginal'
 out.hdr <- argv[9]                      # e.g., out.hdr = 'temp'
 
 dir.create(dirname(out.hdr), recursive = TRUE)
@@ -36,6 +36,7 @@ null.model <- function(method.str = c('direct', 'marginal')) {
 
 b.method <- null.model(boot.null.model)
 
+library(fitdistrplus)
 library(zqtl)
 library(dplyr)
 library(methods)
@@ -82,7 +83,6 @@ z.out <- fit.med.zqtl(zqtl.data$gwas.theta, zqtl.data$gwas.se,
                       X = zqtl.data$X, n = gwas.sample.size,
                       n.med = qtl.sample.size, options = vb.opt)
 
-
 obs.tab <- melt.effect(z.out$param.mediated, mediators$med.id, 1) %>%
     rename(med.id = Var1) %>%
         mutate(theta.se = sqrt(theta.var)) %>%
@@ -90,16 +90,42 @@ obs.tab <- melt.effect(z.out$param.mediated, mediators$med.id, 1) %>%
                           
 .boot <- z.out$bootstrap
 n.boot <- .boot[['nboot']]
-.boot[['nboot']] <- NULL
+
+cauchy.mat <- t(apply(.boot$stat.mat, 1, function(.data) fitdistr(.data, 'cauchy')$estimate))
+colnames(cauchy.mat) <- c('cauchy.location', 'cauchy.scale')
+cauchy.mat <- data.frame(med.id = as.character(mediators$med.id), cauchy.mat)
+
+t.mat <- t(apply(.boot$stat.mat, 1, function(.data) fitdistr(.data, 't', df = 1)$estimate))
+colnames(t.mat) <- c('t.m', 't.s')
+t.mat <- data.frame(med.id = as.character(mediators$med.id), t.mat)
+
+if('nboot' %in% names(.boot)) .boot[['nboot']] <- NULL
+if('llik.marg' %in% names(.boot)) .boot[['llik.marg']] <- NULL
+if('marginal' %in% names(.boot)) .boot[['marginal']] <- NULL
+if('stat.mat' %in% names(.boot)) .boot[['stat.mat']] <- NULL
+
 boot.tab <- melt.effect(.boot, mediators$med.id, 'boot') %>%
     rename(med.id = Var1) %>%
         mutate(lodds.se = sqrt(lodds.var), n.boot = n.boot) %>%            
             dplyr::select(med.id, pval, fd, n.boot, lodds.mean, lodds.se)
 
-out.tab <- obs.tab %>% left_join(boot.tab, by = 'med.id') %>%    
-    mutate(pval.norm = pnorm((lodds - lodds.mean)/lodds.se, lower.tail = FALSE)) %>%
-        mutate(ld = paste(ld.info[1:3], collapse = '\t'), ld.size = n.snps,
-               boot.null.model)
+boot.tab <- boot.tab %>% left_join(cauchy.mat, by = 'med.id') %>%
+    left_join(t.mat, by = 'med.id')
+
+out.tab <- obs.tab %>% left_join(boot.tab, by = 'med.id') %>%
+    mutate(cauchy.p = pcauchy(lodds, location = cauchy.location, scale = cauchy.scale, lower.tail = FALSE)) %>%
+        mutate(t.p = pt((lodds - t.m) / t.s, df = 3, lower.tail = FALSE)) %>%
+            mutate(norm.p = pnorm((lodds - lodds.mean) / lodds.se, lower.tail = FALSE))
+
+out.tab <- out.tab %>%
+    mutate(pval = -log10(pval), cauchy.p = -log10(cauchy.p), t.p = -log10(t.p), norm.p = -log10(norm.p))
+
+out.tab <- out.tab %>%
+    dplyr::select(med.id, theta, theta.se, lodds, pval, fd, n.boot, lodds.mean, lodds.se, cauchy.location, cauchy.scale, t.m, t.s, cauchy.p, t.p, norm.p)
+
+out.tab <- out.tab %>%
+    left_join(mediators, by = 'med.id') %>%
+        mutate(ld = paste(ld.info[1:3], collapse = '\t'), ld.size = n.snps)
 
 write.tab(out.tab, file = gzfile(z.out.file))
 
