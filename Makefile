@@ -133,7 +133,7 @@ finemap/%.mediation.gz:
 	(ls -1 finemap/$(shell echo $* | sed 's/_/\//g')/*.mediation.gz 2> /dev/null | xargs cat) > $@
 
 finemap/%.qtl.gz:
-	(ls -1 finemap/$(shell echo $* | sed 's/_/\//g')/*.qtl.gz 2> /dev/null | xargs cat) > $@
+	(ls -1 finemap/$(shell echo $* | sed 's/_/\//g')/*.qtl.gz 2> /dev/null | xargs zcat) | gzip > $@
 
 m2t/%.mediation.gz:
 	(ls -1 m2t/$(shell echo $* | sed 's/_/\//g')/*.mediation.gz 2> /dev/null | xargs cat) > $@
