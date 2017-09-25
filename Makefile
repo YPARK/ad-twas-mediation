@@ -141,9 +141,12 @@ m2t/%.mediation.gz:
 m2t/%.qtl.gz:
 	(ls -1 m2t/$(shell echo $* | sed 's/_/\//g')/*.qtl.gz 2> /dev/null | xargs cat) > $@
 
-finemap/figures/IGAP_rosmap_eqtl_%-global.pdf: finemap/IGAP_rosmap_eqtl_hs-lm_%.mediation.gz
+################################################################
+step3-figure: $(foreach chr, $(CHR), finemap/figures/IGAP_rosmap_$(chr)-global.pdf)
+
+finemap/figures/IGAP_rosmap_%-global.pdf: finemap/IGAP_rosmap_eqtl_hs-lm_%.mediation.gz
 	mkdir -p $(dir $@)
-	Rscript --vanilla figure.finemap.eqtl.R finemap/IGAP_rosmap_eqtl_hs-lm_$*.mediation.gz finemap/IGAP_rosmap_eqtl_hs-lm_$*.qtl.gz finemap/figures/IGAP_rosmap_eqtl_$*
+	Rscript --vanilla figure.finemap.R finemap/IGAP_rosmap_eqtl_hs-lm_$*.mediation.gz finemap/IGAP_rosmap_mqtl_hs-lm_$*.mediation.gz m2t/IGAP_rosmap_hs-lm_$*.mediation.gz finemap/figures/IGAP_rosmap_$*
 
 
 ################################################################
