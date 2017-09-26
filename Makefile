@@ -78,7 +78,7 @@ stat/IGAP/ld/%.ld.gz : stat/IGAP/data/hs-lm/%.eqtl_bed.gz
 
 
 ################################################################
-# Fine-mapping
+# Fine-mapping and bootstrapping
 step3: jobs/step3-eqtl-jobs.txt.gz \
   jobs/step3-mqtl-jobs.txt.gz \
   jobs/step3-m2t-jobs.txt.gz
@@ -148,6 +148,22 @@ finemap/figures/IGAP_rosmap_%-global.pdf: finemap/IGAP_rosmap_eqtl_hs-lm_%.media
 	mkdir -p $(dir $@)
 	Rscript --vanilla figure.finemap.R finemap/IGAP_rosmap_eqtl_hs-lm_$*.mediation.gz finemap/IGAP_rosmap_mqtl_hs-lm_$*.mediation.gz m2t/IGAP_rosmap_hs-lm_$*.mediation.gz finemap/figures/IGAP_rosmap_$*
 
+
+################################################################
+## simulation analysis
+step4: jobs/step4-eqtl-jobs.txt.gz
+
+jobs/step4-%-jobs.txt.gz: $(foreach chr, 19, jobs/step4/simulation-%-$(chr).jobs)
+	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
+	@printf "" > $@
+	@cat $^ | gzip >> $@
+	@[ $$(zcat $@ | wc -l) -lt 1 ] || qsub -t 1-$$(zcat $@ | wc -l) -N $*-SIM -binding "linear:1" -q short -l h_vmem=4g -P compbio_lab -V -cwd -o /dev/null -b y -j y ./run_rscript.sh $@
+	@rm $^
+
+jobs/step4/simulation-eqtl-%.jobs:
+	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
+	@printf "" > $@
+	for qtl_data in $(QTL_DATA); do zcat stat/IGAP/ld/$*.ld.gz | awk -vchr=$* -vGWAS=IGAP -vQD=$${qtl_data} 'BEGIN { jobid = 0 } $$(NF) >= 1000 { prog = "./make.mediation-simulation.R" OFS ("stat/" GWAS "/ld/" chr ".ld.gz") OFS ("stat/" GWAS "/data/" QD "/" chr ".eqtl_bed.gz") FS ("geno/rosmap1709-chr" chr) FS NR FS "TRUE"; rdir = "simulation/" GWAS "/rosmap/eqtl/" QD "/" chr; for(h1=1; h1 <=5; h1+=2) { for(h2=1; h2<=5; h2+=2) { for(c1=1; c1<=3; ++c1) { for(c2=1; c2<=3; ++c2) { for(c3=1; c3<=3; ++c3) { print prog FS (h1/10) FS (h2/10) FS c1 FS c2 FS c3 FS (rdir "/sim-" (++jobid) ".gz") } } } } } }' >> $@; done
 
 ################################################################
 ## Utilities

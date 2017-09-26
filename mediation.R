@@ -156,7 +156,9 @@ mr.egger <- function(tab, do.perm = FALSE) {
         b.qtl <- b.qtl[sample(length(b.qtl))]
     }
 
-    coefficients(summary(lm(b.gwas ~ b.qtl, weights = 1/gwas.se^2)))
+    ret <- coefficients(summary(lm(b.gwas ~ b.qtl, weights = 1/gwas.se^2)))
+    ret <- signif(ret, 4)
+    return(ret)
 }
 
 take.rot.egger <- function(zqtl.data, genes) {

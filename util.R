@@ -18,6 +18,10 @@ log.msg <- function(...) {
     matrix(rnorm(nrow * ncol), nrow, ncol)
 }
 
+.sample <- function(nrow, ncol, pop = c(1,-1)) {
+    matrix(sample(pop, nrow * ncol, TRUE), nrow, ncol)
+}
+
 fast.cov <- function(x, y) {
     n.obs <- crossprod(!is.na(x), !is.na(y))
     ret <- crossprod(replace(x, is.na(x), 0),
@@ -32,21 +36,28 @@ fast.z.cov <- function(x, y) {
     return(ret)
 }
 
-get.marginal.qtl <- function(xx, yy) {
-    require(reshape2)
-    require(dplyr)
+get.marginal.qtl <- function(xx, yy, .melt = TRUE, TOL = 1e-8) {
 
     .xx <- scale(xx)
     .yy <- scale(yy)
 
-    beta <- fast.cov(.xx, .yy) %>% as.matrix() %>% melt()
-    beta.z <- fast.z.cov(.xx, .yy) %>% as.matrix() %>% melt()
+    beta <- fast.cov(.xx, .yy)
+    beta.z <- fast.z.cov(.xx, .yy)
+
+    if(.melt) {
+        require(reshape2)
+        require(dplyr)
+
+    beta <- beta %>% as.matrix() %>% melt()
+    beta.z <- beta.z %>% as.matrix() %>% melt()
 
     colnames(beta) <- c('snp', 'gene', 'beta')
     colnames(beta.z) <- c('snp', 'gene', 'beta.z')
     out <- beta %>% left_join(beta.z, by = c('snp', 'gene')) %>%
         as.data.frame()
     return(out)
+    }
+    return(list(beta = beta, beta.se = beta / (beta.z +  TOL)))
 }
 
 fast.cor <- function(x, y) {
