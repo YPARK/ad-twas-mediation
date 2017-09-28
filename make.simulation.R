@@ -110,7 +110,7 @@ vb.opt <- list(pi = -2, tau = -4, do.hyper = FALSE, tol = 1e-8, gammax = 1e4,
                vbiter = 5000, do.stdize = TRUE, eigen.tol = 1e-2,
                rate = 1e-2, decay = 0, nsample = 10, print.interv = 100,
                nboot = 0, med.finemap = FALSE, weight.y = TRUE, weight.m = TRUE)
-               
+
 z.out <- fit.med.zqtl(effect = gwas.stat$beta, effect.se = gwas.stat$beta.se,
                       effect.m = qtl.stat$beta, effect.m.se = qtl.stat$beta.se,
                       X = X, options = vb.opt)
@@ -148,7 +148,7 @@ twas.tab <- data.frame(gene = as.character(1:n.med), twas = sapply(1:n.med, take
 ################################################################
 ## run MR egger for comparison
 
-gwas.egger.stat <- get.marginal.qtl(X, y, .melt = TRUE) %>%    
+gwas.egger.stat <- get.marginal.qtl(X, y, .melt = TRUE) %>%
     mutate(gwas.theta = beta, gwas.se = beta.z/beta) %>%
         dplyr::select(-gene, -beta, -beta.z)
 
@@ -175,7 +175,7 @@ out.tab <- z.out.tab %>% left_join(egger.tab, by = 'gene') %>%
         dplyr::select(gene, causal, pve.med, pve.dir, pve.qtl,
                       p, n.med, n.causal.qtl, n.causal.med, n.causal.med, n.causal.direct,
                       theta, theta.se, lodds,
-                      egger.t, twas)                      
+                      egger.t, twas)
 
 write.tab(out.tab, file = gzfile(out.file))
 
