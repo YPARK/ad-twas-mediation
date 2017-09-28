@@ -153,17 +153,24 @@ finemap/figures/IGAP_rosmap_%-global.pdf: finemap/IGAP_rosmap_eqtl_hs-lm_%.media
 ## simulation analysis
 step4: jobs/step4-eqtl-jobs.txt.gz
 
-jobs/step4-%-jobs.txt.gz: $(foreach chr, 19, jobs/step4/simulation-%-$(chr).jobs)
+jobs/step4-%-jobs.txt.gz: $(foreach chr, $(shell seq 22 -1 1), jobs/step4/simulation-%-$(chr).jobs)
 	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
 	@printf "" > $@
 	@cat $^ | gzip >> $@
 	@[ $$(zcat $@ | wc -l) -lt 1 ] || qsub -t 1-$$(zcat $@ | wc -l) -N $*-SIM -binding "linear:1" -q short -l h_vmem=4g -P compbio_lab -V -cwd -o /dev/null -b y -j y ./run_rscript.sh $@
 	@rm $^
 
+step4-resubmit: jobs/step4-eqtl-jobs-resubmit.txt.gz
+
+jobs/step4-%-jobs-resubmit.txt.gz: jobs/step4-%-jobs.txt.gz
+	zcat $< | awk 'system("[ ! -f " $$NF " ]") == 0' | gzip > $@
+	@[ $$(zcat $@ | wc -l) -lt 1 ] || qsub -t 1-$$(zcat $@ | wc -l) -N Re-$*-SIM -binding "linear:1" -q long -l h_vmem=4g -P compbio_lab -V -cwd -o /dev/null -b y -j y ./run_rscript.sh $@
+
 jobs/step4/simulation-eqtl-%.jobs:
 	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
 	@printf "" > $@
-	for qtl_data in $(QTL_DATA); do zcat stat/IGAP/ld/$*.ld.gz | awk -vchr=$* -vGWAS=IGAP -vQD=$${qtl_data} 'BEGIN { jobid = 0 } $$(NF) >= 1000 { prog = "./make.mediation-simulation.R" OFS ("stat/" GWAS "/ld/" chr ".ld.gz") OFS ("stat/" GWAS "/data/" QD "/" chr ".eqtl_bed.gz") FS ("geno/rosmap1709-chr" chr) FS NR FS "TRUE"; rdir = "simulation/" GWAS "/rosmap/eqtl/" QD "/" chr; for(h1=1; h1 <=5; h1+=2) { for(h2=1; h2<=5; h2+=2) { for(c1=1; c1<=3; ++c1) { for(c2=1; c2<=3; ++c2) { for(c3=1; c3<=3; ++c3) { print prog FS (h1/10) FS (h2/10) FS c1 FS c2 FS c3 FS (rdir "/sim-" (++jobid) ".gz") } } } } } }' >> $@; done
+	for qtl_data in $(QTL_DATA); do zcat stat/IGAP/ld/$*.ld.gz | awk '$$NF >= 1000 { print $$0 FS NR }' | shuf | head -n20 | awk -vchr=$* -vGWAS=IGAP -vQD=$${qtl_data} 'BEGIN { jobid = 0 } { prog = "./make.simulation.R" OFS ("stat/" GWAS "/ld/" chr ".ld.gz") OFS ("stat/" GWAS "/data/" QD "/" chr ".eqtl_bed.gz") FS ("geno/rosmap1709-chr" chr) FS $$NF FS "TRUE"; rdir = "simulation/ld/" GWAS "/rosmap/eqtl/" QD "/" chr; for(h1=1; h1 <=3; ++h1) { for(h2=1; h2<=3; ++h2) { for(c1=1; c1<=5; c1+=2) { for(c2=1; c2<=3; ++c2) { print prog FS 0.1 FS (h1/10) FS (h2/10) FS c1 FS c2 FS c2 FS (rdir "/sim-" (++jobid) ".gz") } } } } }' >> $@; done
+	for qtl_data in $(QTL_DATA); do zcat stat/IGAP/ld/$*.ld.gz | awk '$$NF >= 1000 { print $$0 FS NR }' | shuf | head -n20 | awk -vchr=$* -vGWAS=IGAP -vQD=$${qtl_data} 'BEGIN { jobid = 0 } { prog = "./make.simulation-pleiotropy.R" OFS ("stat/" GWAS "/ld/" chr ".ld.gz") OFS ("stat/" GWAS "/data/" QD "/" chr ".eqtl_bed.gz") FS ("geno/rosmap1709-chr" chr) FS $$NF FS "TRUE"; rdir = "simulation/pleiotropy/" GWAS "/rosmap/eqtl/" QD "/" chr; for(h1=1; h1 <=3; ++h1) { for(h2=1; h2<=3; ++h2) { for(c1=1; c1<=5; c1+=2) { for(c2=1; c2<=3; ++c2) { print prog FS 0.1 FS (h1/10) FS (h2/10) FS c1 FS c2 FS c2 FS (rdir "/sim-" (++jobid) ".gz") } } } } }' >> $@; done
 
 ################################################################
 ## Utilities
