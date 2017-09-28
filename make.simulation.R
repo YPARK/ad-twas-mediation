@@ -2,23 +2,22 @@
 
 argv <- commandArgs(trailingOnly = TRUE)
 
-if(length(argv) < 12) q()
+if(length(argv) < 11) q()
 
 ld.file <- argv[1]                      # e.g., ld.file = 'stat/IGAP/ld/19.ld.gz'
-sum.file <- argv[2]                     # e.g., sum.file = 'stat/IGAP/data/hs-lm/19.eqtl_bed.gz'
-plink.hdr <- argv[3]                    # e.g., plink.hdr = 'geno/rosmap1709-chr19'
-ld.idx <- as.integer(argv[4])           # e.g., ld.idx = 117
-is.eqtl <- as.logical(argv[5])          # e.g., is.eqtl = TRUE
+plink.hdr <- argv[2]                    # e.g., plink.hdr = 'geno/rosmap1709-chr19'
+ld.idx <- as.integer(argv[3])           # e.g., ld.idx = 117
+is.eqtl <- as.logical(argv[4])          # e.g., is.eqtl = TRUE
 
-pve.qtl <- as.numeric(argv[6])           # e.g., pve.qtl <- 0.1
-pve.med <- as.numeric(argv[7])           # e.g., pve.med <- 0.3
-pve.dir <- as.numeric(argv[8])           # e.g., pve.dir <- 0.1
+pve.qtl <- as.numeric(argv[5])           # e.g., pve.qtl <- 0.1
+pve.med <- as.numeric(argv[6])           # e.g., pve.med <- 0.3
+pve.dir <- as.numeric(argv[7])           # e.g., pve.dir <- 0.1
 
-n.causal.med <- as.integer(argv[9])     # e.g., n.causal.med <- 1
-n.causal.qtl <- as.integer(argv[10])    # e.g., n.causal.qtl <- 3
-n.causal.direct <- as.integer(argv[11]) # e.g., n.causal.direct <- 3
+n.causal.med <- as.integer(argv[8])     # e.g., n.causal.med <- 1
+n.causal.qtl <- as.integer(argv[9])    # e.g., n.causal.qtl <- 3
+n.causal.direct <- as.integer(argv[10]) # e.g., n.causal.direct <- 3
 
-out.file <- argv[12]
+out.file <- argv[11]
 
 dir.create(dirname(out.file), recursive = TRUE)
 
@@ -48,17 +47,13 @@ ld.info <- ld.tab[ld.idx, ]
 
 plink <- subset.plink(ld.info, temp.dir, plink.hdr)
 x.bim <- data.frame(plink$BIM, x.pos = 1:nrow(plink$BIM))
-
-sum.stat.out <- extract.sum.stat(ld.info, sum.file, x.bim, temp.dir, is.eqtl)
-mediators <- sum.stat.out$mediators
-sum.stat <- sum.stat.out$sum.stat
-n.snps <- sum.stat %>% select(snp.loc) %>% unique() %>% nrow()
-
+n.snps <- nrow(x.bim)
 log.msg('num SNPs = %d\n\n', n.snps)
 
+n.med <- ceiling(n.snps / 20)
+
 ## Only work on sufficiently large LD blocks
-n.snps <- sum.stat %>% select(snp.loc) %>% unique() %>% nrow()
-n.snp.cutoff <- 500
+n.snp.cutoff <- 1000
 if(n.snps < n.snp.cutoff) {
     log.msg('This LD block is too small : %d SNPs < %d\n\n\n', n.snps, n.snp.cutoff)
     system('printf "" | gzip > ' %&&% out.file)
@@ -72,7 +67,6 @@ X <- plink$BED %>% scale()
 X[is.na(X)] <- 0
 p <- ncol(X)
 n <- nrow(X)
-n.med <- nrow(mediators)
 
 ## make sure numbers
 n.causal.med <- pmin(n.causal.med, n.med)
@@ -126,7 +120,7 @@ z.out.tab <- melt.effect(z.out$param.mediated, 1:ncol(M), 'sim') %>%
         dplyr::select(-Var2, -Var1, -theta.var) %>%
             dplyr::select(gene, theta, theta.se, lodds) %>%
                 mutate(causal = ifelse(gene %in% causal.med, 1, 0)) %>%
-                    mutate(pve.med, pve.dir, pve.qtl, p, n.causal.qtl, n.causal.med, n.causal.direct)
+                    mutate(pve.med, pve.dir, pve.qtl, p, n.med, n.causal.qtl, n.causal.med, n.causal.direct)
 
 log.msg('Finished zQTL\n\n')
 
@@ -179,7 +173,7 @@ egger.tab <- egger.tab %>% as.data.frame() %>% mutate(gene = as.character(gene))
 out.tab <- z.out.tab %>% left_join(egger.tab, by = 'gene') %>%
     left_join(twas.tab, by = 'gene') %>%
         dplyr::select(gene, causal, pve.med, pve.dir, pve.qtl,
-                      p, n.causal.qtl, n.causal.med, n.causal.med, n.causal.direct,
+                      p, n.med, n.causal.qtl, n.causal.med, n.causal.med, n.causal.direct,
                       theta, theta.se, lodds,
                       egger.t, twas)                      
 

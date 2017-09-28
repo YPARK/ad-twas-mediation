@@ -82,6 +82,19 @@ subset.plink <- function(ld.info, temp.dir, plink.hdr) {
     return(plink)
 }
 
+subset.plink.snps <- function(ld.info, temp.dir, plink.hdr) {
+
+    ## read plink
+    plink.lb <- ld.info$ld.lb
+    plink.ub <- ld.info$ld.ub
+    chr <- ld.info$chr
+
+    plink.cmd <- sprintf('./bin/plink --bfile %s --make-bed --geno 0.05 --maf 0.05 --chr %d --from-bp %d --to-bp %d --out %s', plink.hdr, chr, plink.lb, plink.ub, temp.dir %&&% '/plink')
+    system(plink.cmd)
+
+    return(read.table(temp.dir %&&% '/plink.bim'))
+}
+
 make.zqtl.data <- function(plink, sum.stat, genes) {
 
     X <- plink$BED
