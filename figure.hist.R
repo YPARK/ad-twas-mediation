@@ -4,6 +4,9 @@ source('util.R')
 source('figure.util.R')
 library(dplyr)
 
+out.file <- 'figures/bootstrap_gene.pdf'
+dir.create(dirname(out.file), recursive = TRUE, showWarnings = FALSE)
+
 read.mediation <- function(in.hdr, in.cols) {
     .files <- in.hdr %&&% 1:22 %&&% '.mediation.gz'
     .dat <- lapply(.files, read.table, col.names = in.cols)
@@ -21,12 +24,22 @@ expr.cols <- c('ensg', 'theta', 'thet.se', 'lodds',
 data.direct.tab <- read.mediation('bootstrap/direct_IGAP_rosmap_eqtl_hs-lm_', expr.cols)
 data.marginal.tab <- read.mediation('bootstrap/marginal_IGAP_rosmap_eqtl_hs-lm_', expr.cols)
 
+.df <- rbind(data.direct.tab %>% select(emp.p) %>% mutate(null = 'direct'),
+             data.marginal.tab %>% select(emp.p) %>% mutate(null = 'marginal'))
 
-## take.hist <- function
+plt <- ggplot(.df, aes(x=10^(-emp.p), group = null, fill = null)) + theme_bw() +
+    geom_histogram(position = 'dodge', bins = 20, color = 'gray40') +
+    geom_hline(yintercept = nrow(.df) / 2 / 20, lty = 2)
 
-ggplot(data.direct.tab %>% filter(lodds < 0)) +
-    geom_histogram(aes(x=10^(-emp.p)))
+plt <- plt +
+    xlab('Empirical p-value') +
+    scale_fill_manual(values = c('#AAAAFF', 'gray80'))
 
-ggplot(data.marginal.tab %>% filter(lodds < 0)) +
-    geom_histogram(aes(x=10^(-emp.p)))
+plt <- plt +
+    theme(legend.title = element_blank(),
+          legend.position = c(.9, .9),
+          legend.justification = c(1, 1))
 
+pdf(file = out.file, useDingbats = FALSE, width = 6, height = 4)
+print(plt)
+dev.off()
