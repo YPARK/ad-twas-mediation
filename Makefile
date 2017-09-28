@@ -186,7 +186,7 @@ jobs/step4/simulation-eqtl-%.jobs: simulation/large-ld-%.txt.gz
 	for qtl_data in $(QTL_DATA); do zcat simulation/large-ld-$*.txt.gz | awk '{ print $$0 FS NR }' | shuf | head -n20 | awk -vchr=$* -vGWAS=IGAP -vQD=$${qtl_data} 'BEGIN { jobid = 0 } { prog = "./make.simulation.R" FS ("simulation/large-ld-" chr ".txt.gz") FS ("geno/rosmap1709-chr" chr) FS $$NF FS "TRUE"; rdir = "simulation/ld/" GWAS "/rosmap/eqtl/" QD "/" chr; for(h1=1; h1 <=3; h1+=.5) { for(h2=0; h2<=3; ++h2) { for(c1=1; c1<=3; c1++) { for(c2=1; c2<=3; ++c2) { print prog FS 0.17 FS (h1/10) FS (h2/10) FS c1 FS c2 FS c2 FS (rdir "/sim-" (++jobid) ".gz") } } } } }' >> $@; done
 	for qtl_data in $(QTL_DATA); do zcat simulation/large-ld-$*.txt.gz | awk '{ print $$0 FS NR }' | shuf | head -n20 | awk -vchr=$* -vGWAS=IGAP -vQD=$${qtl_data} 'BEGIN { jobid = 0 } { prog = "./make.simulation-pleiotropy.R" FS ("simulation/large-ld-" chr ".txt.gz") FS ("geno/rosmap1709-chr" chr) FS $$NF FS "TRUE"; rdir = "simulation/pleiotropy/" GWAS "/rosmap/eqtl/" QD "/" chr; for(h1=1; h1 <=3; h1+=.5) { for(h2=0; h2<=3; ++h2) { for(c1=1; c1<=3; c1++) { for(c2=1; c2<=3; ++c2) { print prog FS 0.17 FS (h1/10) FS (h2/10) FS c1 FS c2 FS c2 FS (rdir "/sim-" (++jobid) ".gz") } } } } }' >> $@; done
 
-step4-post: $(foreach sim, pleiotropy ld, $(foreach chr, $(shell seq 19 22), simulation/result/$(sim)_IGAP_rosmap_eqtl_hs-lm_$(chr).sim.gz))
+step4-post: $(foreach sim, pleiotropy ld, $(foreach chr, $(shell seq 16 22), simulation/result/$(sim)_IGAP_rosmap_eqtl_hs-lm_$(chr).sim.gz))
 
 simulation/result/%.sim.gz:
 	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
