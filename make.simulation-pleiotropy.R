@@ -131,22 +131,32 @@ log.msg('Finished zQTL\n\n')
 ## run gene by gene TWAS by Mancuso et al. 2017
 
 svd.out <- take.ld.svd(plink$BED, options = vb.opt)
-V.t.inv <- sweep(svd.out$V.t, 1, svd.out$D, `/`)
-LD.inv <- t(V.t.inv) %*% V.t.inv
-V.t <- sweep(svd.out$V.t, 1, svd.out$D, `*`)
-LD <- t(V.t) %*% V.t
+W.t <- sweep(svd.out$V.t, 1, svd.out$D, `/`)
+## V.t <- sweep(svd.out$V.t, 1, svd.out$D, `*`)
+## LD.inv <- t(W.t) %*% W.t
+## LD <- t(V.t) %*% V.t
 
 gwas.z <- gwas.stat$beta / gwas.stat$beta.se
 
 take.twas <- function(g) {
+
     qtl.z <- (qtl.stat$beta %c% g) / (qtl.stat$beta.se %c% g)
-    qtl.z.poly <- LD.inv %*% qtl.z
-    num <- t(qtl.z.poly) %*% gwas.z
-    denom <- t(qtl.z.poly) %*% LD %*% qtl.z.poly
+
+    ## This is too memory-intensive
+    ## qtl.z.poly <- LD.inv %*% qtl.z
+    ## num <- t(qtl.z.poly) %*% gwas.z
+    ## denom <- t(qtl.z.poly) %*% LD %*% qtl.z.poly
+
+    num <- t(W.t %*% gwas.z) %*% (W.t %*% qtl.z)
+    denom <- t(W.t %*% qtl.z) %*% (W.t %*% qtl.z)
+    log.msg('TWAS finished [%d / %d]\n', g, n.med)
+
     return(signif(as.numeric(num/sqrt(denom + 1e-16)), 4))
 }
 
 twas.tab <- data.frame(gene = as.character(1:n.med), twas = sapply(1:n.med, take.twas))
+
+log.msg('TWAS Finished\n\n')
 
 ################################################################
 ## run MR egger for comparison
