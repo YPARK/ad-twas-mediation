@@ -2,22 +2,21 @@
 
 argv <- commandArgs(trailingOnly = TRUE)
 
-if(length(argv) < 11) q()
+if(length(argv) < 10) q()
 
 ld.file <- argv[1]                      # e.g., ld.file = 'stat/IGAP/ld/19.ld.gz'
 plink.hdr <- argv[2]                    # e.g., plink.hdr = 'geno/rosmap1709-chr19'
 ld.idx <- as.integer(argv[3])           # e.g., ld.idx = 117
-is.eqtl <- as.logical(argv[4])          # e.g., is.eqtl = TRUE
 
-pve.qtl <- as.numeric(argv[5])           # e.g., pve.qtl <- 0.1
-pve.med <- as.numeric(argv[6])           # e.g., pve.med <- 0.3
-pve.dir <- as.numeric(argv[7])           # e.g., pve.dir <- 0.1
+pve.qtl <- as.numeric(argv[4])           # e.g., pve.qtl <- 0.1
+pve.med <- as.numeric(argv[5])           # e.g., pve.med <- 0.3
+pve.dir <- as.numeric(argv[6])           # e.g., pve.dir <- 0.1
 
-n.causal.med <- as.integer(argv[8])     # e.g., n.causal.med <- 1
-n.causal.qtl <- as.integer(argv[9])    # e.g., n.causal.qtl <- 3
-n.causal.direct <- as.integer(argv[10]) # e.g., n.causal.direct <- 3
+n.causal.med <- as.integer(argv[7])     # e.g., n.causal.med <- 1
+n.causal.qtl <- as.integer(argv[8])    # e.g., n.causal.qtl <- 3
+n.causal.direct <- as.integer(argv[9]) # e.g., n.causal.direct <- 3
 
-out.file <- argv[11]
+out.file <- argv[10]
 
 dir.create(dirname(out.file), recursive = TRUE)
 
@@ -140,7 +139,7 @@ take.twas <- function(g) {
     qtl.z.poly <- LD.inv %*% qtl.z
     num <- t(qtl.z.poly) %*% gwas.z
     denom <- t(qtl.z.poly) %*% LD %*% qtl.z.poly
-    return(as.numeric(num/sqrt(denom + 1e-16)))
+    return(signif(as.numeric(num/sqrt(denom + 1e-16)), 4))
 }
 
 twas.tab <- data.frame(gene = as.character(1:n.med), twas = sapply(1:n.med, take.twas))
