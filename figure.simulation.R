@@ -103,7 +103,7 @@ ld.sim.cols <- c('gene', 'causal', 'pve.med', 'pve.dir', 'pve.qtl',
                  'theta', 'theta.se', 'lodds',
                  'egger.t', 'twas')
 
-sim.files <- 'simulation/result/ld_IGAP_rosmap_eqtl_hs-lm_' %&&% (19:22) %&&% '.sim.gz'
+sim.files <- 'simulation/result/ld_IGAP_rosmap_eqtl_hs-lm_' %&&% (16:22) %&&% '.sim.gz'
 
 sim.tab <- do.call(rbind, lapply(sim.files, read_tsv, col_names = ld.sim.cols))
 
@@ -111,7 +111,7 @@ sim.tab.power <- summarize.sim.tab(sim.tab, egger.power, twas.power, zqtl.power)
 
 sim.tab.auprc <- summarize.sim.tab(sim.tab, egger.auprc, twas.auprc, zqtl.auprc)
 
-plt.sim(sim.tab.power, n.qtl = 3) + ylab('Power (FDR < 10%)')
+plt.sim(sim.tab.power, n.qtl = 1) + ylab('Power (FDR < 10%)')
 
 plt.sim(sim.tab.auprc, n.qtl = 3) + ylab('AUPRC')
 
