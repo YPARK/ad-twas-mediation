@@ -32,7 +32,7 @@ combined.p.val <- function(.df) {
     lo.boot <- sweep(sweep(.rnorm(n, 100), 1, .df$lodds.se, `*`), 1, .df$lodds.mean, `+`)
     lo.boot <- as.vector(lo.boot)
 
-    ret <- .df %>% select(chr, ensg, hgnc, tss, tes, theta, theta.se, lodds, max.gwas.z)
+    ret <- .df %>% select(chr, ld.1, ld.2, ensg, hgnc, tss, tes, theta, theta.se, lodds, max.gwas.z)
     p.val <- empPvals(ret$lodds, lo.boot)
     q.val <- qvalue(p.val, fdr.level = 0.05, pi0.method = 'bootstrap')
     ret <- data.frame(ret, p.val = p.val, q.val = q.val$qvalues)
@@ -42,7 +42,7 @@ combined.p.val <- function(.df) {
 marginal.df <- combined.p.val(data.marginal.tab)
 direct.df <- combined.p.val(data.direct.tab)
 
-stat.cols <- c('chr', 'ensg', 'hgnc', 'tss', 'tes', 'theta', 'theta.se', 'lodds', 'max.gwas.z')
+stat.cols <- c('chr', 'ld.1', 'ld.2', 'ensg', 'hgnc', 'tss', 'tes', 'theta', 'theta.se', 'lodds', 'max.gwas.z')
 
 stat.tab <- marginal.df %>% rename(p.val.marginal = p.val, q.val.marginal = q.val) %>%
     left_join(direct.df %>% rename(p.val.direct = p.val, q.val.direct = q.val), by = stat.cols)
