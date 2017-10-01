@@ -127,7 +127,7 @@ jobs/step3/finemap-m2t-%.jobs:
 
 step3-post: $(foreach data, $(QTL_DATA), $(foreach chr, $(CHR), $(foreach stat, mediation qtl, m2t/IGAP_rosmap_$(data)_$(chr).$(stat).gz \
  $(foreach reg, eqtl mqtl, finemap/IGAP_rosmap_$(reg)_$(data)_$(chr).$(stat).gz) ) ) ) \
- $(foreach data, $(QTL_DATA), $(foreach null, direct marginal, $(foreach chr, $(CHR), bootstrap/$(null)_IGAP_rosmap_eqtl_hs-lm_$(chr).mediation.gz ) ) )
+ $(foreach data, $(QTL_DATA), $(foreach null, direct marginal, $(foreach reg, eqtl mqtl, $(foreach chr, $(CHR), bootstrap/$(null)_IGAP_rosmap_$(reg)_hs-lm_$(chr).mediation.gz ) ) ) )
 
 # % = IGAP_rosmap_eqtl_hs-lm_21
 finemap/%.mediation.gz:
