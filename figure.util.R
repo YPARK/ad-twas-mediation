@@ -24,13 +24,15 @@ grid.vcat <- function(p.list, ...) {
 }
 
 
-match.heights <- function(p.list) {
+match.heights <- function(p.list, stretch = FALSE) {
 
     g.list <- lapply(p.list, ggplotGrob)
     max.width <- g.list[[1]]$heights[2:5]
 
-    for(j in 2:length(g.list)) {
-        max.width <- grid::unit.pmax(max.width, g.list[[j]]$heights[2:5])
+    if(stretch) {
+        for(j in 2:length(g.list)) {
+            max.width <- grid::unit.pmax(max.width, g.list[[j]]$heights[2:5])
+        }
     }
 
     for(j in 1:length(g.list)) {

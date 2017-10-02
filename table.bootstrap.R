@@ -2,7 +2,6 @@
 
 options(stringsAsFators = FALSE)
 source('util.R')
-source('figure.util.R')
 library(dplyr)
 library(qvalue)
 
