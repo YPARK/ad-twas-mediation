@@ -12,20 +12,22 @@ library(dplyr)
 library(ggplot2)
 library(ggrepel)
 library(latex2exp)
+library(Hmisc)
 source('figure.util.R')
 
-gene.tab.sig.file <- 'tables/bootstrap_gene_significant.txt.gz'
-gene.tab.sig <- read.table(gene.tab.sig.file, header = TRUE) %>% na.omit()
-
-## Figure 2. gene by gene scatter plots
-out.dir <- 'figures/genes/'
-dir.create(out.dir, recursive = TRUE, showWarnings = FALSE)
+gene.tab.file <- 'tables/bootstrap_gene_significant.txt.gz'
+gene.tab <- read.table(gene.tab.file, header = TRUE) %>% na.omit()
 
 ## Figure 2. gene by gene scatter plots
 out.dir <- 'figures/genes/'
 dir.create(out.dir, recursive = TRUE, showWarnings = FALSE)
 
 draw.gene <- function(gene.idx, gene.tab, temp.dir, out.hdr) {
+
+    file.name <- out.hdr %&&% sprintf('gene_%d_%05d_%s.pdf', gene.tab[gene.idx, ]$chr,
+                                      gene.idx, gene.tab[gene.idx, ]$hgnc)
+
+    if(file.exists(file.name)) { return(NULL) }
 
     plink.hdr <- 'geno/rosmap1709-chr'
     sum.file.dir <- 'stat/IGAP/data/hs-lm/'
@@ -41,10 +43,10 @@ draw.gene <- function(gene.idx, gene.tab, temp.dir, out.hdr) {
                                      temp.dir = temp.dir,
                                      is.eqtl = TRUE)
 
-    sum.stat.tab <- sum.stat.obj$sum.stat
+    sum.stat <- sum.stat.obj$sum.stat
     genes <- sum.stat.obj$mediators
 
-    zqtl.data <- make.zqtl.data(plink, sum.stat.tab, genes)
+    zqtl.data <- make.zqtl.data(plink, sum.stat, genes)
 
     y.pos <- which(genes$med.id == as.character(gene.tab[gene.idx, 'ensg']))
 
@@ -71,10 +73,17 @@ draw.gene <- function(gene.idx, gene.tab, temp.dir, out.hdr) {
     
     V.t <- svd.out$V.t
 
-    zz.x <- V.t %c% valid %*% (z.x %r% valid)
-    zz.y <- V.t %c% valid %*% (z.y %r% valid)
+    zz.x <- (V.t %c% valid) %*% (z.x %r% valid)
+    zz.y <- V.t %*% z.y
 
-    rr.y <- zz.y - sweep(V.t %*% z.out$param.direct$theta, 1, svd.out$D^2)
+    ww <- 1/svd.out$D^2
+    .wtd.std <- function(x) (x - wtd.mean(x, ww)) / sqrt(wtd.var(x, ww))
+
+    zz.y.direct <- z.out$param.direct$theta / zqtl.data$gwas.se
+    zz.y.direct <- sweep(V.t %*% zz.y.direct, 1, svd.out$D^2, `*`)
+
+    ## rr.y <- matrix(lm(zz.y ~ zz.y.direct, weights = ww)$residuals, ncol = 1)
+    rr.y <- zz.y - zz.y.direct
 
     p0 <- ggplot(data.frame(QTL = z.x[valid], GWAS = z.y[valid])) + theme_bw() +
         theme(legend.position = 'bottom', legend.background = element_blank(),
@@ -82,19 +91,18 @@ draw.gene <- function(gene.idx, gene.tab, temp.dir, out.hdr) {
             geom_point(aes(x = QTL, y = GWAS), alpha = 0.5, size = 1) +
                 ggtitle(genes[y.pos, ]$med.id)
 
-    .df <- data.frame(QTL = zz.x, GWAS = zz.y, w = 1/svd.out$D^2)
-
-    viz.cutoff <- median(.df$w) * 0.50
+    .df <- data.frame(QTL = .wtd.std(zz.x), GWAS = .wtd.std(zz.y), w = ww)
 
     .thm <- theme_bw() +
         theme(legend.position = 'none', axis.title.y=element_blank(), title = element_text(size=8))
 
-    p1 <- ggplot(.df %>% filter(w > viz.cutoff)) + .thm +
+    p1 <- ggplot(.df) + .thm +
         geom_point(aes(x = QTL, y = GWAS, size = w, alpha = w)) +
             scale_size_continuous(range = c(0, 1))
+
+    p1 <- p1 + coord_cartesian(xlim = c(-3, 3), ylim = c(-3, 3))
     
-    .df <- data.frame(QTL = zz.x, GWAS = rr.y, w = 1/svd.out$D^2)
-    viz.cutoff <- median(.df$w) * 0.50
+    .df <- data.frame(QTL = zz.x, GWAS = rr.y, w = ww)
 
     .wlm <- lm(GWAS ~ QTL + 1, data = .df, weights = w)
     .slope <- signif(coefficients(.wlm)[2], 2)
@@ -102,24 +110,25 @@ draw.gene <- function(gene.idx, gene.tab, temp.dir, out.hdr) {
 
     .title <- sprintf('%.2f %s + %.2f', .slope, gene.tab[gene.idx, ]$hgnc, .inter)
 
+    .df <- data.frame(QTL = .wtd.std(zz.x), GWAS = .wtd.std(rr.y), w = ww)
+
     .thm <- theme_bw() +
         theme(axis.title.y=element_blank(), title = element_text(size=8))
 
-    p2 <- ggplot(.df %>% filter(w > viz.cutoff)) + .thm +
+    p2 <- ggplot(.df) + .thm +
         geom_abline(slope = .slope, intercept = .inter, color = 'red', size = .5) +
             ggtitle(.title) +
                 scale_size_continuous(name = TeX('$1/\\lambda$'), range = c(0, 1)) +
                     geom_point(aes(x = QTL, y = GWAS, size = w, alpha = w)) +
                         scale_alpha_continuous(guide = FALSE)
     
+    p2 <- p2 + coord_cartesian(xlim = c(-3, 3), ylim = c(-3, 3))
+
     .df <- data.frame(llik = z.out$llik[, 1]) %>% mutate(iter = 1:n())
 
     p3 <- ggplot(.df) + theme_classic() + geom_line(aes(x=iter, y=llik)) +
         theme(axis.title.y=element_blank()) +
             xlab('iteration (x10)') + ggtitle('log-likelihood')
-
-    file.name <- out.hdr %&&% sprintf('gene_%d_%05d_%s.pdf', gene.tab[gene.idx, ]$chr,
-                                      gene.idx, gene.tab[gene.idx, ]$hgnc)
 
     pdf(file = file.name, width = 8, height = 2.5, useDingbats = FALSE)
     print(grid.hcat(list(p0, p1, p2, p3), widths = c(.9, .9, 1.3, .9)))
@@ -131,10 +140,10 @@ draw.gene <- function(gene.idx, gene.tab, temp.dir, out.hdr) {
 temp.dir <- system('mktemp -d ' %&&% out.dir %&&% '/temp.XXXX',
                    intern = TRUE, ignore.stderr = TRUE)
 
-names(gene.tab.sig)[2] <- 'ld.lb'
-names(gene.tab.sig)[3] <- 'ld.ub'
+names(gene.tab)[2] <- 'ld.lb'
+names(gene.tab)[3] <- 'ld.ub'
 
-draw.gene(gene.idx, gene.tab.sig, temp.dir, out.hdr = out.dir %&&% '/')
+draw.gene(gene.idx, gene.tab, temp.dir, out.hdr = out.dir %&&% '/')
 
 system('rm -r ' %&&% temp.dir)
 log.msg('Finished figure drawing\n\n\n')

@@ -106,7 +106,7 @@ make.zqtl.data <- function(plink, sum.stat, genes) {
     qtl.se[qtl.idx] <- sum.stat$qtl.se
 
     gwas.stat <- sum.stat %>% group_by(x.pos) %>%
-        summarize(gwas.theta = mean(gwas.theta), gwas.se = mean(gwas.se))
+        dplyr::summarize(gwas.theta = mean(gwas.theta), gwas.se = mean(gwas.se))
 
     gwas.theta <- matrix(0, nrow = ncol(X), ncol = 1)
     gwas.se <- matrix(0, nrow = ncol(X), ncol = 1)
