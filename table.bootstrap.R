@@ -4,14 +4,19 @@ options(stringsAsFators = FALSE)
 source('util.R')
 library(dplyr)
 library(qvalue)
+library(readr)
 
 dir.create('tables', recursive = TRUE, showWarnings = FALSE)
 
 read.mediation <- function(in.hdr, in.cols) {
     .files <- in.hdr %&&% 1:22 %&&% '.mediation.gz'
-    .dat <- lapply(.files, read.table, col.names = in.cols)
+    .dat <- lapply(.files, read_tsv, col_names = in.cols)
     return(do.call(rbind, .dat))
 }
+
+herit.genes.tab <- read_tsv('heritable.genes.qvalue.txt.gz', col_names = TRUE)
+h.genes <- herit.genes.tab %>% filter(q.val < 0.1) %>% dplyr::select(ENSG)
+h.genes <- h.genes$ENSG
 
 expr.cols <- c('ensg', 'theta', 'theta.se', 'lodds',
                'emp.p', 'fd', 'nboot',
@@ -21,8 +26,12 @@ expr.cols <- c('ensg', 'theta', 'theta.se', 'lodds',
                'max.gwas.theta', 'max.gwas.z',
                'chr', 'ld.1', 'ld.2', 'n.snps')
 
-data.direct.tab <- read.mediation('bootstrap/direct_IGAP_rosmap_eqtl_hs-lm_', expr.cols)
-data.marginal.tab <- read.mediation('bootstrap/marginal_IGAP_rosmap_eqtl_hs-lm_', expr.cols)
+## select only heritable genes
+data.direct.tab <- read.mediation('bootstrap/direct_IGAP_rosmap_eqtl_hs-lm_', expr.cols) %>%
+    filter(ensg %in% h.genes)
+
+data.marginal.tab <- read.mediation('bootstrap/marginal_IGAP_rosmap_eqtl_hs-lm_', expr.cols) %>%
+    filter(ensg %in% h.genes)
 
 
 ## generate null lodds statistics
@@ -47,10 +56,11 @@ stat.tab <- marginal.df %>% rename(p.val.marginal = p.val, q.val.marginal = q.va
     left_join(direct.df %>% rename(p.val.direct = p.val, q.val.direct = q.val), by = stat.cols)
 
 out.tab <- stat.tab %>%
-    filter(p.val.marginal < 1e-6, p.val.direct < 1e-6) %>%
-    filter(abs(theta/theta.se) > abs(qnorm(1e-6/2)), abs(max.gwas.z) > 3) %>%
+    filter(p.val.marginal < 2.5e-6, p.val.direct < 2.5e-6, lodds > 0) %>%
+    filter(abs(max.gwas.z) > abs(qnorm(1e-4/2))) %>%
     arrange(chr, tss)
 
 write.tab.named(stat.tab, file = gzfile('tables/bootstrap_gene.txt.gz'))
+
 write.tab.named(out.tab, file = gzfile('tables/bootstrap_gene_significant.txt.gz'))
 
