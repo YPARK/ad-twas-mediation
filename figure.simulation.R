@@ -22,15 +22,15 @@ get.power <- function(score, lab, fdr.cutoff = 0.01) {
 }
 
 zqtl.power <- function(tab) {
-    as.numeric(get.power(tab$lodds, tab$causal, 0.05))
+    as.numeric(get.power(tab$lodds, tab$causal, 0.01))
 }
 
 twas.power <- function(tab) {
-    as.numeric(get.power(abs(tab$twas), tab$causal, 0.05))
+    as.numeric(get.power(abs(tab$twas), tab$causal, 0.01))
 }
 
 egger.power <- function(tab) {
-    as.numeric(get.power(abs(tab$egger.t), tab$causal, 0.05))
+    as.numeric(get.power(abs(tab$egger.t), tab$causal, 0.01))
 }
 
 zqtl.auprc <- function(tab) {
@@ -83,13 +83,13 @@ plt.sim <- function(.df, n.qtl) {
                    ymin = score - 2 * score.se, ymax = score + 2 * score.se)
 
     plt <- ggplot(plt.df, plt.aes) + theme_bw() + xlab('Mediation PVE') +
-        geom_errorbar(width = .005) + geom_point(size = 2) + geom_line() +
-            facet_grid(n.causal.med ~ pve.dir, scale = 'free') +
-                scale_color_manual(values = c('red', 'black', 'gray40')) +
+        geom_errorbar(width = .005) + geom_point(size = 2, fill = 'white') +
+            geom_line() +
+                facet_grid(n.causal.med ~ pve.dir, scale = 'free') +
                     ggtitle('QTLs per gene = ' %&&% n.qtl) +
                         theme(legend.title = element_blank(),
                               axis.text.x = element_text(angle=45))
-
+    
     plt <- plt + scale_shape_manual(values = c(21, 22, 24))
 
     return(plt)
@@ -111,35 +111,39 @@ sim.tab.power <- summarize.sim.tab(sim.tab, egger.power, twas.power, zqtl.power)
 
 sim.tab.auprc <- summarize.sim.tab(sim.tab, egger.auprc, twas.auprc, zqtl.auprc)
 
-pdf(file = 'figures/simulation1_power_nqtl3.pdf', width = 8, height = 6, useDingbats = FALSE)
-print(plt.sim(sim.tab.power, n.qtl = 3) + ylab('Power (FDR < 5%)'))
-dev.off()
+for(q in 1:3) {
 
-pdf(file = 'figures/simulation1_auprc_nqtl3.pdf', width = 8, height = 6, useDingbats = FALSE)
-plt.sim(sim.tab.auprc, n.qtl = 3) + ylab('AUPRC')
-dev.off()
+    pdf(file = 'figures/simulation1_power_nqtl' %&&% q %&&% '.pdf', width = 8, height = 5, useDingbats = FALSE)
+    print(plt.sim(sim.tab.power, n.qtl = 3) + ylab('Power (FDR < 1%)'))
+    dev.off()
+
+    pdf(file = 'figures/simulation1_auprc_nqtl' %&&% q %&&% '.pdf', width = 8, height = 5, useDingbats = FALSE)
+    print(plt.sim(sim.tab.auprc, n.qtl = 3) + ylab('AUPRC'))
+    dev.off()
+
+}
 
 ################################################################
 ## Simulation 2
 
 pleio.sim.cols <- c('gene', 'causal', 'pleiotropy', 'pve.med', 'pve.dir', 'pve.qtl',
-                 'p', 'n.med', 'n.causal.qtl', 'n.causal.med', 'n.causal.direct',
-                 'theta', 'theta.se', 'lodds',
-                 'egger.t', 'twas')
+                    'p', 'n.med', 'n.causal.qtl', 'n.causal.med', 'n.causal.direct',
+                    'theta', 'theta.se', 'lodds',
+                    'egger.t', 'twas')
 
 sim.files <- 'simulation/result/pleiotropy_IGAP_rosmap_eqtl_hs-lm_' %&&% (1:22) %&&% '.sim.gz'
 sim.tab <- do.call(rbind, lapply(sim.files, read_tsv, col_names = pleio.sim.cols))
 
 zqtl.false.power <- function(tab) {
-    as.numeric(get.power(tab$lodds, -tab$pleiotropy, 0.05))
+    as.numeric(get.power(tab$lodds, -tab$pleiotropy, 0.5))
 }
 
 twas.false.power <- function(tab) {
-    as.numeric(get.power(abs(tab$twas), -tab$pleiotropy, 0.05))
+    as.numeric(get.power(abs(tab$twas), -tab$pleiotropy, 0.5))
 }
 
 egger.false.power <- function(tab) {
-    as.numeric(get.power(abs(tab$egger.t), -tab$pleiotropy, 0.05))
+    as.numeric(get.power(abs(tab$egger.t), -tab$pleiotropy, 0.5))
 }
 
 zqtl.false.auprc <- function(tab) {
@@ -158,34 +162,36 @@ egger.false.auprc <- function(tab) {
 ## negative prediction
 sim.false.tab.power <-
     summarize.sim.tab(sim.tab, egger.false.power, twas.false.power, zqtl.false.power)
-                      
+
 sim.false.tab.auprc <-
     summarize.sim.tab(sim.tab, egger.false.auprc, twas.false.auprc, zqtl.false.auprc)
 
-pdf(file = 'figures/simulation2_negative_power_nqtl3.pdf', width = 8, height = 6, useDingbats = FALSE)
-print(plt.sim(sim.false.tab.power, n.qtl = 3) + ylab('Mis-classification Power (FDR < 5%)'))
-dev.off()
+for(q in 1:3) {
 
-pdf(file = 'figures/simulation2_negative_auprc_nqtl3.pdf', width = 8, height = 6, useDingbats = FALSE)
-print(plt.sim(sim.false.tab.auprc, n.qtl = 3) + ylab('Mis-classification AUPRC'))
-dev.off()
+    pdf(file = 'figures/simulation2_negative_power_nqtl' %&&% q %&&% '.pdf', width = 8, height = 5, useDingbats = FALSE)
+    print(plt.sim(sim.false.tab.power, n.qtl = 3) + ylab('Mis-classification Power (FDR < 50%)'))
+    dev.off()
 
+    pdf(file = 'figures/simulation2_negative_auprc_nqtl' %&&% q %&&% '.pdf', width = 8, height = 5, useDingbats = FALSE)
+    print(plt.sim(sim.false.tab.auprc, n.qtl = 3) + ylab('Mis-classification AUPRC'))
+    dev.off()
+
+}
 
 ################################################################
 ## positive prediction
 sim.true.tab.power <-
     summarize.sim.tab(sim.tab, egger.power, twas.power, zqtl.power)
-                      
+
 sim.true.tab.auprc <-
     summarize.sim.tab(sim.tab, egger.auprc, twas.auprc, zqtl.auprc)
 
-pdf(file = 'figures/simulation2_positive_power_nqtl3.pdf', width = 8, height = 6, useDingbats = TRUE)
-plt.sim(sim.true.tab.power, n.qtl = 3) +
-    ylab('(FDR < 5%)')
-dev.off()
+for(q in 1:3) {
+    pdf(file = 'figures/simulation2_positive_power_nqtl' %&&% q %&&% '.pdf', width = 8, height = 5, useDingbats = TRUE)
+    print(plt.sim(sim.true.tab.power, n.qtl = 3) + ylab('(FDR < 1%)'))
+    dev.off()
 
-
-pdf(file = 'figures/simulation2_positive_auprc_nqtl3.pdf', width = 8, height = 6, useDingbats = TRUE)
-plt.sim(sim.true.tab.auprc, n.qtl = 3) +
-    ylab('AUPRC')
-dev.off()
+    pdf(file = 'figures/simulation2_positive_auprc_nqtl' %&&% q %&&% '.pdf', width = 8, height = 5, useDingbats = TRUE)
+    print(plt.sim(sim.true.tab.auprc, n.qtl = 3) + ylab('AUPRC'))              
+    dev.off()
+}
