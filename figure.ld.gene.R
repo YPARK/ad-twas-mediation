@@ -117,8 +117,8 @@ draw.gene <- function(gene.idx, gene.tab, temp.dir, out.hdr) {
                                       gene.idx, gene.tab[gene.idx, ]$hgnc)
 
     png(file = ld.file.name,
-        width = 300 * (1 + (x.len / 1e5) * .25),
-        height = 300 * (.5 + 2 * rr))
+        width = 100 * (1 + (x.len / 1e5) * .25),
+        height = 200 * (.5 + 2 * rr))
     print(p1)
     dev.off()
 
