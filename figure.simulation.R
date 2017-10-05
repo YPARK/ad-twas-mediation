@@ -114,11 +114,11 @@ sim.tab.auprc <- summarize.sim.tab(sim.tab, egger.auprc, twas.auprc, zqtl.auprc)
 for(q in 1:3) {
 
     pdf(file = 'figures/simulation1_power_nqtl' %&&% q %&&% '.pdf', width = 8, height = 5, useDingbats = FALSE)
-    print(plt.sim(sim.tab.power, n.qtl = 3) + ylab('Power (FDR < 1%)'))
+    print(plt.sim(sim.tab.power, n.qtl = q) + ylab('Power (FDR < 1%)'))
     dev.off()
 
     pdf(file = 'figures/simulation1_auprc_nqtl' %&&% q %&&% '.pdf', width = 8, height = 5, useDingbats = FALSE)
-    print(plt.sim(sim.tab.auprc, n.qtl = 3) + ylab('AUPRC'))
+    print(plt.sim(sim.tab.auprc, n.qtl = q) + ylab('AUPRC'))
     dev.off()
 
 }
@@ -169,11 +169,11 @@ sim.false.tab.auprc <-
 for(q in 1:3) {
 
     pdf(file = 'figures/simulation2_negative_power_nqtl' %&&% q %&&% '.pdf', width = 8, height = 5, useDingbats = FALSE)
-    print(plt.sim(sim.false.tab.power, n.qtl = 3) + ylab('Mis-classification Power (FDR < 50%)'))
+    print(plt.sim(sim.false.tab.power, n.qtl = q) + ylab('Mis-classification Power (FDR < 50%)'))
     dev.off()
 
     pdf(file = 'figures/simulation2_negative_auprc_nqtl' %&&% q %&&% '.pdf', width = 8, height = 5, useDingbats = FALSE)
-    print(plt.sim(sim.false.tab.auprc, n.qtl = 3) + ylab('Mis-classification AUPRC'))
+    print(plt.sim(sim.false.tab.auprc, n.qtl = q) + ylab('Mis-classification AUPRC'))
     dev.off()
 
 }
@@ -188,10 +188,10 @@ sim.true.tab.auprc <-
 
 for(q in 1:3) {
     pdf(file = 'figures/simulation2_positive_power_nqtl' %&&% q %&&% '.pdf', width = 8, height = 5, useDingbats = TRUE)
-    print(plt.sim(sim.true.tab.power, n.qtl = 3) + ylab('(FDR < 1%)'))
+    print(plt.sim(sim.true.tab.power, n.qtl = q) + ylab('(FDR < 1%)'))
     dev.off()
 
     pdf(file = 'figures/simulation2_positive_auprc_nqtl' %&&% q %&&% '.pdf', width = 8, height = 5, useDingbats = TRUE)
-    print(plt.sim(sim.true.tab.auprc, n.qtl = 3) + ylab('AUPRC'))              
+    print(plt.sim(sim.true.tab.auprc, n.qtl = q) + ylab('AUPRC'))              
     dev.off()
 }

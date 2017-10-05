@@ -23,7 +23,7 @@ dir.create(out.dir, recursive = TRUE, showWarnings = FALSE)
 
 draw.gene <- function(gene.idx, gene.tab, temp.dir, out.hdr) {
 
-    file.name <- out.hdr %&&% sprintf('ld_%d_%05d_%s.pdf', gene.tab[gene.idx, ]$chr,
+    file.name <- out.hdr %&&% sprintf('qtl_%d_%05d_%s.pdf', gene.tab[gene.idx, ]$chr,
                                       gene.idx, gene.tab[gene.idx, ]$hgnc)
 
     if(file.exists(file.name)) { return(NULL) }
@@ -57,19 +57,17 @@ draw.gene <- function(gene.idx, gene.tab, temp.dir, out.hdr) {
 
     qtl.df <- data.frame(snp.loc = zqtl.data$snps$snp.loc, qtl.z) %>%
         mutate(x = 1:n()) %>%
-            filter(abs(qtl.z) > 1) %>%
-                mutate(ln.p = -log10(2 * pnorm(abs(qtl.z), lower.tail = FALSE)))
+            mutate(ln.p = -log10(2 * pnorm(abs(qtl.z), lower.tail = FALSE)))
 
     ## GWAS information
     gwas.z <- zqtl.data$gwas.theta[, 1] / zqtl.data$gwas.se[, 1]
 
     gwas.df <- data.frame(snp.loc = zqtl.data$snps$snp.loc, gwas.z) %>%
         mutate(x = 1:n()) %>%
-            filter(abs(gwas.z) > 1) %>%
-                mutate(ln.p = -log10(2 * pnorm(abs(gwas.z), lower.tail = FALSE)))
+            mutate(ln.p = -log10(2 * pnorm(abs(gwas.z), lower.tail = FALSE)))
 
     ## LD information
-    ld.pairs <- zqtl::take.ld.pairs(zqtl.data$X, cutoff = 0.1, stdize = TRUE) %>%
+    ld.pairs <- zqtl::take.ld.pairs(zqtl.data$X, cutoff = 0.05, stdize = TRUE) %>%
         as.data.frame()
 
     x.min <- min(zqtl.data$snps$snp.loc)
@@ -80,24 +78,26 @@ draw.gene <- function(gene.idx, gene.tab, temp.dir, out.hdr) {
     x.ld.len <- x.ld.max - x.ld.min
     x.len <- x.max - x.min
 
-    ld.df <- ld.pairs %>% mutate(xx.pos = x.min + x.len * (x.pos - x.ld.min)/x.ld.len)
-    ld.df <- ld.df %>% filter(x %in% qtl.df$x | y %in% qtl.df$x)
+    ld.df <- ld.pairs %>% mutate(xx.pos = x.min + x.len * (x.pos - x.ld.min)/x.ld.len) %>%
+        filter(x %in% qtl.df$x | y %in% qtl.df$x) %>%
+            mutate(cov = pmin(pmax(cov, -0.5), 0.5))
+
+    rm(ld.pairs)
 
     x.scale.ld <- scale_x_continuous(limits = range(ld.df$xx.pos) + c(-.5, .5),
                                       expand = c(0,0))
 
     ld.df <- ld.df %>% mutate(g = paste(x,y,sep='-'))
     
-    p1 <- ggplot(ld.df) +
-        theme_classic() + x.scale.ld +
-            theme(axis.text.y = element_blank(), axis.title = element_blank()) +
-                geom_polygon(aes(group = g, fill = cov, x = xx.pos, y = -y.pos), size = 0) +
-                    theme(legend.position = c(0, 1),
-                          legend.justification = c(0, 1),
-                          legend.title = element_text(size = 8),
-                          legend.background = element_blank(),
-                          axis.text.x = element_text(size = 8)) +
-                        scale_fill_continuous(low = 'blue', high = 'red')
+    p1 <- ggplot(ld.df) + x.scale.ld +
+        theme(axis.text.y = element_blank(), axis.title = element_blank()) +
+            geom_polygon(aes(group = g, fill = cov, x = xx.pos, y = -y.pos)) +
+                theme(legend.position = c(0, 1),
+                      legend.justification = c(0, 1),
+                      legend.title = element_text(size = 8),
+                      legend.background = element_blank(),
+                      axis.text.x = element_text(size = 8)) +
+                          scale_fill_continuous(low = 'blue', high = 'yellow')
     
     p2 <- ggplot(qtl.df) + theme_classic() + ylab('eQTL') +
         geom_point(aes(x = snp.loc, y = ln.p), size = .5) +
@@ -113,10 +113,19 @@ draw.gene <- function(gene.idx, gene.tab, temp.dir, out.hdr) {
 
     rr <- (max(abs(ld.df$y.pos)) + 3) / max(ld.df$x.pos)
 
-    heights <- c(rr, .5, .5)
+    ld.file.name <- out.hdr %&&% sprintf('ld_%d_%05d_%s.png', gene.tab[gene.idx, ]$chr,
+                                      gene.idx, gene.tab[gene.idx, ]$hgnc)
+
+    png(file = ld.file.name,
+        width = 300 * (1 + (x.len / 1e5) * .25),
+        height = 300 * (.5 + 2 * rr))
+    print(p1)
+    dev.off()
+
+    heights <- c(.5, .5)
     pdf(file = file.name, width = 1 + (x.len / 1e5) * .25, height = 2 * sum(heights) + 1,
         useDingbats = FALSE)
-    print(grid.vcat(list(p1, p2, p3), heights = heights))
+    print(grid.vcat(list(p2, p3), heights = heights))
     dev.off()
 }
 
