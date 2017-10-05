@@ -18,6 +18,9 @@ herit.genes.tab <- read_tsv('heritable.genes.qvalue.txt.gz', col_names = TRUE)
 h.genes <- herit.genes.tab %>% filter(q.val < 0.1) %>% dplyr::select(ENSG)
 h.genes <- h.genes$ENSG
 
+stwas.tab <- read_tsv('stwas-rosmap.fdr.txt.gz', col_names = TRUE) %>%
+    rename(stwas.p.val = p.val, stwas.q.val = q.val)
+
 expr.cols <- c('ensg', 'theta', 'theta.se', 'lodds',
                'emp.p', 'fd', 'nboot',
                'lodds.mean', 'lodds.se', 'cauchy.location', 'cauchy.scale',
@@ -52,10 +55,20 @@ direct.df <- combined.p.val(data.direct.tab)
 
 stat.cols <- c('chr', 'ld.1', 'ld.2', 'ensg', 'hgnc', 'tss', 'tes', 'theta', 'theta.se', 'lodds', 'max.gwas.z')
 
-stat.tab <- marginal.df %>% rename(p.val.marginal = p.val, q.val.marginal = q.val) %>%
-    left_join(direct.df %>% rename(p.val.direct = p.val, q.val.direct = q.val), by = stat.cols)
+stat.tab <- marginal.df %>%
+    rename(p.val.marginal = p.val, q.val.marginal = q.val)
+
+stat.tab <- stat.tab %>%
+    left_join(direct.df %>% rename(p.val.direct = p.val, q.val.direct = q.val),
+              by = stat.cols)
+
+stat.tab <- stat.tab %>% left_join(stwas.tab, by = 'ensg')
 
 out.tab <- stat.tab %>%
+    filter(p.val.marginal < 2.5e-6, p.val.direct < 2.5e-6) %>%
+    arrange(chr, tss)
+
+out.strict.tab <- stat.tab %>%
     filter(p.val.marginal < 2.5e-6, p.val.direct < 2.5e-6, lodds > 0) %>%
     filter(abs(max.gwas.z) > abs(qnorm(1e-4/2))) %>%
     arrange(chr, tss)
@@ -63,4 +76,6 @@ out.tab <- stat.tab %>%
 write.tab.named(stat.tab, file = gzfile('tables/bootstrap_gene.txt.gz'))
 
 write.tab.named(out.tab, file = gzfile('tables/bootstrap_gene_significant.txt.gz'))
+
+write.tab.named(out.strict.tab, file = gzfile('tables/bootstrap_gene_strict.txt.gz'))
 
