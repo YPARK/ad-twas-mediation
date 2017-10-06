@@ -75,6 +75,11 @@ out.tab <- stat.tab %>%
            sign(theta) == sign(nwas.z)) %>%
     arrange(chr, tss)
 
+.temp <- out.tab %>% select(chr, ld.lb, ld.ub) %>% unique()
+
+out.ld.tab <- stat.tab %>%
+    right_join(.temp, by = c('chr', 'ld.lb', 'ld.ub'))
+
 out.strict.tab <- out.tab %>%
     filter(abs(max.gwas.z) > abs(qnorm(1e-4/2))) %>%
     arrange(chr, tss)
@@ -87,6 +92,8 @@ out.strict.ld.tab <- stat.tab %>%
 write.tab.named(stat.tab, file = gzfile('tables/bootstrap_gene.txt.gz'))
 
 write.tab.named(out.tab, file = gzfile('tables/bootstrap_gene_significant.txt.gz'))
+
+write.tab.named(out.ld.tab, file = gzfile('tables/bootstrap_ld_significant.txt.gz'))
 
 write.tab.named(out.strict.tab, file = gzfile('tables/bootstrap_gene_strict.txt.gz'))
 
