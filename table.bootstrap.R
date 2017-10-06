@@ -27,7 +27,7 @@ expr.cols <- c('ensg', 'theta', 'theta.se', 'lodds',
                't.m', 't.s', 'cauchy.p', 't.p', 'norm.p',
                'hgnc', 'tss', 'tes', 'strand',
                'max.gwas.theta', 'max.gwas.z',
-               'chr', 'ld.1', 'ld.2', 'n.snps')
+               'chr', 'ld.lb', 'ld.ub', 'n.snps')
 
 ## select only heritable genes
 data.direct.tab <- read.mediation('bootstrap/direct_IGAP_rosmap_eqtl_hs-lm_', expr.cols) %>%

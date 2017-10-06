@@ -2,7 +2,7 @@
 
 argv <- commandArgs(trailingOnly = TRUE)
 
-if(length(argv) < 9) q()
+if(length(argv) < 6) q()
 
 ld.file <- argv[1]                      # e.g., ld.file = 'stat/IGAP/ld/1.ld.gz'
 sum.file <- argv[2]                     # e.g., sum.file = 'stat/IGAP/data/hs-lm/1.eqtl_bed.gz'
@@ -82,7 +82,9 @@ take.twas <- function(g) {
 
 n.med <- ncol(zqtl.data$qtl.theta)
 out.tab <- data.frame(med.id = mediators$med.id,
-                      sapply(1:n.med, take.twas))
+                      sapply(1:n.med, take.twas),
+                      ld = paste(ld.info[1:3], collapse = '\t'),
+                      ld.size = n.snps)
 
 if(is.eqtl) names(out.tab)[2] <- 'TWAS'
 if(!is.eqtl) names(out.tab)[2] <- 'MWAS'

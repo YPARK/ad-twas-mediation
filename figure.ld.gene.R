@@ -17,6 +17,12 @@ source('figure.util.R')
 gene.tab.file <- 'tables/bootstrap_gene_significant.txt.gz'
 gene.tab <- read.table(gene.tab.file, header = TRUE) %>% na.omit()
 
+
+## Draw all genes within the same LD block
+
+
+
+
 ## Figure : gene by gene LD block and statistics
 out.dir <- 'figures/genes/'
 dir.create(out.dir, recursive = TRUE, showWarnings = FALSE)
