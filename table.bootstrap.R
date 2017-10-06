@@ -50,8 +50,8 @@ combined.p.val <- function(.df) {
     n <- nrow(.df)
     lo.boot <- sweep(sweep(.rnorm(n, 100), 1, .df$lodds.se, `*`), 1, .df$lodds.mean, `+`)
     lo.boot <- as.vector(lo.boot)
-
-    ret <- .df %>% select(chr, ld.lb, ld.ub, ensg, hgnc, tss, tes, theta, theta.se, lodds, max.gwas.z)
+    ret <- .df %>% select(chr, ld.lb, ld.ub, ensg, hgnc, tss, tes, theta, theta.se, lodds,
+                          lodds.mean, lodds.se, max.gwas.z)
     p.val <- empPvals(ret$lodds, lo.boot)
     q.val <- qvalue(p.val, fdr.level = 0.05, pi0.method = 'bootstrap')
     ret <- data.frame(ret, p.val = p.val, q.val = q.val$qvalues)
