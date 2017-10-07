@@ -160,15 +160,20 @@ nwas/%.nwas.gz:
 	(ls -1 nwas/$(shell echo $* | sed 's/_/\//g')/*.nwas.gz 2> /dev/null | xargs zcat) | awk 'NF > 0' | gzip > $@
 
 ################################################################
-step3-figure: $(foreach chr, $(CHR), finemap/figures/IGAP_rosmap_$(chr)-global.pdf)
+step3-figure: jobs/step3-bootstrap-figures.jobs.gz
 
-finemap/figures/IGAP_rosmap_%-global.pdf: finemap/IGAP_rosmap_eqtl_hs-lm_%.mediation.gz
-	mkdir -p $(dir $@)
-	Rscript --vanilla figure.finemap.R finemap/IGAP_rosmap_eqtl_hs-lm_$*.mediation.gz finemap/IGAP_rosmap_mqtl_hs-lm_$*.mediation.gz m2t/IGAP_rosmap_hs-lm_$*.mediation.gz finemap/figures/IGAP_rosmap_$*
+jobs/step3-bootstrap-figures.jobs.gz: tables/bootstrap_ld_strict.txt.gz
+	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
+	awk -vN=$$(zcat $< | tail -n+2 | wc -l) 'BEGIN { for(j=1; j<=N; ++j) print "./figure.bootstrap.ld.R" FS j FS  "figures/ld/bootstrap/" }' | gzip > $@
+	@[ $$(zcat $@ | wc -l) -lt 1 ] || qsub -t 1-$$(zcat $@ | wc -l) -N FIG-ZQTL -binding "linear:1" -l h_rt=5000 -l h_vmem=16g -P compbio_lab -V -cwd -o /dev/null -b y -j y ./run_rscript.sh $@
+
+## finemap/figures/IGAP_rosmap_%-global.pdf: finemap/IGAP_rosmap_eqtl_hs-lm_%.mediation.gz
+##	mkdir -p $(dir $@)
+##	Rscript --vanilla figure.finemap.R finemap/IGAP_rosmap_eqtl_hs-lm_$*.mediation.gz finemap/IGAP_rosmap_mqtl_hs-lm_$*.mediation.gz m2t/IGAP_rosmap_hs-lm_$*.mediation.gz finemap/figures/IGAP_rosmap_$*
 
 step3-table: tables/bootstrap_gene_significant.txt.gz
 
-tables/bootstrap_gene_significant.txt.gz: table.bootstrap.R
+tables/bootstrap_ld_strict.txt.gz: table.bootstrap.R
 	Rscript --vanilla $<
 
 
