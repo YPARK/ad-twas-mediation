@@ -6,7 +6,7 @@ if(length(argv) < 2) q()
 ld.idx <- as.integer(argv[1])
 out.dir <- argv[2]
 
-# ld.idx <- 1
+                                        # ld.idx <- 1
 
 options(stringsAsFators = FALSE)
 source('util.R')
@@ -21,9 +21,11 @@ library(latex2exp)
 library(reshape2)
 library(scales)
 
-ld.tab.file <- 'tables/bootstrap_ld_strict.txt.gz'
+ld.tab.file <- 'tables/bootstrap_ld_significant.txt.gz'
 ld.tab <- read.table(ld.tab.file, header = TRUE)
 ld.key <- ld.tab %>% select(chr, ld.lb, ld.ub) %>% unique()
+
+if(ld.idx > nrow(ld.key)) q()
 
 dir.create(out.dir, recursive = TRUE, showWarnings = FALSE)
 
@@ -82,7 +84,8 @@ med.out <- fit.med.zqtl(zqtl.data$gwas.theta,
 ## predicted z-score trace
 Vd <- sweep(t(med.out$Vt), 2, sqrt(med.out$D2), `*`)
 
-z.dir <- Vd %*% (sweep(t(Vd), 2, 1/zqtl.data$gwas.se, `*`) %*% med.out$param.direct$theta)
+z.dir.rot <- sweep(t(Vd), 2, 1/zqtl.data$gwas.se, `*`) %*% med.out$param.direct$theta
+z.dir <- Vd %*% z.dir.rot
 
 qtl.theta.nz <- zqtl.data$qtl.theta
 qtl.theta.nz[is.na(zqtl.data$qtl.theta)] <- 0
@@ -90,7 +93,6 @@ z.qtl.nz <- zqtl.data$qtl.theta / zqtl.data$qtl.se
 z.qtl.nz[is.na(zqtl.data$qtl.theta)] <- 0
 
 eta.dir <- t(Vd) %*% med.out$param.direct$theta
-z.dir <- Vd %*% (t(Vd) %*% (med.out$param.direct$theta / zqtl.data$gwas.se))
 var.dir <- sum(eta.dir^2)
 
 Wt <- sweep(med.out$Vt, 1, sqrt(med.out$D2), `/`)
@@ -106,19 +108,18 @@ pve.vec <- med.var.vec / var.tot
 pve.dir <- var.dir / var.tot
 
 model.df <- cbind(model.tab, pve = pve.vec) %>%
-    mutate(l10.lodds = -log10(pmax(p.val.direct, p.val.marginal)))
-
+    mutate(l10.lodds = pmin(-log10(pmax(p.val.direct, p.val.marginal)), 10))
 
 ################################################################
 ## scatter plots
 .scale.fill.count <- scale_fill_gradientn(colours = c('#7777FF', 'yellow'), trans = 'log',
-                                         breaks = c(1, 10, 100))
+                                          breaks = c(1, 10, 100))
 
 .scatter.w <- .5 + nrow(model.df) * .8
 .scatter.h <- 1 + .5
 
 ## QTL information
-gwas.z <- zqtl.data$gwas.theta[, 1] / zqtl.data$gwas.se[, 1] - z.dir
+gwas.z <- zqtl.data$gwas.theta[, 1] / zqtl.data$gwas.se[, 1]
 gwas.df <- data.frame(snp.loc = zqtl.data$snps$snp.loc, gwas = gwas.z) 
 
 qtl.z <- zqtl.data$qtl.theta / zqtl.data$qtl.se
@@ -132,15 +133,15 @@ qtl.melt$hgnc <- factor(qtl.melt$hgnc, model.tab$hgnc)
 
 plt.qtl <- ggplot(qtl.melt %>% na.omit(), aes(x = value, y = gwas)) + theme_bw() +
     geom_hex() +
-    .scale.fill.count +
-    geom_smooth(method = 'lm', color = 'red', size = .5) +
-    facet_grid(.~hgnc, scales = 'free') +
-    xlab('QTL z-score') + ylab('GWAS z-score')
+        .scale.fill.count +
+            geom_smooth(method = 'lm', color = 'red', size = .5) +
+                facet_grid(.~hgnc, scales = 'free') +
+                    xlab('QTL z-score') + ylab('GWAS z-score')
 
 plt.qtl.file <- sprintf('%s/chr%d_ld%d_qtl.pdf', out.dir, chr, ld.idx)
 
 ggsave(plt.qtl, file = plt.qtl.file, width = .scatter.w, height = .scatter.h,
-       useDingbats = FALSE)
+       useDingbats = FALSE, limitsize = FALSE)
 
 
 
@@ -148,8 +149,11 @@ ggsave(plt.qtl, file = plt.qtl.file, width = .scatter.w, height = .scatter.h,
 colnames(med.out$M) <- model.tab$hgnc
 rownames(med.out$M) <- 1:nrow(med.out$M)
 
-Y <- data.frame(gwas = scale(med.out$Y / sqrt(med.out$D2))) %>%
-    mutate(component = 1:n())
+## z.dir.rot = D^{-1} D^2 V' S^{-1} * theta
+yy <- med.out$Y / sqrt(med.out$D2)
+yy.1 <- yy - y.dir.rot
+
+Y <- data.frame(gwas = scale(yy), gwas.1 = scale(yy.1)) %>% mutate(component = 1:n())
 
 M <- sweep(med.out$M, 1, sqrt(med.out$D2), `/`) %>% scale()
 
@@ -160,15 +164,27 @@ m.df$hgnc <- factor(m.df$hgnc, model.tab$hgnc)
 
 plt.qtl.adj <- ggplot(m.df, aes(x=value, y=gwas)) + theme_bw() +
     geom_hex() +
-    .scale.fill.count +
-    geom_smooth(method = 'lm', color = 'red', size = .5) +
-    facet_grid(.~hgnc, scales = 'free') +
-    xlab('adjusted QTL z') + ylab('adjusted GWAS z')
+        .scale.fill.count +
+            geom_smooth(method = 'lm', color = 'red', size = .5) +
+                facet_grid(.~hgnc, scales = 'free') +
+                    xlab('adjusted QTL z') + ylab('adjusted GWAS z')
 
 plt.qtl.adj.file <- sprintf('%s/chr%d_ld%d_qtl_adj.pdf', out.dir, chr, ld.idx)
 
 ggsave(plt.qtl.adj, file = plt.qtl.adj.file, width = .scatter.w, height = .scatter.h,
-       useDingbats = FALSE)
+       useDingbats = FALSE, limitsize = FALSE)
+
+plt.qtl.adj.1 <- ggplot(m.df, aes(x=value, y=gwas.1)) + theme_bw() +
+    geom_hex() +
+        .scale.fill.count +
+            geom_smooth(method = 'lm', color = 'red', size = .5) +
+                facet_grid(.~hgnc, scales = 'free') +
+                    xlab('adjusted QTL z') + ylab('adjusted GWAS z')
+
+plt.qtl.adj.file <- sprintf('%s/chr%d_ld%d_qtl_adj_nod.pdf', out.dir, chr, ld.idx)
+
+ggsave(plt.qtl.adj.1, file = plt.qtl.adj.file, width = .scatter.w, height = .scatter.h,
+       useDingbats = FALSE, limitsize = FALSE)
 
 
 
@@ -178,11 +194,11 @@ blk.width <- 1e4
 
 gwas.block.df <- gwas.df %>%
     mutate(blk.loc = floor(snp.loc/blk.width)*blk.width) %>%
-    group_by(blk.loc) %>% slice(which.max(abs(gwas))) %>%
-    mutate(gwas.p = l10.p.two(abs(gwas)))
+        group_by(blk.loc) %>% slice(which.max(abs(gwas))) %>%
+            mutate(gwas.p = l10.p.two(abs(gwas)))
 
 blk.range <- range(c(gwas.block.df$blk.loc, model.df$tss, model.df$tes, max(gwas.block.df$blk.loc) + blk.width))
-
+blk.length <- blk.range[2] - blk.range[1]
 .gwas.w <- blk.length / blk.width * 0.02 + 1
 
 .gwas.kb <- function() {
@@ -195,28 +211,28 @@ blk.range <- range(c(gwas.block.df$blk.loc, model.df$tss, model.df$tes, max(gwas
 ## -- GWAS
 plt.manhattan <- ggplot() + theme_bw() + ylab('-log10 P') + xlab('genomic location') +
     .gwas.x.scale + 
-    geom_hline(yintercept = -log10(5e-8), color = 'gray') + 
-    geom_hline(yintercept = -log10(2.5e-6), lty = 2) + 
-    geom_point(data=gwas.df, aes(x=snp.loc, y = l10.p.two(abs(gwas))), size = .1) +
-    geom_rect(data=gwas.block.df, aes(xmin=blk.loc, xmax=blk.loc+blk.width, ymin=0, ymax=gwas.p),
-              fill = 'gray', alpha = 0.5)
+        geom_hline(yintercept = -log10(5e-8), color = 'gray') + 
+            geom_hline(yintercept = -log10(2.5e-6), lty = 2) + 
+                geom_point(data=gwas.df, aes(x=snp.loc, y = l10.p.two(abs(gwas))), size = .1) +
+                    geom_rect(data=gwas.block.df, aes(xmin=blk.loc, xmax=blk.loc+blk.width, ymin=0, ymax=gwas.p),
+                              fill = 'gray', alpha = 0.5)
 
 out.file <- sprintf('%s/chr%d_ld%d_gwas.pdf', out.dir, chr, ld.idx)
 
 ggsave(plt.manhattan, file = out.file, width = .gwas.w, height = 3,
-       useDingbats = FALSE)
+       useDingbats = FALSE, limitsize = FALSE)
 
 
 ## -- TWAS
 plt.manhattan <- plt.manhattan +
     geom_rect(data = model.df,
-              aes(xmin = tss, xmax = tes, ymin = 0, ymax = -log10(p.val.nwas)),
+              aes(xmin = tss, xmax = tes, ymin = 0, ymax = pmin(-log10(p.val.nwas), 10)),
               fill = 'green', size = .5, color = 'green', alpha = .3)
 
 out.file <- sprintf('%s/chr%d_ld%d_gwas_twas.pdf', out.dir, chr, ld.idx)
 
 ggsave(plt.manhattan, file = out.file, width = .gwas.w, height = 3,
-       useDingbats = FALSE)
+       useDingbats = FALSE, limitsize = FALSE)
 
 
 ## -- mediation
@@ -225,20 +241,29 @@ plt.manhattan <- plt.manhattan +
                  aes(x = (tes+tss)/2, xend = (tes+tss)/2, y = 0, yend = l10.lodds),
                  color = 'red', size = .5, arrow = arrow(length = unit(.05, 'inches')))
 
-plt.manhattan <- plt.manhattan +
-    geom_text_repel(data = model.df %>% filter(lodds > -2),
-                    aes(x = (tss + tes)/2, y = l10.lodds, label = hgnc), size = 4,
-                    nudge_y = 2, segment.alpha = 0.5, angle = 30, direction = 'y')
+if(model.df %>% filter(lodds > -2) %>% nrow() > 0) {
 
-plt.manhattan <- plt.manhattan +
-    geom_text_repel(data = model.df %>% filter(lodds <= -2),
-                    aes(x = (tss + tes)/2, y = 0, label = hgnc), size = 2,
-                    segment.size = 0.1, angle = 30, direction = 'y')
+    plt.manhattan <- plt.manhattan +
+        geom_text_repel(data = model.df %>% filter(lodds > -2),
+                        aes(x = (tss + tes)/2, y = l10.lodds, label = hgnc), size = 3,
+                        nudge_y = 2, segment.alpha = 0.5, segment.color = '#FFCCCC',
+                        segment.size = 0.1, angle = 30, direction = 'y')
+
+}
+
+if(model.df %>% filter(lodds <= -2) %>% nrow() > 0) {
+
+    plt.manhattan <- plt.manhattan +
+        geom_text_repel(data = model.df %>% filter(lodds <= -2),
+                        aes(x = (tss + tes)/2, y = 0, label = hgnc), size = 2,
+                        segment.color = '#FFCCCC', segment.size = 0.1, angle = 30, direction = 'y')
+
+}
 
 out.file <- sprintf('%s/chr%d_ld%d_gwas_twas_med.pdf', out.dir, chr, ld.idx)
 
 ggsave(plt.manhattan, file = out.file, width = .gwas.w, height = 3,
-       useDingbats = FALSE)
+       useDingbats = FALSE, limitsize = FALSE)
 
 
 
@@ -249,20 +274,40 @@ plt.pve <- ggplot(model.df) + theme_bw() + .gwas.x.scale +
             geom_rect(aes(xmin = tss, xmax = tes, ymin = 0, ymax = pve),
                       fill = 'orange', size = .5, color = 'orange', alpha = 0.5)
 
-plt.pve <- plt.pve +
-    geom_text_repel(data = model.df %>% filter(pve > .01),
-                    aes(x = (tss + tes)/2, y = pve, label = hgnc),
-                    size = 4, nudge_y = .1, segment.alpha = 0.5, angle = 30)
 
-plt.pve <- plt.pve +
-    geom_text_repel(data = model.df %>% filter(pve < .01),
-                    aes(x = (tss + tes)/2, y = 0, label = hgnc),
-                    size = 2, nudge_y = -1, segment.size = 0.1, angle = 30)
+.pve.logit <- c(unique(round(log(pve.vec) - log(1 - pve.vec))), 0, 2, 4)
+.pve.brk <- unique(signif(c(pve.dir, 1/(1+exp(-.pve.logit)))))
+
+.logit.kb <- function() {
+    function(x) format(x/1e3, big.mark=',')
+}
+
+.logit <- trans_new(".logit",
+                    function(x) signif(log(x) - log(1-x), 2),
+                    function(y) signif(1/(1+exp(-y)), 2))
+
+.pve.scale <- scale_y_continuous(breaks = .pve.brk, trans = .logit)
+
+plt.pve <- plt.pve + .pve.scale
+
+if(model.df %>% filter(pve > .01) %>% nrow() > 0) {
+    plt.pve <- plt.pve +
+        geom_text_repel(data = model.df %>% filter(pve > .01),
+                        aes(x = (tss + tes)/2, y = pve, label = hgnc),
+                        size = 4, nudge_y = .1, segment.alpha = 0.5, angle = 30)
+}
+
+if(model.df %>% filter(pve <= .01) %>% nrow() > 0) {
+    plt.pve <- plt.pve +
+        geom_text_repel(data = model.df %>% filter(pve <= .01),
+                        aes(x = (tss + tes)/2, y = 0, label = hgnc),
+                        size = 2, nudge_y = -1, segment.size = 0.1, angle = 30)
+}
 
 out.file <- sprintf('%s/chr%d_ld%d_pve.pdf', out.dir, chr, ld.idx)
 
 ggsave(plt.pve, file = out.file, width = .gwas.w, height = 3,
-       useDingbats = FALSE)
+       useDingbats = FALSE, limitsize = FALSE)
 
 
 
@@ -286,7 +331,7 @@ ld.df <- ld.pairs %>% mutate(xx.pos = x.min + x.len * (x.pos - x.ld.min)/x.ld.le
 rm(ld.pairs)
 
 ld.df <- ld.df %>% mutate(g = paste(x,y,sep='-'))
-    
+
 .thm <- theme(panel.background = element_blank(),
               panel.grid.minor = element_blank(),
               panel.grid.major = element_blank(),
@@ -307,7 +352,7 @@ ld.out.file <- sprintf('%s/chr%d_ld%d_heatmap.png', out.dir, chr, ld.idx)
 rr <- (max(abs(ld.df$y.pos)) + 3) / max(ld.df$x.pos)
 
 png(file = ld.out.file,
-    width = 50 * .gwas.w,
+    width = 100 * .gwas.w,
     height = 100 * (.5 + 2 * rr),
     bg = 'transparent')
 print(plt.ld)
