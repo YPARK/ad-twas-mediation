@@ -134,7 +134,7 @@ qtl.melt$hgnc <- factor(qtl.melt$hgnc, model.tab$hgnc)
 plt.qtl <- ggplot(qtl.melt %>% na.omit(), aes(x = value, y = gwas)) + theme_bw() +
     geom_hex() +
         .scale.fill.count +
-            geom_smooth(method = 'lm', color = 'red', size = .5) +
+            geom_smooth(method = 'lm', se = FALSE,  color = 'red', size = .5) +
                 facet_grid(.~hgnc, scales = 'free') +
                     xlab('QTL z-score') + ylab('GWAS z-score')
 
@@ -151,7 +151,7 @@ rownames(med.out$M) <- 1:nrow(med.out$M)
 
 ## z.dir.rot = D^{-1} D^2 V' S^{-1} * theta
 yy <- med.out$Y / sqrt(med.out$D2)
-yy.1 <- yy - y.dir.rot
+yy.1 <- yy - z.dir.rot
 
 Y <- data.frame(gwas = scale(yy), gwas.1 = scale(yy.1)) %>% mutate(component = 1:n())
 
@@ -165,7 +165,7 @@ m.df$hgnc <- factor(m.df$hgnc, model.tab$hgnc)
 plt.qtl.adj <- ggplot(m.df, aes(x=value, y=gwas)) + theme_bw() +
     geom_hex() +
         .scale.fill.count +
-            geom_smooth(method = 'lm', color = 'red', size = .5) +
+            geom_smooth(method = 'lm', se = FALSE,  color = 'red', size = .5) +
                 facet_grid(.~hgnc, scales = 'free') +
                     xlab('adjusted QTL z') + ylab('adjusted GWAS z')
 
@@ -177,7 +177,7 @@ ggsave(plt.qtl.adj, file = plt.qtl.adj.file, width = .scatter.w, height = .scatt
 plt.qtl.adj.1 <- ggplot(m.df, aes(x=value, y=gwas.1)) + theme_bw() +
     geom_hex() +
         .scale.fill.count +
-            geom_smooth(method = 'lm', color = 'red', size = .5) +
+            geom_smooth(method = 'lm', se = FALSE,  color = 'red', size = .5) +
                 facet_grid(.~hgnc, scales = 'free') +
                     xlab('adjusted QTL z') + ylab('adjusted GWAS z')
 
