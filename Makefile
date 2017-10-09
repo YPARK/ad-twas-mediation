@@ -176,8 +176,7 @@ GS := $(shell ls -1 genesets/*.gmt 2> /dev/null | xargs -I file basename file .v
 step3-figure-gs: $(foreach gs, $(GS), figures/geneset-bootstrap_gene_$(gs).pdf)
 
 figures/geneset-bootstrap_gene_%.pdf:
-	./figure.geneset.R tables/bootstrap_gene_significant.txt.gz genesets/$(shell echo $* | sed 's/_/\./g').v6.0.symbols.gmt 10 figures/geneset-bootstrap_gene_$*_10.pdf
-	./figure.geneset.R tables/bootstrap_gene_significant.txt.gz genesets/$(shell echo $* | sed 's/_/\./g').v6.0.symbols.gmt 5 $@
+	./run.sh ./figure.geneset.R tables/bootstrap_gene_significant.txt.gz tables/bootstrap_gene.txt.gz genesets/$(shell echo $* | sed 's/_/\./g').v6.0.symbols.gmt 5 $@
 
 step3-table: tables/bootstrap_ld_significant.txt.gz
 
