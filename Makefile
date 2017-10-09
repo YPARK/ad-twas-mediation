@@ -172,7 +172,7 @@ jobs/step3-bootstrap-figures.jobs.gz: tables/bootstrap_ld_significant.txt.gz
 ##	mkdir -p $(dir $@)
 ##	Rscript --vanilla figure.finemap.R finemap/IGAP_rosmap_eqtl_hs-lm_$*.mediation.gz finemap/IGAP_rosmap_mqtl_hs-lm_$*.mediation.gz m2t/IGAP_rosmap_hs-lm_$*.mediation.gz finemap/figures/IGAP_rosmap_$*
 
-step3-table: tables/bootstrap_gene_significant.txt.gz
+step3-table: tables/bootstrap_ld_significant.txt.gz
 
 tables/bootstrap_ld_significant.txt.gz: table.bootstrap.R
 	Rscript --vanilla $<
