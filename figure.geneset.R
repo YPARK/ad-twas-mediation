@@ -35,7 +35,7 @@ stat.tab <- read_tsv(tab.tot.file, col_names = TRUE)
 gsc.stat <- .stat$lodds
 names(gsc.stat) <- .stat$hgnc
 
-gsa <- runGSA(gsc.stat, gsc = gsc, geneSetStat = 'mean', nPerm = 1e4,
+gsa <- runGSA(gsc.stat, gsc = gsc, geneSetStat = 'mean', nPerm = 5e4,
               gsSizeLim = c(10, 1000))
 
 gsa.tab <- GSAsummaryTable(gsa, save = FALSE)
