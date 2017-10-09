@@ -165,7 +165,7 @@ step3-figure: jobs/step3-bootstrap-figures.jobs.gz
 
 jobs/step3-bootstrap-figures.jobs.gz: tables/bootstrap_ld_significant.txt.gz
 	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
-	awk -vN=$$(zcat $< | tail -n+2 | awk '{ k=$$1 FS $$2 FS $$3; keys[k]++ } END { print length(keys) }') 'BEGIN { for(j=1; j<=N; ++j) print "./figure.bootstrap.ld.R" FS j FS  "figures/ld/bootstrap/" }' | gzip > $@
+	awk -vN=$$(zcat $< | tail -n+2 | awk '{ k=$$1 FS $$2 FS $$3; keys[k]++ } END { print length(keys) }') 'BEGIN { for(j=1; j<=N; ++j) print "./figure.bootstrap.ld.R" FS j FS "tables/bootstrap_ld_significant.txt.gz" FS "figures/ld/bootstrap/" }' | gzip > $@
 	@[ $$(zcat $@ | wc -l) -lt 1 ] || qsub -t 1-$$(zcat $@ | wc -l) -N FIG-ZQTL -binding "linear:1" -l h_rt=3600 -l h_vmem=32g -P compbio_lab -V -cwd -o /dev/null -b y -j y ./run_rscript.sh $@
 
 ## finemap/figures/IGAP_rosmap_%-global.pdf: finemap/IGAP_rosmap_eqtl_hs-lm_%.mediation.gz
@@ -176,6 +176,8 @@ step3-table: tables/bootstrap_ld_significant.txt.gz
 
 tables/bootstrap_ld_significant.txt.gz: table.bootstrap.R
 	Rscript --vanilla $<
+
+
 
 
 ################################################################
