@@ -5,8 +5,8 @@ argv <- commandArgs(trailingOnly = TRUE)
 if(length(argv) < 4) q()
 
 tab.file <- argv[1] # e.g., 'tables/bootstrap_gene_significant.txt.gz'
-gsc.file <- argv[2] # e.g., 'genesets/c2.cp.reactome.v6.0.symbols.gmt'
-sz.cutoff <- as.integer(argv[3]) # e.g., 3
+tab.tot.file <- argv[2] # e.g., 'tables/bootstrap_gene.txt.gz'
+gsc.file <- argv[3] # e.g., 'genesets/c2.cp.reactome.v6.0.symbols.gmt'
 out.file <- argv[4]
 
 options(stringsAsFators = FALSE)
@@ -23,6 +23,38 @@ source('figure.util.R')
 gsc <- loadGSC(gsc.file)
 tab <- read_tsv(tab.file, col_names = TRUE)
 
+## p-value cutoff
+q.cutoff <- 0.20
+
+## basic test with piano
+stat.tab <- read_tsv(tab.tot.file, col_names = TRUE)
+.stat <- stat.tab %>% select(hgnc, lodds) %>%
+    group_by(hgnc) %>%
+    slice(which.max(lodds))
+
+gsc.stat <- .stat$lodds
+names(gsc.stat) <- .stat$hgnc
+
+gsa <- runGSA(gsc.stat, gsc = gsc, geneSetStat = 'mean', nPerm = 1e4,
+              gsSizeLim = c(10, 1000))
+
+gsa.tab <- GSAsummaryTable(gsa, save = FALSE)
+
+gsa.tab <- data.frame(gs = gsa.tab[, 'Name'],
+                      p.val = gsa.tab[, 'p (dist.dir.up)'],
+                      q.val = gsa.tab[, 'p adj (dist.dir.up)'])
+
+significant.path <- gsa.tab %>% dplyr::filter(q.val < q.cutoff) %>%
+    dplyr::select(gs)
+
+if(nrow(significant.path) < 1) q()
+
+rm.header <- function(s) paste(strsplit(s, '[_]')[[1]][-1], collapse = '_')
+
+significant.path <- as.character(significant.path$gs)
+significant.path <- as.vector(sapply(significant.path, rm.header))
+
+################################################################
 ## gene -> genesets
 gsc.tab <- lapply(1:length(gsc$gsc), function(j) {
     gsc.name <- names(gsc$gsc)[j]
@@ -31,20 +63,13 @@ gsc.tab <- lapply(1:length(gsc$gsc), function(j) {
 
 gsc.tab <- do.call(rbind, gsc.tab)
 
-## assign membership
-rm.header <- function(s) paste(strsplit(s, '[_]')[[1]][-1], collapse = '_')
-
+## assign membership and focus on significant ones
 tab.annot <- tab %>% dplyr::select(hgnc, theta, theta.se) %>%
     right_join(gsc.tab, by = 'hgnc') %>% na.omit() %>%
-    mutate(path = sapply(gs, rm.header))
+    mutate(path = sapply(gs, rm.header)) %>%
+    dplyr::filter(path %in% significant.path)
 
-## show pathways with more than two genes
-tab.path <- tab.annot %>% group_by(path) %>%
-    summarize(path.size = n())
-
-tab.annot <- tab.annot %>%
-    left_join(tab.path, by = 'path') %>%
-    filter(path.size >= pmin(sz.cutoff, max(tab.path$path.size)))
+if(nrow(tab.annot) < 1) q()
 
 ## sort rows and columns -- by membership matrix
 genes <- unique(tab.annot$hgnc)
@@ -61,6 +86,7 @@ M[tab.idx] <- 1
 optimal.row.order <- function(mat) {
     dist.fn <- function(x, y) 1 - cor(x, y, method = 'spearman')
     dd <- proxy::dist(mat, method = dist.fn)
+    dd[!is.finite(dd)] <- 0
     hh <- hclust(dd)
     oo <- cba::order.optimal(dd, merge = hh$merge)
     return(oo$order)
