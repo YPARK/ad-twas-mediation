@@ -20,32 +20,48 @@ gene.tab.sig <- read.table(gene.tab.sig.file, header = TRUE) %>% na.omit()
 draw.effect.chr <- function(.chr) {
 
     .df <- gene.tab %>% filter(chr == .chr)
-    .df.sig <- gene.tab.sig %>% filter(chr == .chr)
+    .df.sig <- gene.tab.sig %>% filter(chr == .chr, lodds > 2)
 
     plt <- ggplot() + theme_bw() +
         geom_linerange(data = .df %>% filter(lodds > 0),
-                       aes(x = (tss+tes)/2e6, ymin = theta - 2 * theta.se, ymax = theta + 2* theta.se),
+                       aes(x = (tss+tes)/2, ymin = theta - 2 * theta.se, ymax = theta + 2* theta.se),
                        color = 'gray40', alpha = 0.5)
 
     plt <- plt +
-        geom_point(data = .df, aes(x = (tss+tes)/2e6, y = theta, size = 1/(1+exp(-lodds))),
+        geom_point(data = .df, aes(x = (tss+tes)/2, y = theta, size = 1/(1+exp(-lodds))),
                    alpha = 0.8, color = 'gray40', show.legend = FALSE)
 
     plt <- plt +
-        geom_point(data = .df.sig, aes(x = (tss+tes)/2e6, y = theta),
+        geom_point(data = .df.sig, aes(x = (tss+tes)/2, y = theta),
                    color = 'red', pch = 4, size = 1) +
                        scale_size_continuous(limits = c(0, 1), range = c(0, 1))
     
     plt <- plt +
-        geom_text_repel(data = .df.sig %>% filter(theta > 0), aes(x = (tss+tes)/2e6, y = theta+2*theta.se, label = hgnc), nudge_y = .1, size = 4, segment.color = 'green', segment.alpha = 0.5)
+        geom_text_repel(data = .df.sig %>% filter(theta > 0), aes(x = (tss+tes)/2, y = theta+2*theta.se, label = hgnc),
+                        nudge_y = .1, size = 4, segment.color = 'green', segment.alpha = 0.5)
 
     plt <- plt +
-        geom_text_repel(data = .df.sig %>% filter(theta < 0), aes(x = (tss+tes)/2e6, y = theta-2*theta.se, label = hgnc), nudge_y = -.1, size = 4, segment.color = 'green', segment.alpha = 0.5) +
-            ylab('Mediation effect') + xlab('Genomic location (Mb)')
+        geom_text_repel(data = .df.sig %>% filter(theta < 0), aes(x = (tss+tes)/2, y = theta-2*theta.se, label = hgnc),
+                        nudge_y = -.1, size = 4, segment.color = 'green', segment.alpha = 0.5) +
+            ylab('Mediation effect') + xlab('genomic location')
     
     file.name <- 'figures/genes/effect_chr' %&&% .chr %&&% '.pdf'
-    n <- nrow(.df)
-    ggsave(filename = file.name, plot = plt, useDingbats = FALSE, width = n/300 + .5, height = 3)
+
+    blk.width <- 1e6
+    genome.range <- range(c(.df$tss, .df$tes))
+    genome.length <- genome.range[2] - genome.range[1]
+    genome.w <- genome.length / blk.width * 0.05 + 1
+
+    .gwas.mb <- function() {
+        function(x) format(x/1e6, big.mark=',')
+    }
+
+    genome.x.scale <- scale_x_continuous(limits = genome.range + c(-1000, 1000), expand = c(0, 0),
+                                         labels = .gwas.mb())
+
+    plt <- plt + genome.x.scale
+
+    ggsave(filename = file.name, plot = plt, useDingbats = FALSE, limitsize = FALSE, width = genome.w + .5, height = 3)
 }
 
 for(chr in 1:22) {
@@ -68,50 +84,65 @@ draw.boot.chr <- function(.chr) {
     
     .df.marg <- read_tsv(.df.marg.file, col_names = .cols) %>%
         filter(ensg %in% gene.tab$ensg)
+
     .df.direct <- read_tsv(.df.direct.file, col_names = .cols) %>%
         filter(ensg %in% gene.tab$ensg)
 
     .sigmoid <- function(x) 1/(1+exp(-x))
 
-    .aes <- aes(x = (tss+tes)/2e6,
+    .aes <- aes(x = (tss+tes)/2,
                 ymin = .sigmoid(lodds.mean - 4 * lodds.se),
                 ymax = .sigmoid(lodds.mean + 4 * lodds.se),
                 y = .sigmoid(lodds.mean + 4 * lodds.se))
 
     plt <- ggplot() + theme_bw() +
         geom_ribbon(data = .df.direct, .aes, fill = '#FFFF99', alpha = 0.3)
+
     plt <- plt +
         geom_line(data = .df.direct, .aes, color = '#99FF99', size = .5)
-        
-    plt <- plt + geom_ribbon(data = .df.marg, .aes, fill = '#FF9999', alpha = 0.3)
+    
+##    plt <- plt + geom_ribbon(data = .df.marg, .aes, fill = '#FF9999', alpha = 0.3)
+
+    .df <- gene.tab %>% filter(chr == .chr)
+    .df.sig <- gene.tab.sig %>% filter(chr == .chr, lodds > 2)
+
     plt <- plt +
         geom_line(data = .df.marg, .aes, color = '#FF9999', size = .5)
 
     plt <- plt + 
-        geom_point(data = .df.marg, aes(x = (tss+tes)/2e6, y = .sigmoid(lodds)),
+        geom_point(data = .df, aes(x = (tss+tes)/2, y = .sigmoid(lodds)),
                    color = 'gray40', show.legend = FALSE, size = .5)
-
-    .df.sig <- .df.marg %>% filter(ensg %in% gene.tab.sig$ensg) %>%
-        group_by(hgnc, tss, tes) %>%
-            slice(which.max(lodds)) %>% as.data.frame()
 
     if(nrow(.df.sig) > 0) {
 
         plt <- plt +
-            geom_point(data = .df.sig, aes(x = (tss+tes)/2e6, y = .sigmoid(lodds)),
+            geom_point(data = .df.sig, aes(x = (tss+tes)/2, y = .sigmoid(lodds)),
                        color = 'red', pch = 4, size = 1)
         
         plt <- plt +
-            geom_text_repel(data = .df.sig, aes(x = (tss+tes)/2e6, y = .sigmoid(lodds), label = hgnc),
+            geom_text_repel(data = .df.sig, aes(x = (tss+tes)/2, y = .sigmoid(lodds), label = hgnc),
                             size = 4, segment.color = 'green', segment.alpha = 0.5)        
     }    
 
     plt <- plt + xlab('Genomic location (Mb)') + ylab('Mediation PIP')
 
     file.name <- 'figures/genes/bootstrap_chr' %&&% .chr %&&% '.pdf'
-    n <- nrow(.df.marg)
 
-    ggsave(filename = file.name, plot = plt, useDingbats = FALSE, width = n/300 + .5, height = 3)
+    blk.width <- 1e6
+    genome.range <- range(c(.df$tss, .df$tes))
+    genome.length <- genome.range[2] - genome.range[1]
+    genome.w <- genome.length / blk.width * 0.05 + 1
+
+    .gwas.mb <- function() {
+        function(x) format(x/1e6, big.mark=',')
+    }
+
+    genome.x.scale <- scale_x_continuous(limits = genome.range + c(-1000, 1000), expand = c(0, 0),
+                                         labels = .gwas.mb())
+
+    plt <- plt + genome.x.scale
+
+    ggsave(filename = file.name, plot = plt, useDingbats = FALSE, limitsize = FALSE, width = genome.w + .5, height = 3)
 }
 
 for(chr in 1:22) {

@@ -1,5 +1,5 @@
 ## subset summary stat data
-extract.sum.stat <- function(ld.info, sum.file, x.bim, temp.dir, is.eqtl = TRUE) {
+extract.sum.stat <- function(ld.info, sum.file, x.bim, temp.dir, is.eqtl = TRUE, qtl.cutoff = 2) {
 
     bedtools.result <- temp.dir %&&% '/stat.ucsc_bed.gz'
     bedtools.hdr <- 'source /broad/software/scripts/useuse > /dev/null; reuse -q BEDTools'
@@ -39,7 +39,8 @@ extract.sum.stat <- function(ld.info, sum.file, x.bim, temp.dir, is.eqtl = TRUE)
             rename(gwas.z = gwas.z.flip, gwas.theta = gwas.theta.flip,
                    qtl.z = qtl.z.flip, qtl.theta = qtl.theta.flip)
 
-    ## sum.stat <- sum.stat %>% filter(abs(qtl.z) >= qtl.cutoff)
+    sum.stat <- sum.stat %>% filter(abs(qtl.z) >= qtl.cutoff)
+
     if(is.eqtl) {
         mediators <-
             sum.stat %>% group_by(med.id) %>%
