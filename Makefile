@@ -169,13 +169,20 @@ jobs/step3-bootstrap-figures.jobs.gz: tables/bootstrap_ld_significant.txt.gz
 	awk -vN=$$(zcat $< | tail -n+2 | awk '{ k=$$1 FS $$2 FS $$3; keys[k]++ } END { print length(keys) }') 'BEGIN { for(j=1; j<=N; ++j) print "./figure.bootstrap.ld.R" FS j FS "tables/bootstrap_ld_twas.txt.gz" FS "figures/ld/twas/" }' | gzip >> $@
 	@[ $$(zcat $@ | wc -l) -lt 1 ] || qsub -t 1-$$(zcat $@ | wc -l) -N FIG-ZQTL -binding "linear:1" -l h_rt=3600 -l h_vmem=32g -P compbio_lab -V -cwd -o /dev/null -b y -j y ./run_rscript.sh $@
 
+
+## figures/bootstrap_gene
+GS := $(shell ls -1 genesets/*.gmt 2> /dev/null | xargs -I file basename file .v6.0.symbols.gmt | sed 's/\./_/g')
+
+step3-figure-gs: $(foreach gs, $(GS), figures/geneset-bootstrap_gene_$(gs).pdf)
+
+figures/geneset-bootstrap_gene_%.pdf:
+	./figure.geneset.R tables/bootstrap_gene_significant.txt.gz genesets/$(shell echo $* | sed 's/_/\./g').v6.0.symbols.gmt 10 figures/geneset-bootstrap_gene_$*_10.pdf
+	./figure.geneset.R tables/bootstrap_gene_significant.txt.gz genesets/$(shell echo $* | sed 's/_/\./g').v6.0.symbols.gmt 5 $@
+
 step3-table: tables/bootstrap_ld_significant.txt.gz
 
 tables/bootstrap_ld_significant.txt.gz: table.bootstrap.R
 	Rscript --vanilla $<
-
-
-
 
 ################################################################
 ## simulation analysis
