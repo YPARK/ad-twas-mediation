@@ -76,8 +76,7 @@ stat.tab <- marginal.df %>%
 ## significant mediation
 
 out.tab <- stat.tab %>%
-    filter(p.val.marginal < 2.5e-6, p.val.direct < 2.5e-6, lodds > 0, p.val.nwas < 2.5e-6,
-           sign(theta) == sign(nwas.z)) %>%
+    filter(p.val.marginal < 2.5e-6, p.val.direct < 2.5e-6, lodds > 0) %>%
     arrange(chr, tss)
 
 .temp <- out.tab %>% select(chr, ld.lb, ld.ub) %>% unique()
@@ -96,12 +95,20 @@ out.strict.ld.tab <- stat.tab %>%
 
 
 ## significant TWAS but no mediation
+out.twas.tab <- stat.tab %>% filter(p.val.nwas < 2.5e-6, lodds < 0)
+
+.temp <- out.twas.tab %>% select(chr, ld.lb, ld.ub) %>% unique()
+
+out.twas.ld.tab <- stat.tab %>%
+    right_join(.temp, by = c('chr', 'ld.lb', 'ld.ub'))
 
 
-
+################################################################
 
 write.tab.named(stat.tab, file = gzfile('tables/bootstrap_gene.txt.gz'))
 write.tab.named(out.tab, file = gzfile('tables/bootstrap_gene_significant.txt.gz'))
 write.tab.named(out.ld.tab, file = gzfile('tables/bootstrap_ld_significant.txt.gz'))
 write.tab.named(out.strict.tab, file = gzfile('tables/bootstrap_gene_strict.txt.gz'))
 write.tab.named(out.strict.ld.tab, file = gzfile('tables/bootstrap_ld_strict.txt.gz'))
+write.tab.named(out.twas.tab, file = gzfile('tables/bootstrap_gene_twas.txt.gz'))
+write.tab.named(out.twas.ld.tab, file = gzfile('tables/bootstrap_ld_twas.txt.gz'))
