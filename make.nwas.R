@@ -9,7 +9,14 @@ sum.file <- argv[2]                     # e.g., sum.file = 'stat/IGAP/data/hs-lm
 plink.hdr <- argv[3]                    # e.g., plink.hdr = 'geno/rosmap1709-chr1'
 ld.idx <- as.integer(argv[4])           # e.g., ld.idx = 37
 is.eqtl <- as.logical(argv[5])          # e.g., is.eqtl = TRUE
-out.file <- argv[6]                     # e.g., out.file = 'temp.gz'
+
+qtl.cutoff <- 0
+if(length(argv) > 6) {
+    qtl.cutoff <- as.numeric(argv[6])
+    out.file <- argv[7]
+} else {
+    out.file <- argv[6]
+}
 
 dir.create(dirname(out.file), recursive = TRUE)
 
@@ -38,7 +45,7 @@ ld.info <- ld.tab[ld.idx, ]
 plink <- subset.plink(ld.info, temp.dir, plink.hdr)
 x.bim <- data.frame(plink$BIM, x.pos = 1:nrow(plink$BIM))
 
-sum.stat.out <- extract.sum.stat(ld.info, sum.file, x.bim, temp.dir, is.eqtl)
+sum.stat.out <- extract.sum.stat(ld.info, sum.file, x.bim, temp.dir, is.eqtl, qtl.cutoff)
 
 sum.stat <- sum.stat.out$sum.stat
 mediators <- sum.stat.out$mediators

@@ -1,5 +1,5 @@
 ## subset summary stat data
-extract.sum.stat <- function(ld.info, sum.file, x.bim, temp.dir, is.eqtl = TRUE, qtl.cutoff = 2) {
+extract.sum.stat <- function(ld.info, sum.file, x.bim, temp.dir, is.eqtl = TRUE, qtl.cutoff = 0) {
 
     bedtools.result <- temp.dir %&&% '/stat.ucsc_bed.gz'
     bedtools.hdr <- 'source /broad/software/scripts/useuse > /dev/null; reuse -q BEDTools'

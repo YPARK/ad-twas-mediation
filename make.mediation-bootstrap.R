@@ -12,7 +12,14 @@ gwas.sample.size <- as.numeric(argv[5]) # e.g., gwas.sample.size = 74000
 qtl.sample.size <- as.numeric(argv[6])  # e.g., qtl.sample.size = 356
 is.eqtl <- as.logical(argv[7])          # e.g., is.eqtl = TRUE
 boot.null.model <- argv[8]              # e.g., boot.null.model = 'marginal'
-out.hdr <- argv[9]                      # e.g., out.hdr = 'temp'
+
+qtl.cutoff <- 0
+if(length(argv) > 9) {
+    qtl.cutoff <- as.numeric(argv[9])
+    out.hdr <- argv[10]
+} else {
+    out.hdr <- argv[9]
+}
 
 dir.create(dirname(out.hdr), recursive = TRUE)
 
@@ -55,7 +62,7 @@ ld.info <- ld.tab[ld.idx, ]
 plink <- subset.plink(ld.info, temp.dir, plink.hdr)
 x.bim <- data.frame(plink$BIM, x.pos = 1:nrow(plink$BIM))
 
-sum.stat.out <- extract.sum.stat(ld.info, sum.file, x.bim, temp.dir, is.eqtl)
+sum.stat.out <- extract.sum.stat(ld.info, sum.file, x.bim, temp.dir, is.eqtl, qtl.cutoff)
 
 sum.stat <- sum.stat.out$sum.stat
 mediators <- sum.stat.out$mediators
@@ -71,7 +78,7 @@ if(n.snps < n.snp.cutoff) {
 
 zqtl.data <- make.zqtl.data(plink, sum.stat, mediators)
 
-## Just run the zQTL w/o bootstrapping, but finemap
+## Just run the zQTL w/o finemap
 vb.opt <- list(pi = -2, tau = -4, do.hyper = FALSE, tol = 1e-8, gammax = 1e4,
                vbiter = 5000, do.stdize = TRUE, eigen.tol = 1e-2,
                rate = 1e-2, decay = -1e-2, nsample = 10, print.interv = 100,

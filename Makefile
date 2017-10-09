@@ -104,7 +104,9 @@ jobs/step3/finemap-eqtl-%.jobs:
 jobs/step3/bootstrap-eqtl-%.jobs:
 	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
 	@printf "" > $@
+
 	for qtl_data in $(QTL_DATA); do zcat stat/IGAP/ld/$*.ld.gz | awk -vchr=$* -vGWAS=IGAP -vQD=$${qtl_data} '$$(NF) >= 100 { print "./make.mediation-bootstrap.R" OFS ("stat/" GWAS "/ld/" chr ".ld.gz") OFS ("stat/" GWAS "/data/" QD "/" chr ".eqtl_bed.gz") FS ("geno/rosmap1709-chr" chr) FS NR FS 74046 FS 356 FS "TRUE" FS "direct" FS ("bootstrap/direct/" GWAS "/rosmap/eqtl/" QD "/" chr "/" NR) }' | awk 'system("[ ! -f " $$NF ".mediation.gz ]") == 0' >> $@; done
+
 	for qtl_data in $(QTL_DATA); do zcat stat/IGAP/ld/$*.ld.gz | awk -vchr=$* -vGWAS=IGAP -vQD=$${qtl_data} '$$(NF) >= 100 { print "./make.mediation-bootstrap.R" OFS ("stat/" GWAS "/ld/" chr ".ld.gz") OFS ("stat/" GWAS "/data/" QD "/" chr ".eqtl_bed.gz") FS ("geno/rosmap1709-chr" chr) FS NR FS 74046 FS 356 FS "TRUE" FS "marginal" FS ("bootstrap/marginal/" GWAS "/rosmap/eqtl/" QD "/" chr "/" NR) }' | awk 'system("[ ! -f " $$NF ".mediation.gz ]") == 0' >> $@; done
 
 jobs/step3/nwas-eqtl-%.jobs:
@@ -132,7 +134,6 @@ jobs/step3/finemap-m2t-%.jobs:
 	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
 	@printf "" > $@
 	for qtl_data in $(QTL_DATA); do zcat stat/IGAP/ld/$*.ld.gz | awk -vchr=$* -vGWAS=IGAP -vQD=$${qtl_data} '$$(NF) >= 100 { print "./make.mediation-m2t.R" OFS ("stat/" GWAS "/ld/" chr ".ld.gz") OFS ("stat/" GWAS "/data/" QD "/" chr ".mqtl_bed.gz") OFS ("stat/" GWAS "/data/" QD "/" chr ".eqtl_bed.gz") FS ("geno/rosmap1709-chr" chr) FS NR FS 74046 FS 598 FS 356 OFS ("m2t/" GWAS "/rosmap/" QD "/" chr "/" NR) }' | awk 'system("[ ! -f " $$NF ".mediation.gz ]") == 0' >> $@; done
-
 
 step3-post: $(foreach data, $(QTL_DATA), $(foreach chr, $(CHR), $(foreach stat, mediation qtl, m2t/IGAP_rosmap_$(data)_$(chr).$(stat).gz \
  $(foreach reg, eqtl mqtl, finemap/IGAP_rosmap_$(reg)_$(data)_$(chr).$(stat).gz) ) ) ) \
@@ -210,6 +211,37 @@ step4-post: $(foreach sim, pleiotropy ld, $(foreach chr, $(shell seq 1 22), simu
 simulation/result/%.sim.gz:
 	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
 	(ls -1 simulation/$(shell echo $* | sed 's/_/\//g')/sim-*.gz 2> /dev/null | xargs zcat) | gzip > $@
+
+################################################################
+## more strict eQTL selection (|z| > 2)
+step5: jobs/step5-eqtl-jobs.txt.gz
+
+step5-resubmit: jobs/step5-eqtl-jobs-resubmit.txt.gz
+
+jobs/step5-%-jobs-resubmit.txt.gz: jobs/step5-%-jobs.txt.gz
+	zcat $< | awk 'system("[ ! -f " $$NF ".mediation.gz ]") == 0 && system("[ ! -f " $$NF " ]") == 0' | gzip > $@
+	@[ $$(zcat $@ | wc -l) -lt 1 ] || qsub -t 1-$$(zcat $@ | wc -l) -N Re-$*-ZQTL -binding "linear:1" -l h_rt=7200 -l h_vmem=4g -P compbio_lab -V -cwd -o /dev/null -b y -j y ./run_rscript.sh $@
+
+jobs/step5-%-jobs.txt.gz: $(foreach chr, $(CHR), $(foreach task, nwas bootstrap, jobs/step5/$(task)-%-$(chr).jobs))
+	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
+	@printf "" > $@
+	@cat $^ | gzip >> $@
+	@[ $$(zcat $@ | wc -l) -lt 1 ] || qsub -t 1-$$(zcat $@ | wc -l) -N $*-ZQTL -binding "linear:1" -l h_rt=3600 -l h_vmem=4g -P compbio_lab -V -cwd -o /dev/null -b y -j y ./run_rscript.sh $@
+	@rm $^
+
+jobs/step5/bootstrap-eqtl-%.jobs:
+	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
+	@printf "" > $@
+
+	for qtl_data in $(QTL_DATA); do zcat stat/IGAP/ld/$*.ld.gz | awk -vchr=$* -vGWAS=IGAP -vQD=$${qtl_data} '$$(NF) >= 100 { print "./make.mediation-bootstrap.R" OFS ("stat/" GWAS "/ld/" chr ".ld.gz") OFS ("stat/" GWAS "/data/" QD "/" chr ".eqtl_bed.gz") FS ("geno/rosmap1709-chr" chr) FS NR FS 74046 FS 356 FS "TRUE" FS "direct" FS 2 FS ("bootstrap-strict/direct/" GWAS "/rosmap/eqtl/" QD "/" chr "/" NR) }' >> $@; done
+
+	for qtl_data in $(QTL_DATA); do zcat stat/IGAP/ld/$*.ld.gz | awk -vchr=$* -vGWAS=IGAP -vQD=$${qtl_data} '$$(NF) >= 100 { print "./make.mediation-bootstrap.R" OFS ("stat/" GWAS "/ld/" chr ".ld.gz") OFS ("stat/" GWAS "/data/" QD "/" chr ".eqtl_bed.gz") FS ("geno/rosmap1709-chr" chr) FS NR FS 74046 FS 356 FS "TRUE" FS "marginal" FS 2 FS ("bootstrap-strict/marginal/" GWAS "/rosmap/eqtl/" QD "/" chr "/" NR) }' >> $@; done
+
+jobs/step5/nwas-eqtl-%.jobs:
+	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
+	@printf "" > $@
+	for qtl_data in $(QTL_DATA); do zcat stat/IGAP/ld/$*.ld.gz | awk -vchr=$* -vGWAS=IGAP -vQD=$${qtl_data} '$$(NF) >= 1000 { print "./make.nwas.R" OFS ("stat/" GWAS "/ld/" chr ".ld.gz") OFS ("stat/" GWAS "/data/" QD "/" chr ".eqtl_bed.gz") FS ("geno/rosmap1709-chr" chr) FS NR FS "TRUE" FS 2 FS ("nwas-strict/" GWAS "/rosmap/eqtl/" QD "/" chr "/" NR ".nwas.gz") }' >> $@; done
+
 
 ################################################################
 ## Utilities
