@@ -95,7 +95,7 @@ out.strict.ld.tab <- stat.tab %>%
 
 
 ## significant TWAS but no mediation
-out.twas.tab <- stat.tab %>% filter(p.val.nwas < 2.5e-6, lodds < 0)
+out.twas.tab <- stat.tab %>% filter(p.val.nwas < 2.5e-6, lodds < -2.2)
 
 .temp <- out.twas.tab %>% select(chr, ld.lb, ld.ub) %>% unique()
 
