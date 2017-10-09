@@ -1,12 +1,11 @@
 #!/usr/bin/env Rscript
 argv <- commandArgs(trailingOnly = TRUE)
 
-if(length(argv) < 2) q()
+if(length(argv) < 3) q()
 
 ld.idx <- as.integer(argv[1])
-out.dir <- argv[2]
-
-                                        # ld.idx <- 1
+ld.tab.file <- argv[2] # e.g., 'tables/bootstrap_ld_significant.txt.gz'
+out.dir <- argv[3]
 
 options(stringsAsFators = FALSE)
 source('util.R')
@@ -21,7 +20,6 @@ library(latex2exp)
 library(reshape2)
 library(scales)
 
-ld.tab.file <- 'tables/bootstrap_ld_significant.txt.gz'
 ld.tab <- read.table(ld.tab.file, header = TRUE)
 ld.key <- ld.tab %>% select(chr, ld.lb, ld.ub) %>% unique()
 

@@ -64,11 +64,16 @@ marginal.df <- combined.p.val(data.marginal.tab) %>%
 direct.df <- combined.p.val(data.direct.tab) %>%
     rename(p.val.direct = p.val, q.val.direct = q.val)    
 
+## Overall statistics
+
 .temp <- direct.df %>% dplyr::select(chr, ld.lb, ld.ub, ensg, p.val.direct, q.val.direct)
 
 stat.tab <- marginal.df %>%
     left_join(.temp, by = c('chr', 'ld.lb', 'ld.ub', 'ensg')) %>%
     left_join(nwas.tab, by = c('chr', 'ld.lb', 'ld.ub', 'ensg'))
+
+
+## significant mediation
 
 out.tab <- stat.tab %>%
     filter(p.val.marginal < 2.5e-6, p.val.direct < 2.5e-6, lodds > 0, p.val.nwas < 2.5e-6,
@@ -89,12 +94,14 @@ out.strict.tab <- out.tab %>%
 out.strict.ld.tab <- stat.tab %>%
     right_join(.temp, by = c('chr', 'ld.lb', 'ld.ub'))
 
+
+## significant TWAS but no mediation
+
+
+
+
 write.tab.named(stat.tab, file = gzfile('tables/bootstrap_gene.txt.gz'))
-
 write.tab.named(out.tab, file = gzfile('tables/bootstrap_gene_significant.txt.gz'))
-
 write.tab.named(out.ld.tab, file = gzfile('tables/bootstrap_ld_significant.txt.gz'))
-
 write.tab.named(out.strict.tab, file = gzfile('tables/bootstrap_gene_strict.txt.gz'))
-
 write.tab.named(out.strict.ld.tab, file = gzfile('tables/bootstrap_ld_strict.txt.gz'))
