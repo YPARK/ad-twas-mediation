@@ -161,7 +161,7 @@ nwas/%.nwas.gz:
 	(ls -1 nwas/$(shell echo $* | sed 's/_/\//g')/*.nwas.gz 2> /dev/null | xargs zcat) | awk 'NF > 0' | gzip > $@
 
 ################################################################
-step3-figure: jobs/step3-bootstrap-figures.jobs.gz
+step3-figure: jobs/step3-bootstrap-figures.jobs.gz jobs/step3-gs-figures.jobs.gz
 
 jobs/step3-bootstrap-figures.jobs.gz: tables/bootstrap_ld_significant.txt.gz
 	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
@@ -173,10 +173,15 @@ jobs/step3-bootstrap-figures.jobs.gz: tables/bootstrap_ld_significant.txt.gz
 ## figures/bootstrap_gene
 GS := $(shell ls -1 genesets/*.gmt 2> /dev/null | xargs -I file basename file .v6.0.symbols.gmt | sed 's/\./_/g')
 
+jobs/step3-gs-figures.jobs.gz: $(foreach gs, $(GS), jobs/step3-gs-$(gs).job)
+	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
+	@cat $^ | gzip > $@
+	@[ $$(zcat $@ | wc -l) -lt 1 ] || qsub -t 1-$$(zcat $@ | wc -l) -N FIG-GS -binding "linear:1" -l h_rt=17200 -l h_vmem=4g -P compbio_lab -V -cwd -o /dev/null -b y -j y ./run_rscript.sh $@
+
 step3-figure-gs: $(foreach gs, $(GS), figures/geneset-bootstrap_gene_$(gs).pdf)
 
-figures/geneset-bootstrap_gene_%.pdf:
-	./run.sh ./figure.geneset.R tables/bootstrap_gene_significant.txt.gz tables/bootstrap_gene.txt.gz genesets/$(shell echo $* | sed 's/_/\./g').v6.0.symbols.gmt 5 $@
+jobs/step3-gs-%.job:
+	echo ./figure.geneset.R tables/bootstrap_gene_significant.txt.gz tables/bootstrap_gene.txt.gz genesets/$(shell echo $* | sed 's/_/\./g').v6.0.symbols.gmt figures/pathway-gene-$*.pdf > $@
 
 step3-table: tables/bootstrap_ld_significant.txt.gz
 

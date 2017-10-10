@@ -4,10 +4,12 @@ argv <- commandArgs(trailingOnly = TRUE)
 
 if(length(argv) < 4) q()
 
-tab.file <- argv[1] # e.g., 'tables/bootstrap_gene_significant.txt.gz'
-tab.tot.file <- argv[2] # e.g., 'tables/bootstrap_gene.txt.gz'
-gsc.file <- argv[3] # e.g., 'genesets/c2.cp.reactome.v6.0.symbols.gmt'
+tab.file <- argv[1] # e.g., tab.file <- 'tables/bootstrap_gene_significant.txt.gz'
+tab.tot.file <- argv[2] # e.g., tab.tot.file <- 'tables/bootstrap_gene.txt.gz'
+gsc.file <- argv[3] # e.g., gsc.file <- 'genesets/c2.cp.reactome.v6.0.symbols.gmt'
 out.file <- argv[4]
+
+if(file.exists(out.file)) q()
 
 options(stringsAsFators = FALSE)
 
@@ -16,43 +18,15 @@ library(readr)
 library(piano)
 library(cba)
 library(proxy)
+library(ggplot2)
 
 source('util.R')
-source('figure.util.R')
-
-gsc <- loadGSC(gsc.file)
-tab <- read_tsv(tab.file, col_names = TRUE)
-
-## p-value cutoff
-q.cutoff <- 0.20
-
-## basic test with piano
-stat.tab <- read_tsv(tab.tot.file, col_names = TRUE)
-.stat <- stat.tab %>% select(hgnc, lodds) %>%
-    group_by(hgnc) %>%
-    slice(which.max(lodds))
-
-gsc.stat <- .stat$lodds
-names(gsc.stat) <- .stat$hgnc
-
-gsa <- runGSA(gsc.stat, gsc = gsc, geneSetStat = 'mean', nPerm = 5e4,
-              gsSizeLim = c(10, 1000))
-
-gsa.tab <- GSAsummaryTable(gsa, save = FALSE)
-
-gsa.tab <- data.frame(gs = gsa.tab[, 'Name'],
-                      p.val = gsa.tab[, 'p (dist.dir.up)'],
-                      q.val = gsa.tab[, 'p adj (dist.dir.up)'])
-
-significant.path <- gsa.tab %>% dplyr::filter(q.val < q.cutoff) %>%
-    dplyr::select(gs)
-
-if(nrow(significant.path) < 1) q()
 
 rm.header <- function(s) paste(strsplit(s, '[_]')[[1]][-1], collapse = '_')
 
-significant.path <- as.character(significant.path$gs)
-significant.path <- as.vector(sapply(significant.path, rm.header))
+gsc <- loadGSC(gsc.file)
+tab <- read_tsv(tab.file, col_names = TRUE)
+stat.tab <- read_tsv(tab.tot.file, col_names = TRUE)
 
 ################################################################
 ## gene -> genesets
@@ -63,13 +37,59 @@ gsc.tab <- lapply(1:length(gsc$gsc), function(j) {
 
 gsc.tab <- do.call(rbind, gsc.tab)
 
+## q-value cutoff
+q.cutoff <- 0.25
+
+.stat <- stat.tab %>% select(hgnc, lodds) %>%
+    group_by(hgnc) %>%
+    slice(which.max(lodds))
+
+gsc.stat <- .stat$lodds
+names(gsc.stat) <- .stat$hgnc
+
+gsa <- runGSA(geneLevelStats = gsc.stat, gsc = gsc, geneSetStat = 'median',
+              nPerm = 1e5, gsSizeLim = c(10, 500), verbose = TRUE)              
+
+gsa.tab <- GSAsummaryTable(gsa, save = FALSE)
+
+gsa.tab <- data.frame(gs = gsa.tab[, 'Name'],
+                      p.val = gsa.tab[, 'p (dist.dir.up)'],
+                      q.val = gsa.tab[, 'p adj (dist.dir.up)'],
+                      p.val.mix = gsa.tab[, 'p (mix.dir.up)'],
+                      q.val.mix = gsa.tab[, 'p adj (mix.dir.up)']) %>%
+                          mutate(gs = sapply(gs, rm.header))
+
+significant.path <- gsa.tab %>%
+    dplyr::filter(q.val < q.cutoff | q.val.mix < q.cutoff) %>%
+    dplyr::select(gs)
+
+## show top 20 pathways
+pdf(file = gsub(out.file, pattern = '.pdf', replacement = '-top20.pdf'), width = 6, height = 8)
+GSAheatmap(gsa, cutoff=20, adjusted=FALSE, ncharLabel=50, cellnote='pvalue', columnnames='full',
+           colorkey=TRUE, colorgrad=NULL, cex=NULL)
+dev.off()
+
+## save the list of p-values
+write.tab.named(gsa.tab %>% arrange(p.val), file = gzfile(out.file %&&% '.txt.gz'))
+
+if(nrow(significant.path) < 1) {
+    log.msg('No significant pathway\n\n')
+    q()
+}
+
+significant.path <- unique(as.character(significant.path$gs))
+
+################################################################
 ## assign membership and focus on significant ones
 tab.annot <- tab %>% dplyr::select(hgnc, theta, theta.se) %>%
     right_join(gsc.tab, by = 'hgnc') %>% na.omit() %>%
     mutate(path = sapply(gs, rm.header)) %>%
     dplyr::filter(path %in% significant.path)
 
-if(nrow(tab.annot) < 1) q()
+if(nrow(tab.annot) < 1) {
+    log.msg('No overlap with significant genes\n\n')
+    q()
+}
 
 ## sort rows and columns -- by membership matrix
 genes <- unique(tab.annot$hgnc)
@@ -119,8 +139,9 @@ plt <- ggplot(tab.sort) + theme_bw() +
               hjust = 1, vjust = .5),
           axis.title = element_blank())
 
-w <- length(genes) * .1 + 1 + max(sapply(pathways, nchar)) * .05
+w <- length(genes) * .15 + 1 + max(sapply(pathways, nchar)) * .05
 h <- length(pathways) * .1 + 1
 
 ggsave(filename = out.file, plot = plt, width = w, height = h)
        
+log.msg('Saved %s\n\n', out.file)
