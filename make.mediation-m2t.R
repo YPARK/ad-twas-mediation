@@ -26,12 +26,12 @@ dir.create(dirname(out.hdr), recursive = TRUE)
 source('util.R')
 options(stringsAsFactors = FALSE)
 
-joint.gene.file <- out.hdr %&&% '.gene.mediation.gz'
-joint.cpg.file <- out.hdr %&&% '.cpg.mediation.gz'
+joint.gene.file <- out.hdr %&&% '.gene-mediation.gz'
+joint.cpg.file <- out.hdr %&&% '.cpg-mediation.gz'
 
-joint.null.file <- out.hdr %&&% '.joint.null.gz'
+joint.null.file <- out.hdr %&&% '.joint-null.gz'
 m2t.out.file <- out.hdr %&&% '.mediation.gz'
-m2t.null.file <- out.hdr %&&% '.m2t.null.gz'
+m2t.null.file <- out.hdr %&&% '.m2t-null.gz'
 
 files <- c(joint.gene.file, joint.cpg.file, m2t.out.file, joint.null.file, m2t.null.file)
 
