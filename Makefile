@@ -89,17 +89,12 @@ jobs/step3-%-jobs-resubmit.txt.gz: jobs/step3-%-jobs.txt.gz
 	zcat $< | awk 'system("[ ! -f " $$NF ".mediation.gz ]") == 0 && system("[ ! -f " $$NF " ]") == 0' | gzip > $@
 	@[ $$(zcat $@ | wc -l) -lt 1 ] || qsub -t 1-$$(zcat $@ | wc -l) -N Re-$*-ZQTL -binding "linear:1" -l h_rt=7200 -l h_vmem=4g -P compbio_lab -V -cwd -o /dev/null -b y -j y ./run_rscript.sh $@
 
-jobs/step3-%-jobs.txt.gz: $(foreach chr, $(CHR), $(foreach task, nwas, jobs/step3/$(task)-%-$(chr).jobs)) # finemap bootstrap 
+jobs/step3-%-jobs.txt.gz: $(foreach chr, $(CHR), $(foreach task, nwas, jobs/step3/$(task)-%-$(chr).jobs)) # bootstrap 
 	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
 	@printf "" > $@
 	@cat $^ | gzip >> $@
 	@[ $$(zcat $@ | wc -l) -lt 1 ] || qsub -t 1-$$(zcat $@ | wc -l) -N $*-ZQTL -binding "linear:1" -l h_rt=1000 -l h_vmem=4g -P compbio_lab -V -cwd -o /dev/null -b y -j y ./run_rscript.sh $@
 	@rm $^
-
-jobs/step3/finemap-eqtl-%.jobs:
-	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
-	@printf "" > $@
-	for qtl_data in $(QTL_DATA); do zcat stat/IGAP/ld/$*.ld.gz | awk -vchr=$* -vGWAS=IGAP -vQD=$${qtl_data} '$$(NF) >= 100 { print "./make.mediation-finemap.R" OFS ("stat/" GWAS "/ld/" chr ".ld.gz") OFS ("stat/" GWAS "/data/" QD "/" chr ".eqtl_bed.gz") FS ("geno/rosmap1709-chr" chr) FS NR FS 74046 FS 356 FS "TRUE" FS ("finemap/" GWAS "/rosmap/eqtl/" QD "/" chr "/" NR) }' | awk 'system("[ ! -f " $$NF ".mediation.gz ]") == 0' >> $@; done
 
 jobs/step3/bootstrap-eqtl-%.jobs:
 	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
@@ -119,39 +114,45 @@ jobs/step3/nwas-mqtl-%.jobs:
 	@printf "" > $@
 	for qtl_data in $(QTL_DATA); do zcat stat/IGAP/ld/$*.ld.gz | awk -vchr=$* -vGWAS=IGAP -vQD=$${qtl_data} '$$(NF) >= 100 { print "./make.nwas.R" OFS ("stat/" GWAS "/ld/" chr ".ld.gz") OFS ("stat/" GWAS "/data/" QD "/" chr ".mqtl_bed.gz") FS ("geno/rosmap1709-chr" chr) FS NR FS "FALSE" FS ("nwas/" GWAS "/rosmap/mqtl/" QD "/" chr "/" NR ".nwas.gz") }' >> $@; done
 
-jobs/step3/finemap-mqtl-%.jobs:
-	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
-	@printf "" > $@
-	for qtl_data in $(QTL_DATA); do zcat stat/IGAP/ld/$*.ld.gz | awk -vchr=$* -vGWAS=IGAP -vQD=$${qtl_data} '$$(NF) >= 100 { print "./make.mediation-finemap.R" OFS ("stat/" GWAS "/ld/" chr ".ld.gz") OFS ("stat/" GWAS "/data/" QD "/" chr ".mqtl_bed.gz") FS ("geno/rosmap1709-chr" chr) FS NR FS 74046 FS 598 FS "FALSE" FS ("finemap/" GWAS "/rosmap/mqtl/" QD "/" chr "/" NR) }' | awk 'system("[ ! -f " $$NF ".mediation.gz ]") == 0' >> $@; done
-
 jobs/step3/bootstrap-mqtl-%.jobs:
 	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
 	@printf "" > $@
 	for qtl_data in $(QTL_DATA); do zcat stat/IGAP/ld/$*.ld.gz | awk -vchr=$* -vGWAS=IGAP -vQD=$${qtl_data} '$$(NF) >= 100 { print "./make.mediation-bootstrap.R" OFS ("stat/" GWAS "/ld/" chr ".ld.gz") OFS ("stat/" GWAS "/data/" QD "/" chr ".mqtl_bed.gz") FS ("geno/rosmap1709-chr" chr) FS NR FS 74046 FS 598 FS "FALSE" FS "direct" FS ("bootstrap/direct/" GWAS "/rosmap/mqtl/" QD "/" chr "/" NR) }' | awk 'system("[ ! -f " $$NF ".mediation.gz ]") == 0' >> $@; done
 	for qtl_data in $(QTL_DATA); do zcat stat/IGAP/ld/$*.ld.gz | awk -vchr=$* -vGWAS=IGAP -vQD=$${qtl_data} '$$(NF) >= 100 { print "./make.mediation-bootstrap.R" OFS ("stat/" GWAS "/ld/" chr ".ld.gz") OFS ("stat/" GWAS "/data/" QD "/" chr ".mqtl_bed.gz") FS ("geno/rosmap1709-chr" chr) FS NR FS 74046 FS 598 FS "FALSE" FS "marginal" FS ("bootstrap/marginal/" GWAS "/rosmap/mqtl/" QD "/" chr "/" NR) }' | awk 'system("[ ! -f " $$NF ".mediation.gz ]") == 0' >> $@; done
 
-jobs/step3/finemap-m2t-%.jobs:
-	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
-	@printf "" > $@
-	for qtl_data in $(QTL_DATA); do zcat stat/IGAP/ld/$*.ld.gz | awk -vchr=$* -vGWAS=IGAP -vQD=$${qtl_data} '$$(NF) >= 100 { print "./make.mediation-m2t.R" OFS ("stat/" GWAS "/ld/" chr ".ld.gz") OFS ("stat/" GWAS "/data/" QD "/" chr ".mqtl_bed.gz") OFS ("stat/" GWAS "/data/" QD "/" chr ".eqtl_bed.gz") FS ("geno/rosmap1709-chr" chr) FS NR FS 74046 FS 598 FS 356 OFS ("m2t/" GWAS "/rosmap/" QD "/" chr "/" NR) }' | awk 'system("[ ! -f " $$NF ".mediation.gz ]") == 0' >> $@; done
 
-step3-post: $(foreach data, $(QTL_DATA), $(foreach chr, $(CHR), $(foreach stat, mediation qtl, m2t/IGAP_rosmap_$(data)_$(chr).$(stat).gz \
- $(foreach reg, eqtl mqtl, finemap/IGAP_rosmap_$(reg)_$(data)_$(chr).$(stat).gz) ) ) ) \
- $(foreach data, $(QTL_DATA), $(foreach null, direct marginal, $(foreach reg, eqtl mqtl, $(foreach chr, $(CHR), bootstrap/$(null)_IGAP_rosmap_$(reg)_hs-lm_$(chr).mediation.gz ) ) ) ) \
- $(foreach data, $(QTL_DATA), $(foreach reg, eqtl mqtl, $(foreach chr, $(CHR), nwas/IGAP_rosmap_$(reg)_hs-lm_$(chr).nwas.gz ) ) )
-
+# Retire finemap
+#
+# jobs/step3/finemap-eqtl-%.jobs:
+# 	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
+# 	@printf "" > $@
+# 	for qtl_data in $(QTL_DATA); do zcat stat/IGAP/ld/$*.ld.gz | awk -vchr=$* -vGWAS=IGAP -vQD=$${qtl_data} '$$(NF) >= 100 { print "./make.mediation-finemap.R" OFS ("stat/" GWAS "/ld/" chr ".ld.gz") OFS ("stat/" GWAS "/data/" QD "/" chr ".eqtl_bed.gz") FS ("geno/rosmap1709-chr" chr) FS NR FS 74046 FS 356 FS "TRUE" FS ("finemap/" GWAS "/rosmap/eqtl/" QD "/" chr "/" NR) }' | awk 'system("[ ! -f " $$NF ".mediation.gz ]") == 0' >> $@; done
+#
+# jobs/step3/finemap-mqtl-%.jobs:
+# 	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
+# 	@printf "" > $@
+# 	for qtl_data in $(QTL_DATA); do zcat stat/IGAP/ld/$*.ld.gz | awk -vchr=$* -vGWAS=IGAP -vQD=$${qtl_data} '$$(NF) >= 100 { print "./make.mediation-finemap.R" OFS ("stat/" GWAS "/ld/" chr ".ld.gz") OFS ("stat/" GWAS "/data/" QD "/" chr ".mqtl_bed.gz") FS ("geno/rosmap1709-chr" chr) FS NR FS 74046 FS 598 FS "FALSE" FS ("finemap/" GWAS "/rosmap/mqtl/" QD "/" chr "/" NR) }' | awk 'system("[ ! -f " $$NF ".mediation.gz ]") == 0' >> $@; done
+#
+# jobs/step3/finemap-m2t-%.jobs:
+# 	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
+# 	@printf "" > $@
+# 	for qtl_data in $(QTL_DATA); do zcat stat/IGAP/ld/$*.ld.gz | awk -vchr=$* -vGWAS=IGAP -vQD=$${qtl_data} '$$(NF) >= 100 { print "./make.mediation-m2t.R" OFS ("stat/" GWAS "/ld/" chr ".ld.gz") OFS ("stat/" GWAS "/data/" QD "/" chr ".mqtl_bed.gz") OFS ("stat/" GWAS "/data/" QD "/" chr ".eqtl_bed.gz") FS ("geno/rosmap1709-chr" chr) FS NR FS 74046 FS 598 FS 356 OFS ("m2t/" GWAS "/rosmap/" QD "/" chr "/" NR) }' | awk 'system("[ ! -f " $$NF ".mediation.gz ]") == 0' >> $@; done
+#
 # % = IGAP_rosmap_eqtl_hs-lm_21
-finemap/%.mediation.gz:
-	(ls -1 finemap/$(shell echo $* | sed 's/_/\//g')/*.mediation.gz 2> /dev/null | xargs cat) > $@
+# finemap/%.mediation.gz:
+#	(ls -1 finemap/$(shell echo $* | sed 's/_/\//g')/*.mediation.gz 2> /dev/null | xargs cat) > $@
+#
+# finemap/%.qtl.gz:
+#	(ls -1 finemap/$(shell echo $* | sed 's/_/\//g')/*.qtl.gz 2> /dev/null | xargs zcat) | gzip > $@
+#
+# m2t/%.mediation.gz:
+# 	(ls -1 m2t/$(shell echo $* | sed 's/_/\//g')/*.mediation.gz 2> /dev/null | xargs cat) > $@
+# 
+# m2t/%.qtl.gz:
+# 	(ls -1 m2t/$(shell echo $* | sed 's/_/\//g')/*.qtl.gz 2> /dev/null | xargs cat) > $@
 
-finemap/%.qtl.gz:
-	(ls -1 finemap/$(shell echo $* | sed 's/_/\//g')/*.qtl.gz 2> /dev/null | xargs zcat) | gzip > $@
-
-m2t/%.mediation.gz:
-	(ls -1 m2t/$(shell echo $* | sed 's/_/\//g')/*.mediation.gz 2> /dev/null | xargs cat) > $@
-
-m2t/%.qtl.gz:
-	(ls -1 m2t/$(shell echo $* | sed 's/_/\//g')/*.qtl.gz 2> /dev/null | xargs cat) > $@
+step3-post: $(foreach data, $(QTL_DATA), $(foreach null, direct marginal, $(foreach reg, eqtl mqtl, $(foreach chr, $(CHR), bootstrap/$(null)_IGAP_rosmap_$(reg)_hs-lm_$(chr).mediation.gz ) ) ) ) \
+ $(foreach data, $(QTL_DATA), $(foreach reg, eqtl mqtl, $(foreach chr, $(CHR), nwas/IGAP_rosmap_$(reg)_hs-lm_$(chr).nwas.gz ) ) )
 
 # % = $(null)_IGAP_rosmap_eqtl_hs-lm_$(chr)
 bootstrap/%.mediation.gz:
