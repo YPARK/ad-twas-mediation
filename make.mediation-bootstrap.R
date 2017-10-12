@@ -27,7 +27,6 @@ source('util.R')
 options(stringsAsFactors = FALSE)
 
 z.out.file <- out.hdr %&&% '.mediation.gz'
-snp.out.file <- out.hdr %&&% '.qtl.gz'
 
 if(file.exists(z.out.file)) {
     log.msg('File exists : %s\n\n\n', z.out.file)
