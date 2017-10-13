@@ -82,24 +82,28 @@ stat/IGAP/ld/%.ld.gz : stat/IGAP/data/hs-lm/%.eqtl_bed.gz
 step3: jobs/step3-eqtl-jobs.txt.gz jobs/step3-mqtl-jobs.txt.gz \
   jobs/step3_m2t-jobs.txt.gz
 
-step3-resubmit: jobs/step3-eqtl-jobs-resubmit.txt.gz jobs/step3-mqtl-jobs-resubmit.txt.gz
+step3-resubmit: jobs/step3-eqtl-jobs-resubmit.txt.gz jobs/step3-mqtl-jobs-resubmit.txt.gz \
+  jobs/step3_m2t-jobs-resubmit.txt.gz
 
 jobs/step3-%-jobs-resubmit.txt.gz: jobs/step3-%-jobs.txt.gz
 	zcat $< | awk 'system("[ ! -f " $$NF ".mediation.gz ]") == 0 && system("[ ! -f " $$NF " ]") == 0' | gzip > $@
 	@[ $$(zcat $@ | wc -l) -lt 1 ] || qsub -t 1-$$(zcat $@ | wc -l) -N Re-$*-ZQTL -binding "linear:1" -l h_rt=7200 -l h_vmem=4g -P compbio_lab -V -cwd -o /dev/null -b y -j y ./run_rscript.sh $@
+
+jobs/step3_m2t-jobs-resubmit.txt.gz: jobs/step3_m2t-jobs.txt.gz
+	zcat $< | awk 'system("[ ! -f " $$NF ".mediation.gz ]") == 0 && system("[ ! -f " $$NF " ]") == 0' | gzip > $@
+	@[ $$(zcat $@ | wc -l) -lt 1 ] || qsub -t 1-$$(zcat $@ | wc -l) -N Re-M2T -binding "linear:1" -l h_rt=40000 -l h_vmem=4g -P compbio_lab -V -cwd -o /dev/null -b y -j y ./run_rscript.sh $@
 
 jobs/step3-%-jobs.txt.gz: $(foreach chr, $(CHR), $(foreach task, nwas, jobs/step3/$(task)-%-$(chr).jobs))
 	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
 	@printf "" > $@
 	@cat $^ | gzip >> $@
 	@[ $$(zcat $@ | wc -l) -lt 1 ] || qsub -t 1-$$(zcat $@ | wc -l) -N $*-ZQTL -binding "linear:1" -l h_rt=1000 -l h_vmem=4g -P compbio_lab -V -cwd -o /dev/null -b y -j y ./run_rscript.sh $@
-	@rm $^
 
 jobs/step3_m2t-jobs.txt.gz: $(foreach chr, $(CHR), jobs/step3/bootstrap-m2t-$(chr).jobs)
 	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
 	@printf "" > $@
 	@cat $^ | gzip >> $@
-	@[ $$(zcat $@ | wc -l) -lt 1 ] || qsub -t 1-$$(zcat $@ | wc -l) -N M2T -binding "linear:1" -l h_rt=5000 -l h_vmem=4g -P compbio_lab -V -cwd -o /dev/null -b y -j y ./run_rscript.sh $@
+	@[ $$(zcat $@ | wc -l) -lt 1 ] || qsub -t 1-$$(zcat $@ | wc -l) -N M2T -binding "linear:1" -l h_rt=10000 -l h_vmem=4g -P compbio_lab -V -cwd -o /dev/null -b y -j y ./run_rscript.sh $@
 	@rm $^
 
 jobs/step3/bootstrap-eqtl-%.jobs:
