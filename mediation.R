@@ -68,6 +68,21 @@ extract.sum.stat <- function(ld.info, sum.file, x.bim, temp.dir, is.eqtl = TRUE,
     }
 }
 
+find.argmax.snps <- function(.stat.tab) {
+    best.qtl.tab <- .stat.tab %>% group_by(med.id) %>%
+        slice(which.max(abs(qtl.z))) %>%
+            dplyr::select(med.id, rs, snp.loc, qtl.z) %>%
+                dplyr::rename(best.qtl.rs = rs, best.qtl.loc = snp.loc, best.qtl.z = qtl.z)
+    
+    best.gwas.tab <- .stat.tab %>% group_by(med.id) %>%
+        slice(which.max(abs(gwas.z))) %>%
+            dplyr::select(med.id, rs, snp.loc, gwas.z) %>%
+                dplyr::rename(best.gwas.rs = rs, best.gwas.loc = snp.loc, best.gwas.z = gwas.z)
+
+    ret <- best.qtl.tab %>% left_join(best.gwas.tab, by = 'med.id')
+    return(ret)
+}
+
 subset.plink <- function(ld.info, temp.dir, plink.hdr) {
 
     ## read plink
