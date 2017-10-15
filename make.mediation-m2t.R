@@ -4,11 +4,11 @@ argv <- commandArgs(trailingOnly = TRUE)
 
 if(length(argv) < 6) q()
 
-ld.file <- argv[1]                      # e.g., ld.file = 'stat/IGAP/ld/1.ld.gz'
-mqtl.stat.file <- argv[2]               # e.g., mqtl.stat.file = 'stat/IGAP/data/hs-lm/1.mqtl_bed.gz'
-eqtl.stat.file <- argv[3]               # e.g., eqtl.stat.file = 'stat/IGAP/data/hs-lm/1.eqtl_bed.gz'
-plink.hdr <- argv[4]                    # e.g., plink.hdr = 'geno/rosmap1709-chr1'
-ld.idx <- as.integer(argv[5])           # e.g., ld.idx = 15
+ld.file <- argv[1]                      # e.g., ld.file = 'stat/IGAP/ld/4.ld.gz'
+mqtl.stat.file <- argv[2]               # e.g., mqtl.stat.file = 'stat/IGAP/data/hs-lm/4.mqtl_bed.gz'
+eqtl.stat.file <- argv[3]               # e.g., eqtl.stat.file = 'stat/IGAP/data/hs-lm/4.eqtl_bed.gz'
+plink.hdr <- argv[4]                    # e.g., plink.hdr = 'geno/rosmap1709-chr4'
+ld.idx <- as.integer(argv[5])           # e.g., ld.idx = 68
 out.hdr <- argv[6]                      # e.g., out.hdr = 'temp'
 
 ## Fit two models:
@@ -77,6 +77,14 @@ if(n.snps < n.snp.cutoff) {
 mqtl.stat <- extract.sum.stat(ld.info, mqtl.stat.file, x.bim, temp.dir, is.eqtl = FALSE)
 mqtl.sum.stat <- mqtl.stat$sum.stat
 mqtl.mediators <- mqtl.stat$mediators
+
+n.snps <- mqtl.sum.stat %>% select(snp.loc) %>% unique() %>% nrow()
+if(n.snps < n.snp.cutoff) {
+    log.msg('This LD block is too small : %d SNPs < %d\n', n.snps, n.snp.cutoff)
+    system('printf "" | gzip > ' %&&% m2t.out.file)
+    system('rm -r ' %&&% temp.dir)
+    q()
+}
 
 ## best QTL for each CpG
 best.mqtl.tab <- find.argmax.snps(mqtl.sum.stat)

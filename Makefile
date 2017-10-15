@@ -89,13 +89,13 @@ jobs/step3-%-jobs-resubmit.txt.gz: jobs/step3-%-jobs.txt.gz
 
 jobs/step3_m2t-jobs-resubmit.txt.gz: jobs/step3_m2t-jobs.txt.gz
 	zcat $< | awk 'system("[ ! -f " $$NF ".mediation.gz ]") == 0 && system("[ ! -f " $$NF " ]") == 0' | gzip > $@
-	@[ $$(zcat $@ | wc -l) -lt 1 ] || qsub -t 1-$$(zcat $@ | wc -l) -N Re-M2T -binding "linear:1" -l h_rt=40000 -l h_vmem=4g -P compbio_lab -V -cwd -o /dev/null -b y -j y ./run_rscript.sh $@
+	@[ $$(zcat $@ | wc -l) -lt 1 ] || qsub -t 1-$$(zcat $@ | wc -l) -N Re-M2T -binding "linear:1" -l h_rt=60000 -l h_vmem=8g -P compbio_lab -V -cwd -o /dev/null -b y -j y ./run_rscript.sh $@
 
-jobs/step3-%-jobs.txt.gz: $(foreach chr, $(CHR), $(foreach task, pve, jobs/step3/$(task)-%-$(chr).jobs))
+jobs/step3-%-jobs.txt.gz: $(foreach chr, $(CHR), $(foreach task, bootstrap pve, jobs/step3/$(task)-%-$(chr).jobs))
 	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
 	@printf "" > $@
 	@cat $^ | gzip >> $@
-	@[ $$(zcat $@ | wc -l) -lt 1 ] || qsub -t 1-$$(zcat $@ | wc -l) -N $*-ZQTL -binding "linear:1" -l h_rt=1000 -l h_vmem=4g -P compbio_lab -V -cwd -o /dev/null -b y -j y ./run_rscript.sh $@
+	@[ $$(zcat $@ | wc -l) -lt 1 ] || qsub -t 1-$$(zcat $@ | wc -l) -N $*-ZQTL -binding "linear:1" -l h_rt=10000 -l h_vmem=4g -P compbio_lab -V -cwd -o /dev/null -b y -j y ./run_rscript.sh $@
 
 jobs/step3_m2t-jobs.txt.gz: $(foreach chr, $(CHR), jobs/step3/bootstrap-m2t-$(chr).jobs)
 	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
@@ -147,7 +147,7 @@ jobs/step3/bootstrap-m2t-%.jobs:
 
 ################################################################
 step3-post: $(foreach data, $(QTL_DATA), $(foreach null, direct marginal, $(foreach reg, eqtl mqtl, $(foreach chr, $(CHR), bootstrap/$(null)_IGAP_rosmap_$(reg)_hs-lm_$(chr).mediation.gz ) ) ) ) \
- $(foreach data, $(QTL_DATA), $(foreach reg, eqtl mqtl, $(foreach chr, $(CHR), nwas/IGAP_rosmap_$(reg)_hs-lm_$(chr).nwas.gz ) ) )
+ $(foreach stat, nwas pve, $(foreach data, $(QTL_DATA), $(foreach reg, eqtl mqtl, $(foreach chr, $(CHR), $(stat)/IGAP_rosmap_$(reg)_hs-lm_$(chr).$(stat).gz ) ) ) )
 
 # % = $(null)_IGAP_rosmap_eqtl_hs-lm_$(chr)
 bootstrap/%.mediation.gz:
@@ -155,6 +155,9 @@ bootstrap/%.mediation.gz:
 
 nwas/%.nwas.gz:
 	(ls -1 nwas/$(shell echo $* | sed 's/_/\//g')/*.nwas.gz 2> /dev/null | xargs zcat) | awk 'NF > 0' | gzip > $@
+
+pve/%.pve.gz:
+	(ls -1 pve/$(shell echo $* | sed 's/_/\//g')/*.pve.gz 2> /dev/null | xargs zcat) | awk 'NF > 0' | gzip > $@
 
 ################################################################
 step3-figure: jobs/step3-bootstrap-figures.jobs.gz jobs/step3-gs-figures.jobs.gz

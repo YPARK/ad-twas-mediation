@@ -23,7 +23,15 @@ extract.sum.stat <- function(ld.info, sum.file, x.bim, temp.dir, is.eqtl = TRUE,
                            'ld', 'med.id', 'cg.loc')
     }
 
-    sum.stat <- read.table(bedtools.result, col.names = sum.stat.cols, sep = '\t') %>%
+    ## sum.stat <- read.table(bedtools.result, col.names = sum.stat.cols, sep = '\t') %>%
+    require(readr)
+    sum.stat <- read_tsv(bedtools.result, col_names = sum.stat.cols)
+
+    if(nrow(sum.stat) == 0) {
+        return(list(sum.stat = sum.stat, mediators = NULL))
+    }
+
+    sum.stat <- sum.stat %>%
         mutate(qtl.se = qtl.theta / qtl.z) %>%
             left_join(x.bim, by = c('chr', 'rs', 'snp.loc'))
 

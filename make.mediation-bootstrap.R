@@ -97,11 +97,27 @@ obs.tab <- melt.effect(z.out$param.mediated, mediators$med.id, 1) %>%
 .boot <- z.out$bootstrap
 n.boot <- .boot[['nboot']]
 
-cauchy.mat <- t(apply(.boot$stat.mat, 1, function(.data) fitdistr(.data, 'cauchy')$estimate))
+cauchy.mat <- t(apply(.boot$stat.mat, 1, function(.data) {
+    ret <- tryCatch({
+        return(fitdistr(.data, 'cauchy')$estimate)
+    }, error = function(e) {
+        return(rep(NA,2))
+    })
+    return(ret)
+}))
+
 colnames(cauchy.mat) <- c('cauchy.location', 'cauchy.scale')
 cauchy.mat <- data.frame(med.id = as.character(mediators$med.id), cauchy.mat)
 
-t.mat <- t(apply(.boot$stat.mat, 1, function(.data) fitdistr(.data, 't', df = 1)$estimate))
+t.mat <- t(apply(.boot$stat.mat, 1, function(.data) {
+    ret <- tryCatch({
+        return(fitdistr(.data, 't', df = 1)$estimate)
+    }, error = function(e) {
+        return(rep(NA,2))
+    })
+    return(ret)
+}))
+
 colnames(t.mat) <- c('t.m', 't.s')
 t.mat <- data.frame(med.id = as.character(mediators$med.id), t.mat)
 
