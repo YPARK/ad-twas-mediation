@@ -160,13 +160,16 @@ pve/%.pve.gz:
 	(ls -1 pve/$(shell echo $* | sed 's/_/\//g')/*.pve.gz 2> /dev/null | xargs zcat) | awk 'NF > 0' | gzip > $@
 
 ################################################################
-step3-figure: jobs/step3-bootstrap-figures.jobs.gz jobs/step3-gs-figures.jobs.gz
+step3-figure: jobs/step3-figures.jobs.gz
 
-jobs/step3-bootstrap-figures.jobs.gz: tables/bootstrap_ld_significant.txt.gz
+
+jobs/step3-figures.jobs.gz: tables/genes_ld_significant.txt.gz
 	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
-	awk -vN=$$(zcat $< | tail -n+2 | awk '{ k=$$1 FS $$2 FS $$3; keys[k]++ } END { print length(keys) }') 'BEGIN { for(j=1; j<=N; ++j) print "./figure.bootstrap.ld.R" FS j FS "tables/bootstrap_ld_significant.txt.gz" FS "figures/ld/bootstrap/" }' | gzip > $@
-	awk -vN=$$(zcat $< | tail -n+2 | awk '{ k=$$1 FS $$2 FS $$3; keys[k]++ } END { print length(keys) }') 'BEGIN { for(j=1; j<=N; ++j) print "./figure.bootstrap.ld.R" FS j FS "tables/bootstrap_ld_twas.txt.gz" FS "figures/ld/twas/" }' | gzip >> $@
-	@[ $$(zcat $@ | wc -l) -lt 1 ] || qsub -t 1-$$(zcat $@ | wc -l) -N FIG-ZQTL -binding "linear:1" -l h_rt=3600 -l h_vmem=32g -P compbio_lab -V -cwd -o /dev/null -b y -j y ./run_rscript.sh $@
+	@printf "" | gzip > $@
+	awk -vN=$$(zcat tables/genes_ld_strict.txt.gz | tail -n+2 | awk '{ k=$$1 FS $$2 FS $$3; keys[k]++ } END { print length(keys) }') 'BEGIN { for(j=1; j<=N; ++j) print "./figure.gene.local.R" FS j FS "tables/genes_ld_strict.txt.gz" FS "figures/local/strict/" }' | gzip >> $@
+	awk -vN=$$(zcat tables/genes_ld_significant.txt.gz | tail -n+2 | awk '{ k=$$1 FS $$2 FS $$3; keys[k]++ } END { print length(keys) }') 'BEGIN { for(j=1; j<=N; ++j) print "./figure.gene.local.R" FS j FS "tables/genes_ld_significant.txt.gz" FS "figures/local/mediation/" }' | gzip >> $@
+	awk -vN=$$(zcat tables/genes_ld_twas.txt.gz | tail -n+2 | awk '{ k=$$1 FS $$2 FS $$3; keys[k]++ } END { print length(keys) }') 'BEGIN { for(j=1; j<=N; ++j) print "./figure.gene.local.R" FS j FS "tables/genes_ld_twas.txt.gz" FS "figures/local/twas/" }' | gzip >> $@
+	@[ $$(zcat $@ | wc -l) -lt 1 ] || qsub -t 1-$$(zcat $@ | wc -l) -N FIG-ZQTL -binding "linear:1" -l h_rt=1000 -l h_vmem=4g -P compbio_lab -V -cwd -o /dev/null -b y -j y ./run_rscript.sh $@
 
 
 ## figures/bootstrap_gene

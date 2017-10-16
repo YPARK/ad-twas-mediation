@@ -33,7 +33,7 @@ sum.file.dir <- 'stat/IGAP/data/hs-lm/'
 ld.info <- ld.key[ld.idx, ]
 chr <- as.integer(ld.info[1])
 
-ld.out.file <- sprintf('%s/chr%d_ld%d_heatmap.png', out.dir, chr, ld.idx)
+ld.out.file <- sprintf('%s/chr%d_ld%d_gwas_med_twas.pdf', out.dir, chr, ld.idx)
 
 if(file.exists(ld.out.file)) q()
 
@@ -127,7 +127,7 @@ if(max(gwas.df$gwas.p) > -log10(5e-8)) {
 }
 
 out.file <- sprintf('%s/chr%d_ld%d_gwas.pdf', out.dir, chr, ld.idx)
-ggsave(plt.manhattan, file = out.file, width = .gwas.w, height = 3,
+ggsave(file = out.file, plot = plt.gwas, width = .gwas.w, height = 3,
        useDingbats = FALSE, limitsize = FALSE)
 
 ################################################################
@@ -153,7 +153,7 @@ if(nrow(.temp) > 0) {
     qtl.edges <- qtl.melt %>% right_join(.temp, by = 'hgnc') %>% na.omit()
     plt.edge <- plt.edge +
         geom_segment(data = qtl.edges, aes(x = snp.loc, xend = (tss+tes)/2, y = 1, yend = 0),
-                     size = .1, color = 'gray')
+                     size = .1, color = 'gray', alpha = 0.5)
 }
 
 
@@ -164,12 +164,39 @@ plt.edge <- plt.edge +
                     angle = 45, segment.color = 'green', alpha = 0.5) +
     scale_size_continuous(guide = FALSE, range=c(2, 4))
 
+
+v.tot <- model.tab %>% mutate(v.tot = v.med.tot + v.resid + v.dir) %>%
+    slice(which.max(v.tot)) %>% dplyr::select(v.tot, v.med.tot, v.resid, v.dir) %>%
+        melt()
+
+v.tot.val <- v.tot %>% filter(variable == 'v.tot') %>% dplyr::select(value) %>% as.numeric()
+
+v.tot <- v.tot %>% filter(variable != 'v.tot') %>% mutate(pve = value / v.tot.val)
+
+get.plt <- function() {
+    ret <- gg.plot() +
+        theme(axis.text.x = element_blank(), axis.title = element_blank())
+    return(ret)
+}
+
+p1 <- get.plt() +
+    geom_bar(data = v.tot, aes(x='0', y = pve, fill = variable), stat = 'identity')
+
+p2 <- get.plt() +
+    geom_bar(data = model.tab %>% arrange(desc(pve)) %>% head(5), aes(x='1', y = pve, fill = hgnc), stat = 'identity')
+
+out.file <- sprintf('%s/chr%d_ld%d_pve.pdf', out.dir, chr, ld.idx)
+pdf(file = out.file, width = 4, height = 3, useDingbats = FALSE)
+grid.hcat(list(p1, p2))
+dev.off()
+
 plt.med <- gg.plot(model.tab) +
     geom_hline(yintercept = -log10(2.5e-6), lty = 2, color = 'gray') + 
-    geom_segment(aes(x = (tss + tes)/2, xend = (tss + tes)/2, y = 0, yend = med.p),
-                 color = 'red', arrow = arrow(length = unit(.05, 'inches')),
+    geom_segment(aes(x = (tss + tes)/2, xend = (tss + tes)/2, y = 0, yend = med.p, color = theta),
+                 arrow = arrow(length = unit(.05, 'inches')),
                  size = 1) +
-    scale_y_reverse() + .gwas.x.scale + ylab('-log10 mediation p-value') +
+                     scale_y_reverse() + scale_color_gradient2(low = 'blue', high = 'red', mid = 'gray40', guide = FALSE) +
+                         .gwas.x.scale + ylab('-log10 mediation p-value') +
     xlab('genomic location (kb)')
 
 
@@ -177,10 +204,11 @@ plt.med.twas <- gg.plot(model.tab) +
     geom_hline(yintercept = -log10(2.5e-6), lty = 2, color = 'gray') + 
     geom_segment(aes(x = (tss + tes)/2, xend = (tss + tes)/2, y = 0, yend = pmin(-log10(p.val.nwas), 10)),
                  color = '#009900', size = 2, alpha = 0.5) +
-    geom_segment(aes(x = (tss + tes)/2, xend = (tss + tes)/2, y = 0, yend = med.p),
-                 color = 'red', arrow = arrow(length = unit(.05, 'inches')),
+    geom_segment(aes(x = (tss + tes)/2, xend = (tss + tes)/2, y = 0, yend = med.p, color = theta),
+                 arrow = arrow(length = unit(.05, 'inches')),
                  size = 1) +
-    scale_y_reverse() + .gwas.x.scale + ylab('-log10 mediation p-value') +
+                     scale_y_reverse() + scale_color_gradient2(low = 'blue', high = 'red', mid = 'gray40', guide = FALSE) +
+                         .gwas.x.scale + ylab('-log10 mediation p-value') +
     xlab('genomic location (kb)')
 
 
