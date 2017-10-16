@@ -3,9 +3,9 @@ argv <- commandArgs(trailingOnly = TRUE)
 
 if(length(argv) < 3) q()
 
-ld.idx <- as.integer(argv[1])
-ld.tab.file <- argv[2] # e.g., 'tables/bootstrap_ld_significant.txt.gz'
-out.dir <- argv[3]
+ld.idx <- as.integer(argv[1]) # e.g., ld.idx <- 1
+ld.tab.file <- argv[2] # e.g., ld.tab.file <- 'tables/genes_ld_significant.txt.gz'
+out.dir <- argv[3]     # e.g., out.dir <- 'temp' 
 
 options(stringsAsFators = FALSE)
 source('util.R')
@@ -26,6 +26,15 @@ ld.key <- ld.tab %>% select(chr, ld.lb, ld.ub) %>% unique()
 if(ld.idx > nrow(ld.key)) q()
 
 dir.create(out.dir, recursive = TRUE, showWarnings = FALSE)
+
+## top    : GWAS
+## middle : QTL
+## bottom : PVE
+
+
+
+
+
 
 plink.hdr <- 'geno/rosmap1709-chr'
 sum.file.dir <- 'stat/IGAP/data/hs-lm/'

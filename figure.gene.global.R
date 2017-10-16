@@ -158,7 +158,7 @@ ret <-
                 label = hgnc)) +
     geom_linerange(data = df.sig,
                    aes(ymin = theta - 2*theta.se, ymax = theta + 2*theta.se),
-                   size = 0.25) +
+                   size = 1) +
     geom_point() +
     scale_size_continuous('proportion of variance explained', range = c(0.5, 1.5), breaks = c(1e-2, 1e-1, .99)) +
     scale_color_gradientn('-log10 GWAS p-value', colors = c('gray80', 'gray40', 'purple', 'purple')) +
@@ -166,10 +166,10 @@ ret <-
     scale_x_continuous(labels = .genome.mb(), breaks = c(0, 5e7, 1e8, 1.5e8, 2e8)) +
     theme(legend.direction = 'horizontal', legend.position = 'bottom',
           panel.spacing.x = unit(0.05, 'lines'), panel.grid.minor.x = element_blank(),
-          panel.border = element_blank(), strip.text = element_text(size = 6),
-          axis.text = element_text(size = 5),
+          panel.border = element_blank(), strip.text = element_text(size = 8),
+          axis.text = element_text(size = 8),
           axis.text.x = element_text(angle = 45, hjust = 1),
-          legend.title = element_text(size = 8))
+          legend.title = element_text(size = 12))
 
 ret <- ret + xlab('genomic location (mb)') + ylab('mediation effect')
 
@@ -179,16 +179,16 @@ df.strict.pos <- df.sig %>% filter(abs(best.gwas.z) > 4, theta > 0)
 
 ret <- ret + geom_text_repel(data = df.strict.neg, 
                              aes(y = theta), color = 'blue', segment.alpha = 0.5,
-                             nudge_y = -.2, size = 1.5, segment.size = .3, segment.color = 'green')
+                             nudge_y = -.2, size = 3, segment.size = .3, segment.color = 'green')
 
 ret <- ret + geom_point(data = df.strict.neg, pch = 22, size = 3, color = 'green')
 
 ret <- ret + geom_text_repel(data = df.strict.pos,
                       aes(y = theta), color = 'red', segment.alpha = 0.5,
-                      nudge_y = .2, size = 1.5, segment.size = .3, segment.color = 'orange')
+                      nudge_y = .2, size = 3, segment.size = .3, segment.color = 'orange')
 
 ret <- ret + geom_point(data = df.strict.pos, pch = 22, size = 3, color = 'orange')
 
-ggsave(filename = 'figures/gene_mediation_effect.pdf', plot = ret, width = 8, height = 5,
+ggsave(filename = 'figures/gene_mediation_effect.pdf', plot = ret, width = 16, height = 8,
        useDingbats = FALSE, limitsize = FALSE)
 
