@@ -180,10 +180,13 @@ get.plt <- function() {
 }
 
 p1 <- get.plt() +
-    geom_bar(data = v.tot, aes(x='0', y = pve, fill = variable), stat = 'identity')
+    geom_bar(data = v.tot, aes(x='0', y = pve, fill = variable), stat = 'identity') +
+        ylim(c(0, 1))
 
 p2 <- get.plt() +
-    geom_bar(data = model.tab %>% arrange(desc(pve)) %>% head(5), aes(x='1', y = pve, fill = hgnc), stat = 'identity')
+    geom_bar(data = model.tab %>% arrange(desc(pve)) %>% head(7),
+             aes(x='1', y = pve, fill = hgnc), stat = 'identity') +
+                 ylim(c(0, 1))
 
 out.file <- sprintf('%s/chr%d_ld%d_pve.pdf', out.dir, chr, ld.idx)
 pdf(file = out.file, width = 4, height = 3, useDingbats = FALSE)
