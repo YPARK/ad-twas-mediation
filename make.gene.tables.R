@@ -62,7 +62,15 @@ null.marginal <- null.lodds(boot.marginal.tab)
 
 ## read PVE calculation and add p-values
 pve.tab <- read.pve('pve/IGAP_rosmap_eqtl_hs-lm_') %>%
-    rename(ensg = med.id) %>%
+    rename(ensg = med.id)
+
+.temp <- pve.tab %>% group_by(chr, ld.lb, ld.ub) %>%
+    summarize(v.med.sum = sum(v.med), v.med.tot = max(v.med.tot)) %>%
+    mutate(v.med.tot = pmax(v.med.sum, v.med.tot)) %>%
+    dplyr::select(-v.med.sum)
+
+pve.tab <- pve.tab %>% dplyr::select(-v.med.tot) %>%
+    left_join(.temp, by = c('chr', 'ld.lb', 'ld.ub')) %>%
     filter(ensg %in% h.genes)
 
 pval.direct <- empPvals(pve.tab$lodds, null.direct)
