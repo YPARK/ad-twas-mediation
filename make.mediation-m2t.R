@@ -4,11 +4,11 @@ argv <- commandArgs(trailingOnly = TRUE)
 
 if(length(argv) < 6) q()
 
-ld.file <- argv[1]                      # e.g., ld.file = 'stat/IGAP/ld/4.ld.gz'
-mqtl.stat.file <- argv[2]               # e.g., mqtl.stat.file = 'stat/IGAP/data/hs-lm/4.mqtl_bed.gz'
-eqtl.stat.file <- argv[3]               # e.g., eqtl.stat.file = 'stat/IGAP/data/hs-lm/4.eqtl_bed.gz'
-plink.hdr <- argv[4]                    # e.g., plink.hdr = 'geno/rosmap1709-chr4'
-ld.idx <- as.integer(argv[5])           # e.g., ld.idx = 68
+ld.file <- argv[1]                      # e.g., ld.file = 'stat/IGAP/ld/5.ld.gz'
+mqtl.stat.file <- argv[2]               # e.g., mqtl.stat.file = 'stat/IGAP/data/hs-lm/5.mqtl_bed.gz'
+eqtl.stat.file <- argv[3]               # e.g., eqtl.stat.file = 'stat/IGAP/data/hs-lm/5.eqtl_bed.gz'
+plink.hdr <- argv[4]                    # e.g., plink.hdr = 'geno/rosmap1709-chr5'
+ld.idx <- as.integer(argv[5])           # e.g., ld.idx = 43
 out.hdr <- argv[6]                      # e.g., out.hdr = 'temp'
 
 ## Fit two models:
@@ -67,6 +67,7 @@ best.eqtl.tab <- find.argmax.snps(eqtl.sum.stat)
 
 ## Only work on sufficiently large LD blocks
 n.snps <- eqtl.sum.stat %>% select(snp.loc) %>% unique() %>% nrow()
+
 if(n.snps < n.snp.cutoff) {
     log.msg('This LD block is too small : %d SNPs < %d\n', n.snps, n.snp.cutoff)
     system('printf "" | gzip > ' %&&% m2t.out.file)
@@ -79,6 +80,7 @@ mqtl.sum.stat <- mqtl.stat$sum.stat
 mqtl.mediators <- mqtl.stat$mediators
 
 n.snps <- mqtl.sum.stat %>% select(snp.loc) %>% unique() %>% nrow()
+
 if(n.snps < n.snp.cutoff) {
     log.msg('This LD block is too small : %d SNPs < %d\n', n.snps, n.snp.cutoff)
     system('printf "" | gzip > ' %&&% m2t.out.file)
@@ -115,6 +117,15 @@ joint.qtl.se <- cbind(zqtl.data.eqtl$qtl.se, zqtl.data.mqtl$qtl.se)
 joint.mediators <- c(eqtl.mediators$med.id, mqtl.mediators$med.id)
 
 log.msg('Have all data ready:\n%s mediators\n\n', length(joint.mediators))
+
+n.snps <- ncol(zqtl.data.eqtl$X)
+
+if(n.snps < n.snp.cutoff) {
+    log.msg('This LD block is too small : %d SNPs < %d\n', n.snps, n.snp.cutoff)
+    system('printf "" | gzip > ' %&&% m2t.out.file)
+    system('rm -r ' %&&% temp.dir)
+    q()
+}
 
 ## 1. joint model with short number of bootstrap steps (store them all)
 vb.opt <- list(pi = -2, tau = -4, do.hyper = FALSE, tol = 1e-8, gammax = 1e4,
