@@ -166,7 +166,8 @@ plt.edge <- gg.plot() + .gwas.x.scale +
 
 plt.edge <-
     plt.edge +
-    geom_polygon(data =.temp, .aes.poly, alpha = 0.3, show.legend = FALSE) +
+    geom_polygon(data =.temp, .aes.poly, alpha = 0.3) +
+    scale_fill_gradient2(low = 'blue', high = 'red', mid = 'gray40', guide = FALSE) +
     geom_segment(data = model.tab, .aes.qtl, show.legend = FALSE,
                  arrow = arrow(length = unit(.05, 'inches'))) +
     geom_text(data = model.tab, .aes.txt, hjust = 0, angle = 90, size = 3) +
