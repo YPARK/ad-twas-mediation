@@ -157,13 +157,16 @@ plt.edge <- gg.plot() + .gwas.x.scale +
                qtl.melt %>% group_by(hgnc) %>% summarize(x = max(snp.loc), y = 0),
                .gene %>% dplyr::select(hgnc, x, y))
 
-.aes.poly <- aes(group = hgnc, x = x, y = y)
+.temp <- .temp %>% left_join(model.tab %>% dplyr::select(hgnc, theta),
+                             by = 'hgnc')
+
+.aes.poly <- aes(group = hgnc, x = x, y = y, fill = theta)
 .aes.qtl <- aes(x = best.qtl.loc, xend = (tss+tes)/2, y = 0, yend = 1, color = sign(best.qtl.z))
 .aes.txt <- aes(x = (tss + tes)/2, y = 1, label = hgnc)
 
 plt.edge <-
     plt.edge +
-    geom_polygon(data =.temp, .aes.poly, fill = 'gray', alpha = 0.5) +
+    geom_polygon(data =.temp, .aes.poly, alpha = 0.3, show.legend = FALSE) +
     geom_segment(data = model.tab, .aes.qtl, show.legend = FALSE,
                  arrow = arrow(length = unit(.05, 'inches'))) +
     geom_text(data = model.tab, .aes.txt, hjust = 0, angle = 90, size = 3) +
