@@ -89,7 +89,7 @@ jobs/step3-%-jobs-resubmit.txt.gz: jobs/step3-%-jobs.txt.gz
 
 jobs/step3_m2t-jobs-resubmit.txt.gz: jobs/step3_m2t-jobs.txt.gz
 	zcat $< | awk 'system("[ ! -f " $$NF ".mediation.gz ]") == 0 && system("[ ! -f " $$NF " ]") == 0' | gzip > $@
-	@[ $$(zcat $@ | wc -l) -lt 1 ] || qsub -t 1-$$(zcat $@ | wc -l) -N Re-M2T -binding "linear:1" -l h_rt=120000 -l h_vmem=16g -P compbio_lab -V -cwd -o /dev/null -b y -j y ./run_rscript.sh $@
+	@[ $$(zcat $@ | wc -l) -lt 1 ] || qsub -t 1-$$(zcat $@ | wc -l) -N Re-M2T -binding "linear:1" -l h_rt=300:00:00 -l h_vmem=16g -P compbio_lab -V -cwd -o /dev/null -b y -j y ./run_rscript.sh $@
 
 jobs/step3-%-jobs.txt.gz: $(foreach chr, $(CHR), $(foreach task, bootstrap pve, jobs/step3/$(task)-%-$(chr).jobs))
 	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
@@ -146,20 +146,45 @@ jobs/step3/bootstrap-m2t-%.jobs:
 
 
 ################################################################
-step3-post: $(foreach data, $(QTL_DATA), $(foreach null, direct marginal, $(foreach reg, eqtl mqtl, $(foreach chr, $(CHR), bootstrap/$(null)_IGAP_rosmap_$(reg)_hs-lm_$(chr).mediation.gz ) ) ) ) \
+step3-post: $(foreach data, $(QTL_DATA), $(foreach null, direct marginal, $(foreach reg, eqtl mqtl, $(foreach chr, $(CHR), bootstrap/$(null)_IGAP_rosmap_$(reg)_$(data)_$(chr).mediation.gz ) ) ) ) \
+ $(foreach data, $(QTL_DATA), $(foreach chr, $(CHR), bootstrap/rosmap_$(data)_$(chr).m2t-null.gz bootstrap/rosmap_$(data)_$(chr).m2t.gz joint/IGAP_rosmap_$(data)_$(chr).cpg.gz joint/IGAP_rosmap_$(data)_$(chr).genes.gz joint/IGAP_rosmap_$(data)_$(chr).null.gz ) ) \
  $(foreach stat, nwas pve, $(foreach data, $(QTL_DATA), $(foreach reg, eqtl mqtl, $(foreach chr, $(CHR), $(stat)/IGAP_rosmap_$(reg)_hs-lm_$(chr).$(stat).gz ) ) ) )
 
 # % = $(null)_IGAP_rosmap_eqtl_hs-lm_$(chr)
 bootstrap/%.mediation.gz:
+	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
 	(ls -1 bootstrap/$(shell echo $* | sed 's/_/\//g')/*.mediation.gz 2> /dev/null | xargs zcat) | awk 'NF > 0' | gzip > $@
 
-m2t/%.m2t.gz:
+# % = IGAP_rosmap/hs-lm/21/
+bootstrap/%.m2t.gz:
+	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
+	(ls -1 bootstrap/m2t/IGAP/$(shell echo $* | sed 's/_/\//g')/*.mediation.gz 2> /dev/null | xargs zcat) | awk 'NF > 0' | gzip > $@
 
+bootstrap/%.m2t-null.gz:
+	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
+	(ls -1 bootstrap/m2t/IGAP/$(shell echo $* | sed 's/_/\//g')/*.m2t-null.gz 2> /dev/null | xargs zcat) | awk 'NF > 0' | gzip > $@
+
+# % = IGAP_rosmap/hs-lm/21/
+joint/%.genes.gz:
+	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
+	(ls -1 bootstrap/m2t/$(shell echo $* | sed 's/_/\//g')/*.gene-mediation.gz 2> /dev/null | xargs zcat) | awk 'NF > 0' | gzip > $@
+
+# % = IGAP_rosmap/hs-lm/21/
+joint/%.cpg.gz:
+	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
+	(ls -1 bootstrap/m2t/$(shell echo $* | sed 's/_/\//g')/*.cpg-mediation.gz 2> /dev/null | xargs zcat) | awk 'NF > 0' | gzip > $@
+
+# % = IGAP_rosmap/hs-lm/21/
+joint/%.null.gz:
+	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
+	(ls -1 bootstrap/m2t/$(shell echo $* | sed 's/_/\//g')/*.joint-null.gz 2> /dev/null | xargs zcat) | awk 'NF > 0' | gzip > $@
 
 nwas/%.nwas.gz:
+	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
 	(ls -1 nwas/$(shell echo $* | sed 's/_/\//g')/*.nwas.gz 2> /dev/null | xargs zcat) | awk 'NF > 0' | gzip > $@
 
 pve/%.pve.gz:
+	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
 	(ls -1 pve/$(shell echo $* | sed 's/_/\//g')/*.pve.gz 2> /dev/null | xargs zcat) | awk 'NF > 0' | gzip > $@
 
 ################################################################
@@ -181,7 +206,7 @@ GS := $(shell ls -1 genesets/*.gmt 2> /dev/null | xargs -I file basename file .v
 jobs/step3-gs-figures.jobs.gz: $(foreach gs, $(GS), jobs/step3-gs-$(gs).job)
 	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
 	@cat $^ | gzip > $@
-	@[ $$(zcat $@ | wc -l) -lt 1 ] || qsub -t 1-$$(zcat $@ | wc -l) -N FIG-GS -binding "linear:1" -l h_rt=30000 -l h_vmem=4g -P compbio_lab -V -cwd -o /dev/null -b y -j y ./run_rscript.sh $@
+	@[ $$(zcat $@ | wc -l) -lt 1 ] || qsub -t 1-$$(zcat $@ | wc -l) -N FIG-GS -binding "linear:1" -l h_rt=50000 -l h_vmem=4g -P compbio_lab -V -cwd -o /dev/null -b y -j y ./run_rscript.sh $@
 
 step3-figure-gs: $(foreach gs, $(GS), figures/geneset-bootstrap_gene_$(gs).pdf)
 
@@ -235,7 +260,7 @@ step5-resubmit: jobs/step5-eqtl-jobs-resubmit.txt.gz
 
 jobs/step5-%-jobs-resubmit.txt.gz: jobs/step5-%-jobs.txt.gz
 	zcat $< | awk 'system("[ ! -f " $$NF ".mediation.gz ]") == 0 && system("[ ! -f " $$NF " ]") == 0' | gzip > $@
-	@[ $$(zcat $@ | wc -l) -lt 1 ] || qsub -t 1-$$(zcat $@ | wc -l) -N Re-$*-ZQTL -binding "linear:1" -l h_rt=120000 -l h_vmem=4g -P compbio_lab -V -cwd -o /dev/null -b y -j y ./run_rscript.sh $@
+	@[ $$(zcat $@ | wc -l) -lt 1 ] || qsub -t 1-$$(zcat $@ | wc -l) -N Re-$*-ZQTL -binding "linear:1" -l h_rt=500000 -l h_vmem=4g -P compbio_lab -V -cwd -o /dev/null -b y -j y ./run_rscript.sh $@
 
 jobs/step5-%-jobs.txt.gz: $(foreach chr, $(CHR), $(foreach task, nwas bootstrap, jobs/step5/$(task)-%-$(chr).jobs))
 	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
@@ -266,4 +291,3 @@ bin/plink:
 	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
 	curl $(PLINKZIP) -o bin/plink.zip
 	unzip bin/plink.zip -d bin/
-

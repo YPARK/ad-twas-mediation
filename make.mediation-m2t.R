@@ -128,72 +128,84 @@ if(n.snps < n.snp.cutoff) {
 }
 
 ## 1. joint model with short number of bootstrap steps (store them all)
-vb.opt <- list(pi = -2, tau = -4, do.hyper = FALSE, tol = 1e-8, gammax = 1e4,
-               vbiter = 5000, do.stdize = TRUE, eigen.tol = 1e-2,
-               rate = 1e-2, decay = -1e-2, nsample = 10, print.interv = 100,
-               nboot = 10, bootstrap.method = 2, med.finemap = FALSE)
+.files <- c(joint.gene.file, joint.cpg.file, joint.null.file)
 
-joint.out <- fit.med.zqtl(effect = zqtl.data.eqtl$gwas.theta,
-                          effect.se = zqtl.data.eqtl$gwas.se,
-                          effect.m = joint.qtl.theta,
-                          effect.m.se = joint.qtl.se,
-                          X = zqtl.data.eqtl$X,
-                          options = vb.opt)
+if(!all(sapply(.files, file.exists))) {
 
-log.msg('Finished fitting the joint model\n')
+    vb.opt <- list(pi = -2, tau = -4, do.hyper = FALSE, tol = 1e-8, gammax = 1e4,
+                   vbiter = 5000, do.stdize = TRUE, eigen.tol = 1e-2,
+                   rate = 1e-2, decay = -1e-2, nsample = 10, print.interv = 100,
+                   nboot = 10, bootstrap.method = 2, med.finemap = FALSE)
 
-joint.null.stat <- as.vector(joint.out$bootstrap$stat.mat)
+    joint.out <- fit.med.zqtl(effect = zqtl.data.eqtl$gwas.theta,
+                              effect.se = zqtl.data.eqtl$gwas.se,
+                              effect.m = joint.qtl.theta,
+                              effect.m.se = joint.qtl.se,
+                              X = zqtl.data.eqtl$X,
+                              options = vb.opt)
 
-joint.effect.melt <- melt.effect(joint.out$param.mediated, joint.mediators, 'gwas')
+    log.msg('Finished fitting the joint model\n')
+
+    joint.null.stat <- as.vector(joint.out$bootstrap$stat.mat)
+
+    joint.effect.melt <- melt.effect(joint.out$param.mediated, joint.mediators, 'gwas')
+
+    cat(joint.null.stat, file = gzfile(joint.null.file), sep = '\n')
+
+    gene.out.tab <- joint.effect.melt %>% dplyr::select(-Var2) %>%
+        filter(Var1 %in% eqtl.mediators$med.id) %>%
+            dplyr::rename(med.id = Var1) %>%
+                left_join(eqtl.mediators, by = 'med.id') %>%
+                    left_join(best.eqtl.tab, by = 'med.id') %>%
+                        mutate(chr = ld.info[1,1], ld.lb = ld.info[1,2], ld.ub = ld.info[1,3]) %>%
+                            dplyr::select(chr, ld.lb, ld.ub, med.id, theta, theta.var, lodds, hgnc,
+                                          tss, tes, strand, best.gwas.z, best.gwas.rs, best.gwas.loc,
+                                          best.qtl.z, best.qtl.rs, best.qtl.loc)
+
+    cpg.out.tab <- joint.effect.melt %>% dplyr::select(-Var2) %>%
+        filter(Var1 %in% mqtl.mediators$med.id) %>%
+            dplyr::rename(med.id = Var1) %>%
+                left_join(mqtl.mediators, by = 'med.id') %>%
+                    left_join(best.mqtl.tab, by = 'med.id') %>%
+                        mutate(chr = ld.info[1,1], ld.lb = ld.info[1,2], ld.ub = ld.info[1,3]) %>%
+                            dplyr::select(chr, ld.lb, ld.ub, med.id, theta, theta.var, lodds,
+                                          cg.loc, best.gwas.z, best.gwas.rs, best.gwas.loc,
+                                          best.qtl.z, best.qtl.rs, best.qtl.loc)
+
+
+    write.tab(gene.out.tab, file = gzfile(joint.gene.file))
+    write.tab(cpg.out.tab, file = gzfile(joint.cpg.file))
+}
 
 
 ## 2. M -> T (with much reduced number of bootstrap)
-vb.opt <- list(pi = -2, tau = -4, do.hyper = FALSE, tol = 1e-8, gammax = 1e4,
-               vbiter = 5000, do.stdize = TRUE, eigen.tol = 1e-2,
-               rate = 1e-2, decay = -1e-2, nsample = 10, print.interv = 100,
-               nboot = 3, bootstrap.method = 2, med.finemap = FALSE)
+.files <- c(m2t.out.file, m2t.null.file)
 
-m2t.out <- fit.med.zqtl(effect = zqtl.data.eqtl$qtl.theta,
-                        effect.se = zqtl.data.eqtl$qtl.se,
-                        effect.m = zqtl.data.mqtl$qtl.theta,
-                        effect.m.se = zqtl.data.mqtl$qtl.se,
-                        X = zqtl.data.eqtl$X,
-                        options = vb.opt)
+if(!all(sapply(.files, file.exists))) {
 
-log.msg('Finished fitting the M->T model\n')
+    vb.opt <- list(pi = -2, tau = -4, do.hyper = FALSE, tol = 1e-8, gammax = 1e4,
+                   vbiter = 5000, do.stdize = TRUE, eigen.tol = 1e-2,
+                   rate = 1e-2, decay = -1e-2, nsample = 10, print.interv = 100,
+                   nboot = 3, bootstrap.method = 2, med.finemap = FALSE)
 
-m2t.null.stat <- as.vector(m2t.out$bootstrap$stat.mat)
+    m2t.out <- fit.med.zqtl(effect = zqtl.data.eqtl$qtl.theta,
+                            effect.se = zqtl.data.eqtl$qtl.se,
+                            effect.m = zqtl.data.mqtl$qtl.theta,
+                            effect.m.se = zqtl.data.mqtl$qtl.se,
+                            X = zqtl.data.eqtl$X,
+                            options = vb.opt)
 
-m2t.effect.melt <- melt.effect(m2t.out$param.mediated, mqtl.mediators$med.id, eqtl.mediators$med.id)
+    log.msg('Finished fitting the M->T model\n')
 
-################################################################
-cat(joint.null.stat, file = gzfile(joint.null.file), sep = '\n')
-cat(m2t.null.stat, file = gzfile(m2t.null.file), sep = '\n')
+    m2t.null.stat <- as.vector(m2t.out$bootstrap$stat.mat)
 
-gene.out.tab <- joint.effect.melt %>% dplyr::select(-Var2) %>%
-    filter(Var1 %in% eqtl.mediators$med.id) %>%
-        dplyr::rename(med.id = Var1) %>%
-            left_join(eqtl.mediators, by = 'med.id') %>%
-                left_join(best.eqtl.tab, by = 'med.id') %>%
-                    mutate(chr = ld.info[1,1], ld.lb = ld.info[1,2], ld.ub = ld.info[1,3]) %>%
-                        dplyr::select(chr, ld.lb, ld.ub, med.id, theta, theta.var, lodds, hgnc,
-                                      tss, tes, strand, best.gwas.z, best.gwas.rs, best.gwas.loc,
-                                      best.qtl.z, best.qtl.rs, best.qtl.loc)
+    m2t.effect.melt <- melt.effect(m2t.out$param.mediated, mqtl.mediators$med.id, eqtl.mediators$med.id)
 
-cpg.out.tab <- joint.effect.melt %>% dplyr::select(-Var2) %>%
-    filter(Var1 %in% mqtl.mediators$med.id) %>%
-        dplyr::rename(med.id = Var1) %>%
-            left_join(mqtl.mediators, by = 'med.id') %>%
-                left_join(best.mqtl.tab, by = 'med.id') %>%
-                    mutate(chr = ld.info[1,1], ld.lb = ld.info[1,2], ld.ub = ld.info[1,3]) %>%
-                        dplyr::select(chr, ld.lb, ld.ub, med.id, theta, theta.var, lodds,
-                                      cg.loc, best.gwas.z, best.gwas.rs, best.gwas.loc,
-                                      best.qtl.z, best.qtl.rs, best.qtl.loc)
+    cat(m2t.null.stat, file = gzfile(m2t.null.file), sep = '\n')
 
+    write.tab(m2t.effect.melt, file = gzfile(m2t.out.file))
 
-write.tab(gene.out.tab, file = gzfile(joint.gene.file))
-write.tab(cpg.out.tab, file = gzfile(joint.cpg.file))
-write.tab(m2t.effect.melt, file = gzfile(m2t.out.file))
+}
 
 system('rm -r ' %&&% temp.dir)
 log.msg('Finished M -> T\n\n\n')
