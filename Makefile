@@ -213,9 +213,12 @@ step3-figure-gs: $(foreach gs, $(GS), figures/geneset-bootstrap_gene_$(gs).pdf)
 jobs/step3-gs-%.job:
 	echo ./figure.geneset.R tables/bootstrap_gene_significant.txt.gz tables/bootstrap_gene.txt.gz genesets/$(shell echo $* | sed 's/_/\./g').v6.0.symbols.gmt figures/pathway-gene-$*.pdf > $@
 
-step3-table: tables/genes_ld_significant.txt.gz
+step3-table: tables/genes_ld_significant.txt.gz tables/joint_m2t_fdr10.txt.gz
 
 tables/genes_ld_significant.txt.gz: make.gene.tables.R
+	Rscript --vanilla $<
+
+tables/joint_m2t_fdr10.txt.gz: make.joint.tables.R
 	Rscript --vanilla $<
 
 ################################################################
