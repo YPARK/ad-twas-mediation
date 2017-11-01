@@ -91,20 +91,16 @@ Vd <- sweep(t(V.t), 2, D, `*`)
 W <- sweep(t(V.t), 2, D, `/`)
 
 
-eta.med <- sweep(M %*% med.out$param.mediated$theta, 1, D, `/`)
-var.med <- var(eta.med)
-
-eta.resid <- sweep(V.t %*% med.out$resid$theta, 1, D, `/`)
-var.resid <- var(eta.resid)
-
 ## theta' R theta
 eta.dir <- t(Vd) %*% med.out$param.direct$theta
 var.dir <- sum(eta.dir^2)
 
 ## estimated true qtl effect
-S.m <- 1/S.inv.m
-S.m[S.inv.m < 1e-8] <- 0
-aa <- (W %*% sweep(M, 1, D, `/`)) * S.m
+## theta.hat        ~ S R inv(S) (aa * bb)
+## inv(S) theta.hat ~ R inv(S) (aa * bb)
+##                  ~ R inv(S) 
+
+aa <- sweep(W %*% sweep(M, 1, D, `/`), 1, S, `*`)
 bb <- med.out$param.mediated$theta
 ab <- aa %*% bb
 

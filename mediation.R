@@ -82,12 +82,18 @@ find.argmax.snps <- function(.stat.tab) {
             dplyr::select(med.id, rs, snp.loc, qtl.z) %>%
                 dplyr::rename(best.qtl.rs = rs, best.qtl.loc = snp.loc, best.qtl.z = qtl.z)
     
+    n.qtl.tab <- .stat.tab %>% group_by(med.id) %>%
+        summarize(n.qtls = n())
+
     best.gwas.tab <- .stat.tab %>% group_by(med.id) %>%
         slice(which.max(abs(gwas.z))) %>%
             dplyr::select(med.id, rs, snp.loc, gwas.z) %>%
                 dplyr::rename(best.gwas.rs = rs, best.gwas.loc = snp.loc, best.gwas.z = gwas.z)
 
-    ret <- best.qtl.tab %>% left_join(best.gwas.tab, by = 'med.id')
+    ret <- best.qtl.tab %>%
+        left_join(best.gwas.tab, by = 'med.id') %>%
+            left_join(n.qtl.tab, by = 'med.id')
+
     return(ret)
 }
 

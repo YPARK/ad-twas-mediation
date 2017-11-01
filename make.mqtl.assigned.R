@@ -10,14 +10,32 @@ probe.file <- argv[3] # e.g., probe.file <- 'mqtl/chr1/b1.probes.gz'
 gwas.file <- argv[4] # e.g., gwas.file <- 'data/IGAP/chr1.ld_bed.gz'
 out.file <- argv[5] # e.g., out.file <- 'temp.ucsc_bed.gz'
 
-if(file.exists(out.file)) q()
+options(stringsAsFactors = FALSE, scipen=999)
+library(readr)
+library(dplyr)
+source('util.R')
+
+if(file.exists(out.file)) {
+    log.msg('File : %s exists\n', out.file)
+    q()
+}
 
 dir.create(dirname(out.file), recursive = TRUE)
 
-library(dplyr)
-options(stringsAsFactors = FALSE, scipen=999)
+.files <- c(qtl.file, snp.file, probe.file, gwas.file)
+if(!all(sapply(.files, file.exists))) {
+    if(file.exists(probe.file)) {
+        system('printf "" | gzip > ' %&&% out.file)
+        log.msg('no QTL connection\n')
+        q()
+    }
+    log.msg('incomplete list of input files:\n\n%s\n', paste(.files, collpse='\n'))
+    q()
+}
 
-.read.tab <- function(.file, .cols) read.table(.file, col.names = .cols, sep = '\t')
+.read.tab <- function(.file, .cols) {
+    read_tsv(.file, col_names = .cols)
+}
 
 snp.cols <- c('chr', 'rs', '.', 'snp.loc', 'mqtl.a1', 'mqtl.a2')
 probe.cols <- c('cg', 'chr', 'cg.loc')
@@ -25,9 +43,14 @@ qtl.cols <- c('snp.loc', 'cg', 'mqtl.theta', 'mqtl.z')
 gwas.cols <- c('chr', 'snp.loc.1', 'snp.loc', 'rs',
                'gwas.a1', 'gwas.a2', 'gwas.z', 'gwas.theta', 'gwas.se', 'ld')
 
+qtl.tab <- .read.tab(qtl.file, qtl.cols)
+
+if(nrow(qtl.tab) == 0) {
+    system('printf "" | gzip > ' %&&% out.file)
+}
+
 snp.tab <- .read.tab(snp.file, snp.cols)
 probe.tab <- .read.tab(probe.file, probe.cols)
-qtl.tab <- .read.tab(qtl.file, qtl.cols)
 gwas.tab <- .read.tab(gwas.file, gwas.cols) %>%
     mutate(chr = sapply(chr, gsub, pattern = 'chr', replacement = '')) %>%
         mutate(chr = as.integer(chr)) %>%
