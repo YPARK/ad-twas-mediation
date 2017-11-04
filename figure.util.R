@@ -66,7 +66,10 @@ row.order <- function(mat) {
 }
 
 gg.plot <- function(...) {
-    ggplot(...) + theme_bw() + theme(panel.background = element_blank())
+    ggplot(...) + theme_bw() + theme(plot.background = element_blank(),
+                                     panel.background = element_blank(),
+                                     strip.background = element_blank(),
+                                     legend.background = element_blank())
 }
 
 order.pair <- function(pair.tab) {

@@ -215,32 +215,12 @@ step3-figure: jobs/step3-figures.jobs.gz
 jobs/step3-figures.jobs.gz: tables/genes_ld_significant.txt.gz
 	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
 	@printf "" | gzip > $@
-	awk -vN=$$(zcat tables/genes_ld_strict.txt.gz | tail -n+2 | awk '{ k=$$1 FS $$2 FS $$3; keys[k]++ } END { print length(keys) }') 'BEGIN { for(j=1; j<=N; ++j) print "./figure.gene.local.R" FS j FS "tables/genes_ld_strict.txt.gz" FS "figures/local/strict/" }' | gzip >> $@
-	awk -vN=$$(zcat tables/genes_ld_significant.txt.gz | tail -n+2 | awk '{ k=$$1 FS $$2 FS $$3; keys[k]++ } END { print length(keys) }') 'BEGIN { for(j=1; j<=N; ++j) print "./figure.gene.local.R" FS j FS "tables/genes_ld_significant.txt.gz" FS "figures/local/mediation/" }' | gzip >> $@
-	awk -vN=$$(zcat tables/genes_ld_twas.txt.gz | tail -n+2 | awk '{ k=$$1 FS $$2 FS $$3; keys[k]++ } END { print length(keys) }') 'BEGIN { for(j=1; j<=N; ++j) print "./figure.gene.local.R" FS j FS "tables/genes_ld_twas.txt.gz" FS "figures/local/twas/" }' | gzip >> $@
-	@[ $$(zcat $@ | wc -l) -lt 1 ] || qsub -t 1-$$(zcat $@ | wc -l) -N FIG-ZQTL -binding "linear:1" -l h_rt=1000 -l h_vmem=4g -P compbio_lab -V -cwd -o /dev/null -b y -j y ./run_rscript.sh $@
+## awk -vN=$$(zcat tables/genes_ld_strict.txt.gz | tail -n+2 | awk '{ k=$$1 FS $$2 FS $$3; keys[k]++ } END { print length(keys) }') 'BEGIN { for(j=1; j<=N; ++j) print "./figure.gene.local.R" FS j FS "tables/genes_ld_strict.txt.gz" FS "figures/local/strict/" }' | gzip >> $@
+## awk -vN=$$(zcat tables/genes_ld_significant.txt.gz | tail -n+2 | awk '{ k=$$1 FS $$2 FS $$3; keys[k]++ } END { print length(keys) }') 'BEGIN { for(j=1; j<=N; ++j) print "./figure.gene.local.R" FS j FS "tables/genes_ld_significant.txt.gz" FS "figures/local/mediation/" }' | gzip >> $@
+## awk -vN=$$(zcat tables/genes_ld_twas.txt.gz | tail -n+2 | awk '{ k=$$1 FS $$2 FS $$3; keys[k]++ } END { print length(keys) }') 'BEGIN { for(j=1; j<=N; ++j) print "./figure.gene.local.R" FS j FS "tables/genes_ld_twas.txt.gz" FS "figures/local/twas/" }' | gzip >> $@
+## @[ $$(zcat $@ | wc -l) -lt 1 ] || qsub -t 1-$$(zcat $@ | wc -l) -N FIG-ZQTL -binding "linear:1" -l h_rt=1000 -l h_vmem=4g -P compbio_lab -V -cwd -o /dev/null -b y -j y ./run_rscript.sh $@
 
 
-## figures/bootstrap_gene
-GS := $(shell ls -1 genesets/*.gmt 2> /dev/null | xargs -I file basename file .v6.0.symbols.gmt | sed 's/\./_/g')
-
-jobs/step3-gs-figures.jobs.gz: $(foreach gs, $(GS), jobs/step3-gs-$(gs).job)
-	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
-	@cat $^ | gzip > $@
-	@[ $$(zcat $@ | wc -l) -lt 1 ] || qsub -t 1-$$(zcat $@ | wc -l) -N FIG-GS -binding "linear:1" -l h_rt=50000 -l h_vmem=4g -P compbio_lab -V -cwd -o /dev/null -b y -j y ./run_rscript.sh $@
-
-step3-figure-gs: $(foreach gs, $(GS), figures/geneset-bootstrap_gene_$(gs).pdf)
-
-jobs/step3-gs-%.job:
-	echo ./figure.geneset.R tables/bootstrap_gene_significant.txt.gz tables/bootstrap_gene.txt.gz genesets/$(shell echo $* | sed 's/_/\./g').v6.0.symbols.gmt figures/pathway-gene-$*.pdf > $@
-
-step3-table: tables/genes_ld_significant.txt.gz tables/joint_m2t_fdr10.txt.gz
-
-tables/genes_ld_significant.txt.gz: make.gene.tables.R
-	Rscript --vanilla $<
-
-tables/joint_m2t_fdr10.txt.gz: make.joint.tables.R
-	Rscript --vanilla $<
 
 ################################################################
 ## simulation analysis

@@ -158,6 +158,7 @@ write.tables <- function(qtl.data, qval.cutoff = 1e-2) {
     out.significant.file <- out.dir %&&% '/significant_genes.txt.gz'
     out.ld.file <- out.dir %&&% '/significant_LD.txt.gz'
     out.significant.pandoc <- out.dir %&&% '/significant_genes.md'
+    out.tot.file <- out.dir %&&% '/total_genes.txt.gz'
 
     out.figure.pval.file <- out.dir %&&% '/pvalues.pdf'
     out.figure.qval.file <- out.dir %&&% '/qvalues.pdf'
@@ -226,6 +227,7 @@ write.tables <- function(qtl.data, qval.cutoff = 1e-2) {
     write_tsv(med.tab %>% right_join(.temp),
               path = out.ld.file)
 
+    write_tsv(med.tab, path = out.tot.file)
 }
 
 qtl.data.vec <- c('full-' %&&% seq(2, 8, 2), 'hic-' %&&% seq(2, 8, 2))

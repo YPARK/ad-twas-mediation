@@ -1,3 +1,4 @@
+#!/usr/bin/env Rscript
 
 options(stringsAsFators = FALSE)
 source('util.R')
@@ -21,7 +22,54 @@ get.power <- function(score, lab, fdr.cutoff = 0.01) {
     return(.temp[1])
 }
 
-zqtl.power <- function(tab) {
+get.pleiotropy.f1 <- function(score, lab, lab.false) {
+
+    ## The pr curve as a matrix, where the first column contains recall,
+    ## the second contains precision, and the third contains the
+    ## corresponding threshold on the scores.
+    ##
+    ## Take argmax F1 score threshold and determine FDR due to pleiotropy
+    ##
+
+    pr.out <- pr.curve(score[lab == 1], score[lab == 0], curve = TRUE)
+
+    pr.curve <- pr.out$curve %>% as.data.frame()
+    colnames(pr.curve) <- c('recall', 'precision', 'threshold')
+
+    best.pr <- pr.curve %>%
+        mutate(f1 = 2 * (recall * precision)/(recall + precision)) %>%
+            slice(which.max(f1))
+
+    ret <- mean(lab.false[score >= best.pr$threshold])
+    ## denom <- sum(lab[score >= best.pr$threshold])
+    ## ret <- num / pmax(denom, 1)
+    return(ret)
+}
+
+get.pleiotropy.recall <- function(score, lab, lab.false, recall.cutoff = .2) {
+
+    ## The pr curve as a matrix, where the first column contains recall,
+    ## the second contains precision, and the third contains the
+    ## corresponding threshold on the scores.
+    ##
+    ## Take argmax F1 score threshold and determine FDR due to pleiotropy
+    ##
+
+    pr.out <- pr.curve(score[lab == 1], score[lab == 0], curve = TRUE)
+
+    pr.curve <- pr.out$curve %>% as.data.frame()
+    colnames(pr.curve) <- c('recall', 'precision', 'threshold')
+
+    best.pr <- pr.curve %>% filter(recall >= recall.cutoff) %>%
+        slice(which.max(precision))
+
+    ret <- mean(lab.false[score >= best.pr$threshold])
+    ## denom <- sum(lab[score >= best.pr$threshold])
+    ## ret <- num / pmax(denom, 1)
+    return(ret)
+}
+
+cammel.power <- function(tab) {
     as.numeric(get.power(tab$lodds, tab$causal, 0.01))
 }
 
@@ -33,7 +81,7 @@ egger.power <- function(tab) {
     as.numeric(get.power(abs(tab$egger.t), tab$causal, 0.01))
 }
 
-zqtl.auprc <- function(tab) {
+cammel.auprc <- function(tab) {
     as.numeric(get.auprc(tab$lodds, tab$causal))
 }
 
@@ -45,31 +93,55 @@ egger.auprc <- function(tab) {
     as.numeric(get.auprc(abs(tab$egger.t), tab$causal))
 }
 
-summarize.sim.tab <- function(sim.tab, egger.score, twas.score, zqtl.score) {
+cammel.false.f1 <- function(tab) {
+    as.numeric(get.pleiotropy.f1(tab$lodds, tab$causal, -tab$pleiotropy))
+}
+
+twas.false.f1 <- function(tab) {
+    as.numeric(get.pleiotropy.f1(abs(tab$twas), tab$causal, -tab$pleiotropy))
+}
+
+egger.false.f1 <- function(tab) {
+    as.numeric(get.pleiotropy.f1(abs(tab$egger.t), tab$causal, -tab$pleiotropy))
+}
+
+cammel.false.25recall <- function(tab) {
+    as.numeric(get.pleiotropy.recall(tab$lodds, tab$causal, -tab$pleiotropy, 0.25))
+}
+
+twas.false.25recall <- function(tab) {
+    as.numeric(get.pleiotropy.recall(abs(tab$twas), tab$causal, -tab$pleiotropy, 0.25))
+}
+
+egger.false.25recall <- function(tab) {
+    as.numeric(get.pleiotropy.recall(abs(tab$egger.t), tab$causal, -tab$pleiotropy, 0.25))
+}
+
+summarize.sim.tab <- function(sim.tab, egger.score, twas.score, cammel.score) {
 
     temp.egger <- sim.tab %>%
         group_by(pve.med, pve.dir, pve.qtl, n.causal.qtl, n.causal.med, n.med) %>%
             do(egger = egger.score(.)) %>% tidy(egger) %>%
                 group_by(pve.med, pve.dir, pve.qtl, n.causal.qtl, n.causal.med) %>%
                     summarize(score = mean(x), score.se = sd(x)/sqrt(length(x)))
-    
+
     temp.twas <- sim.tab %>%
         group_by(pve.med, pve.dir, pve.qtl, n.causal.qtl, n.causal.med, n.med) %>%
             do(twas = twas.score(.)) %>% tidy(twas) %>%
                 group_by(pve.med, pve.dir, pve.qtl, n.causal.qtl, n.causal.med) %>%
                     summarize(score = mean(x), score.se = sd(x)/sqrt(length(x)))
-    
-    temp.zqtl <- sim.tab %>%
+
+    temp.cammel <- sim.tab %>%
         group_by(pve.med, pve.dir, pve.qtl, n.causal.qtl, n.causal.med, n.med) %>%
-            do(zqtl = zqtl.score(.)) %>% tidy(zqtl) %>%
+            do(cammel = cammel.score(.)) %>% tidy(cammel) %>%
                 group_by(pve.med, pve.dir, pve.qtl, n.causal.qtl, n.causal.med) %>%
                     summarize(score = mean(x), score.se = sd(x)/sqrt(length(x)))
-    
-    .df <- rbind(temp.zqtl %>% mutate(method = 'zqtl'),
+
+    .df <- rbind(temp.cammel %>% mutate(method = 'cammel'),
                  temp.twas %>% mutate(method = 'twas'),
                  temp.egger %>% mutate(method = 'egger'))
-    
-    .df$method <- factor(.df$method, c('zqtl', 'twas', 'egger'))
+
+    .df$method <- factor(.df$method, c('cammel', 'twas', 'egger'))
     .df$n.causal.med <- factor(.df$n.causal.med, 1:3, 'causal mediators = ' %&&% 1:3)
     .df$pve.dir <- factor(.df$pve.dir, unique(.df$pve.dir), 'pleiotropy = ' %&&% unique(.df$pve.dir))
 
@@ -89,42 +161,11 @@ plt.sim <- function(.df, n.qtl) {
                     ggtitle('QTLs per gene = ' %&&% n.qtl) +
                         theme(legend.title = element_blank(),
                               axis.text.x = element_text(angle=45))
-    
+
     plt <- plt + scale_shape_manual(values = c(21, 22, 24))
 
     return(plt)
 }
-
-################################################################
-## Simulation 1
-
-ld.sim.cols <- c('gene', 'causal', 'pve.med', 'pve.dir', 'pve.qtl',
-                 'p', 'n.med', 'n.causal.qtl', 'n.causal.med', 'n.causal.direct',
-                 'theta', 'theta.se', 'lodds',
-                 'egger.t', 'twas')
-
-sim.files <- 'simulation/result/ld_IGAP_rosmap_eqtl_hs-lm_' %&&% (1:22) %&&% '.sim.gz'
-
-sim.tab <- do.call(rbind, lapply(sim.files, read_tsv, col_names = ld.sim.cols))
-
-sim.tab.power <- summarize.sim.tab(sim.tab, egger.power, twas.power, zqtl.power)
-
-sim.tab.auprc <- summarize.sim.tab(sim.tab, egger.auprc, twas.auprc, zqtl.auprc)
-
-for(q in 1:3) {
-
-    pdf(file = 'figures/simulation1_power_nqtl' %&&% q %&&% '.pdf', width = 8, height = 5, useDingbats = FALSE)
-    print(plt.sim(sim.tab.power, n.qtl = q) + ylab('Power (FDR < 1%)'))
-    dev.off()
-
-    pdf(file = 'figures/simulation1_auprc_nqtl' %&&% q %&&% '.pdf', width = 8, height = 5, useDingbats = FALSE)
-    print(plt.sim(sim.tab.auprc, n.qtl = q) + ylab('AUPRC'))
-    dev.off()
-
-}
-
-################################################################
-## Simulation 2
 
 pleio.sim.cols <- c('gene', 'causal', 'pleiotropy', 'pve.med', 'pve.dir', 'pve.qtl',
                     'p', 'n.med', 'n.causal.qtl', 'n.causal.med', 'n.causal.direct',
@@ -134,64 +175,60 @@ pleio.sim.cols <- c('gene', 'causal', 'pleiotropy', 'pve.med', 'pve.dir', 'pve.q
 sim.files <- 'simulation/result/pleiotropy_IGAP_rosmap_eqtl_hs-lm_' %&&% (1:22) %&&% '.sim.gz'
 sim.tab <- do.call(rbind, lapply(sim.files, read_tsv, col_names = pleio.sim.cols))
 
-zqtl.false.power <- function(tab) {
-    as.numeric(get.power(tab$lodds, -tab$pleiotropy, 0.5))
-}
+for(nm in 1:3) {
+    for(nq in 1:3) {
 
-twas.false.power <- function(tab) {
-    as.numeric(get.power(abs(tab$twas), -tab$pleiotropy, 0.5))
-}
+        sim.auprc.tab <- 
+            summarize.sim.tab(sim.tab %>% filter(pve.dir > 0, n.causal.med == nm, n.causal.qtl == nq),
+                              egger.auprc, twas.auprc, cammel.auprc)
 
-egger.false.power <- function(tab) {
-    as.numeric(get.power(abs(tab$egger.t), -tab$pleiotropy, 0.5))
-}
+        sim.power.tab <- 
+            summarize.sim.tab(sim.tab %>% filter(pve.dir > 0, n.causal.med == nm, n.causal.qtl == nq),
+                              egger.power, twas.power, cammel.power)
 
-zqtl.false.auprc <- function(tab) {
-    as.numeric(get.auprc(tab$lodds, -tab$pleiotropy))
-}
+        sim.false.tab <- 
+            summarize.sim.tab(sim.tab %>% filter(pve.dir > 0, n.causal.med == nm, n.causal.qtl == nq),
+                              egger.false.f1, twas.false.f1, cammel.false.f1)
 
-twas.false.auprc <- function(tab) {
-    as.numeric(get.auprc(abs(tab$twas), -tab$pleiotropy))
-}
 
-egger.false.auprc <- function(tab) {
-    as.numeric(get.auprc(abs(tab$egger.t), -tab$pleiotropy))
-}
+        .aes <- aes(x = pve.med * 100, y = score, color = method, shape = method,
+                    ymin = (score - 2*score.se), ymax = (score + 2*score.se))
 
-################################################################
-## negative prediction
-sim.false.tab.power <-
-    summarize.sim.tab(sim.tab, egger.false.power, twas.false.power, zqtl.false.power)
+        p1 <- gg.plot(sim.auprc.tab, .aes) +
+            geom_errorbar(width = .005) + geom_point(size = 2, fill = 'white') +
+                geom_line() +
+                    facet_grid(n.causal.med~pve.dir) +
+                        scale_shape_manual(values = c(21, 22, 24)) +
+                            ylab('AUPRC') +
+                                xlab('% variance explained by mediation') +
+                                    ggtitle('# causal QTLs = ' %&&% nq) +
+        theme(legend.position = 'none')
 
-sim.false.tab.auprc <-
-    summarize.sim.tab(sim.tab, egger.false.auprc, twas.false.auprc, zqtl.false.auprc)
+        p2 <- gg.plot(sim.power.tab, .aes) +
+            geom_errorbar(width = .005) + geom_point(size = 2, fill = 'white') +
+                geom_line() +
+                    facet_grid(n.causal.med~pve.dir) +
+                        scale_shape_manual(values = c(21, 22, 24)) +
+                            ylab('power at FDR < 1%') +
+                                xlab('% variance explained by mediation') +
+                                    theme(legend.position = 'none')
 
-for(q in 1:3) {
+        .aes <- aes(x = pve.med * 100, y = score * 100, color = method, shape = method,
+                    ymin = 100*(score - 2*score.se), ymax = 100*(score + 2*score.se))
 
-    pdf(file = 'figures/simulation2_negative_power_nqtl' %&&% q %&&% '.pdf', width = 8, height = 5, useDingbats = FALSE)
-    print(plt.sim(sim.false.tab.power, n.qtl = q) + ylab('Mis-classification Power (FDR < 50%)'))
-    dev.off()
+        p3 <- gg.plot(sim.false.tab, .aes) +
+            geom_errorbar(width = .005) + geom_point(size = 2, fill = 'white') +
+                geom_line() +
+                    facet_grid(n.causal.med~pve.dir) +
+                        scale_shape_manual(values = c(21, 22, 24)) +
+                            ylab('% false discovery at max F1') +
+                                xlab('% variance explained by mediation') +
+                                    theme(legend.position = 'bottom')
 
-    pdf(file = 'figures/simulation2_negative_auprc_nqtl' %&&% q %&&% '.pdf', width = 8, height = 5, useDingbats = FALSE)
-    print(plt.sim(sim.false.tab.auprc, n.qtl = q) + ylab('Mis-classification AUPRC'))
-    dev.off()
+        gg <- grid.vcat(list(p1, p2, p3), heights = c(1.2, 1, 1.3))
 
-}
+        out.file <- 'figures/Fig_simulation_med' %&&% nm %&&% '_qtl' %&&% nq %&&% '.pdf'
 
-################################################################
-## positive prediction
-sim.true.tab.power <-
-    summarize.sim.tab(sim.tab, egger.power, twas.power, zqtl.power)
-
-sim.true.tab.auprc <-
-    summarize.sim.tab(sim.tab, egger.auprc, twas.auprc, zqtl.auprc)
-
-for(q in 1:3) {
-    pdf(file = 'figures/simulation2_positive_power_nqtl' %&&% q %&&% '.pdf', width = 8, height = 5, useDingbats = TRUE)
-    print(plt.sim(sim.true.tab.power, n.qtl = q) + ylab('(FDR < 1%)'))
-    dev.off()
-
-    pdf(file = 'figures/simulation2_positive_auprc_nqtl' %&&% q %&&% '.pdf', width = 8, height = 5, useDingbats = TRUE)
-    print(plt.sim(sim.true.tab.auprc, n.qtl = q) + ylab('AUPRC'))              
-    dev.off()
+        ggsave(filename = out.file, plot = gg, width = 8, height = 9)
+    }
 }
