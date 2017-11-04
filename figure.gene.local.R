@@ -58,7 +58,7 @@ model.tab <- ld.tab %>%
     right_join(ld.info, by = c('chr', 'ld.lb', 'ld.ub'))
 
 model.tab <- model.tab %>%
-    mutate(med.p = -log10(pmax(p.val.direct, p.val.marginal)))
+    mutate(med.p = -log10(p.val))
 
 model.tab <- model.tab %>%
     mutate(pve = v.med / (v.med.tot + v.resid + v.dir))
@@ -187,32 +187,11 @@ plt.med <-
     .gwas.x.scale + ylab('-log10 mediation p-value') +
     xlab('genomic location (kb)')
 
-plt.med.twas <-
-    gg.plot(model.tab) +
-    geom_hline(yintercept = -log10(2.5e-6), lty = 2, color = 'gray') + 
-    geom_segment(aes(x = (tss + tes)/2, xend = (tss + tes)/2, y = 0, yend = pmin(-log10(p.val.nwas), 10)),
-                 color = '#009900', size = 3, alpha = 0.5) +
-    geom_segment(aes(x = (tss + tes)/2, xend = (tss + tes)/2, y = 0, yend = med.p, color = theta),
-                 arrow = arrow(length = unit(.075, 'inches')), size = 2) +
-    scale_color_gradient2(low = 'blue', high = 'red', mid = 'gray40', guide = FALSE) +
-    .gwas.x.scale + ylab('-log10 mediation p-value') +
-    xlab('genomic location (kb)')
-
-
-
 out.file <- sprintf('%s/chr%d_ld%d_gwas_med.pdf', out.dir, chr, ld.idx)
 pdf(file = out.file, width = 8, height = 6, useDingbats = FALSE)
 plt.list <- list(plt.med, plt.edge, plt.gwas + scale_y_reverse() + .gwas.x.scale.top)
 grid.vcat(plt.list)
 dev.off()          
-
-
-out.file <- sprintf('%s/chr%d_ld%d_gwas_med_twas.pdf', out.dir, chr, ld.idx)
-pdf(file = out.file, width = 8, height = 6, useDingbats = FALSE)
-plt.list <- list(plt.med.twas, plt.edge, plt.gwas + scale_y_reverse() + .gwas.x.scale.top)
-grid.vcat(plt.list)
-dev.off()          
-
 
 
 ################################################################
