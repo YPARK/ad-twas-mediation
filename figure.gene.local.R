@@ -58,7 +58,7 @@ model.tab <- ld.tab %>%
     right_join(ld.info, by = c('chr', 'ld.lb', 'ld.ub'))
 
 model.tab <- model.tab %>%
-    mutate(med.p = -log10(p.val))
+    mutate(med.p = -log10(pval))
 
 model.tab <- model.tab %>%
     mutate(pve = v.med / (v.med.tot + v.resid + v.dir))
