@@ -159,21 +159,27 @@ ggsave(file = out.file, plot = plt.qtl, width = .gwas.w, height = 2,
 
 plt.edge <- gg.plot() + .gwas.x.scale + theme_void()
 
-.gene <- model.tab %>% dplyr::select(hgnc, tss, tes) %>% mutate(x = (tss + tes)/2, y = 1)
+## show QTLs with PVE > 1%
+.gene <- model.tab %>%
+    dplyr::filter(pve >= .01) %>%
+    dplyr::select(hgnc, tss, tes) %>%
+    mutate(x = (tss + tes)/2, y = 1)
 
-.temp <- qtl.melt %>% dplyr::left_join(.gene) %>%
-    dplyr::left_join(model.tab)
+if(nrow(.gene) > 0) {
 
-.aes.txt <- aes(x = (tss + tes)/2, y = 1, label = hgnc)
-.aes.qtl <- aes(x = snp.loc, xend = (tss+tes)/2, y = 0, yend = 1, color = sign(value), size = qtl.p)
+    .temp <- qtl.melt %>% dplyr::left_join(.gene) %>%
+        dplyr::left_join(model.tab)
 
-plt.edge <-
-    plt.edge +
+    .aes.txt <- aes(x = (tss + tes)/2, y = 1, label = hgnc)
+    .aes.qtl <- aes(x = snp.loc, xend = (tss+tes)/2, y = 0, yend = 1, color = sign(value), size = qtl.p)
+
+    plt.edge <- plt.edge +
         geom_segment(data = .temp, .aes.qtl, show.legend = FALSE) +
             geom_text(data = model.tab, .aes.txt, hjust = 0, angle = 90, size = 3) +
                 scale_y_continuous(limits = c(0, 1.2), breaks = c(0, 0.5, 1)) +
                     scale_color_gradientn(colors = c('#9999FF', '#FF9999')) +
-scale_size_continuous(range = c(0, 1))
+    scale_size_continuous(range = c(0, 1))
+}
 
 ## mediation p-value
 sig.genes <- model.tab %>% filter(qval < 1e-2)
@@ -194,6 +200,20 @@ plt.list <- list(plt.med, plt.edge, plt.gwas + scale_y_reverse() + .gwas.x.scale
 gg <- grid.vcat(plt.list)
 ggsave(filename = out.file, plot = gg, width = 8, height = 6, useDingbats = FALSE)
 
+## mediation PVE
+plt.med.pve <-
+    gg.plot(model.tab %>% dplyr::filter(pval <= med.cutoff)) + 
+    geom_segment(aes(x = (tss + tes)/2, xend = (tss + tes)/2, y = 0, yend = pve * 100, color = theta),
+                 arrow = arrow(length = unit(.075, 'inches')), size = 1.5) +
+    scale_color_gradient2(low = 'blue', high = 'red', mid = 'gray40', guide = FALSE) +
+    .gwas.x.scale + ylab('% local GWAS variance') +
+    xlab('genomic location (kb)')
+
+out.file <- sprintf('%s/chr%d_ld%d_%s_gwas_med_pve.pdf', out.dir, chr, ld.idx, sig.genes.name)
+
+plt.list <- list(plt.med.pve, plt.edge, plt.gwas + scale_y_reverse() + .gwas.x.scale.top)
+gg <- grid.vcat(plt.list)
+ggsave(filename = out.file, plot = gg, width = 8, height = 6, useDingbats = FALSE)
 
 ################################################################
 ## show PVE

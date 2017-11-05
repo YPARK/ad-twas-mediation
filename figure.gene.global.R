@@ -38,7 +38,7 @@ draw.plots <- function(qtl.data) {
 
     df.sig <- df %>% filter(hgnc %in% gene.tab.sig$hgnc)
 
-    df.strict <- df.sig %>% filter(pve > 1e-1, gwas.p > 4)
+    df.strict <- df.sig %>% filter(pve >= 1e-1, gwas.p >= 4)
 
     scale.grad <- scale_fill_gradientn(colors = c('#AAAAFF', '#FFFFAA'), trans = 'log10')
 
@@ -143,7 +143,7 @@ draw.plots <- function(qtl.data) {
            plot = gwas.pve.plot(TRUE), width = 6, height = 4)
 
 
-################################################################
+    ################################################################
     ## Global effect sizes
     ## color genes by GWAS significance
 
@@ -172,9 +172,9 @@ draw.plots <- function(qtl.data) {
 
     ret <- ret + xlab('genomic location (mb)') + ylab('mediation effect')
 
-    df.strict.neg <- df.sig %>% filter(theta < 0, pve > .25)
+    df.strict.neg <- df.sig %>% filter(theta < 0, pve >= .1, abs(best.gwas.z) >= 3)
 
-    df.strict.pos <- df.sig %>% filter(theta > 0, pve > .25)
+    df.strict.pos <- df.sig %>% filter(theta > 0, pve >= .1, abs(best.gwas.z) >= 3)
 
     ret <- ret + geom_text_repel(data = df.strict.neg, 
                                  aes(y = theta), color = 'blue', segment.alpha = 0.5,
