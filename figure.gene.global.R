@@ -143,7 +143,7 @@ draw.plots <- function(qtl.data) {
            plot = gwas.pve.plot(TRUE), width = 6, height = 4)
 
 
-    ################################################################
+################################################################
     ## Global effect sizes
     ## color genes by GWAS significance
 
@@ -156,8 +156,7 @@ draw.plots <- function(qtl.data) {
                 aes(x = gene.loc, y = theta, color = pmin(gwas.p, 8), size = pve,
                     label = hgnc)) +
                         geom_linerange(data = df.sig,
-                                       aes(ymin = theta - 2*theta.se, ymax = theta + 2*theta.se),
-                                       size = 1) +
+                                       aes(ymin = theta - 2*theta.se, ymax = theta + 2*theta.se)) +
                                            geom_point() +
                                                scale_size_continuous('proportion of variance explained', range = c(0, 4), breaks = c(1e-2, 1e-1, .99)) +
                                                    scale_color_gradientn('-log10 GWAS p-value', colors = c('gray80', 'gray40', 'purple', 'purple')) +
@@ -172,9 +171,9 @@ draw.plots <- function(qtl.data) {
 
     ret <- ret + xlab('genomic location (mb)') + ylab('mediation effect')
 
-    df.strict.neg <- df.sig %>% filter(theta < 0, pve >= .1, abs(best.gwas.z) >= 3)
+    df.strict.neg <- df.sig %>% filter(theta < 0, pve >= .1, gwas.p >= 4)
 
-    df.strict.pos <- df.sig %>% filter(theta > 0, pve >= .1, abs(best.gwas.z) >= 3)
+    df.strict.pos <- df.sig %>% filter(theta > 0, pve >= .1, gwas.p >= 4)
 
     ret <- ret + geom_text_repel(data = df.strict.neg, 
                                  aes(y = theta), color = 'blue', segment.alpha = 0.5,
