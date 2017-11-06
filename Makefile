@@ -218,7 +218,7 @@ jobs/step3-figures.jobs.gz: $(foreach d, $(shell ls -1 tables/genes/ 2> /dev/nul
 jobs/step3/%-figures.jobs.gz: tables/genes/%/significant_LD.txt.gz 
 	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
 	@printf "" | gzip > $@
-	awk -vN=$$(zcat $< | tail -n+2 | awk '{ k=$$1 FS $$2 FS $$3; keys[k]++ } END { print length(keys) }') 'BEGIN { for(j=1; j<=N; ++j) print "./figure.gene.local.R" FS j FS "$<" FS "figures/genes/local_$*/" }' | gzip >> $@
+	awk -vN=$$(zcat $< | tail -n+2 | awk '{ k=$$1 FS $$2 FS $$3; keys[k]++ } END { print length(keys) }') 'BEGIN { for(j=1; j<=N; ++j) print "./make.gene.figure.local.R" FS j FS "$<" FS "figures/genes/local_$*/" }' | gzip >> $@
 
 
 ################################################################

@@ -1,0 +1,33 @@
+PLINK v1.90b4.6 64-bit (15 Aug 2017)
+Options in effect:
+  --bfile geno/rosmap1709-chr1
+  --chr 1
+  --from-bp 35381295
+  --geno 0.05
+  --maf 0.05
+  --make-bed
+  --out figures/genes/local_full-2//temp.A2A6/plink
+  --to-bp 36855957
+
+Hostname: uger-c022
+Working directory: /broad/compbio/ypp/AD/mediation
+Start time: Sun Nov  5 18:38:47 2017
+
+Random number seed: 1509925127
+128993 MB RAM detected; reserving 64496 MB for main workspace.
+913 out of 496566 variants loaded from .bim file.
+1709 people (527 males, 1182 females) loaded from .fam.
+Using 1 thread (no multithreaded calculations invoked).
+Before main variant filters, 1709 founders and 0 nonfounders present.
+Calculating allele frequencies... done.
+Total genotyping rate is 0.811586.
+456 variants removed due to missing genotype data (--geno).
+41 variants removed due to minor allele threshold(s)
+(--maf/--max-maf/--mac/--max-mac).
+416 variants and 1709 people pass filters and QC.
+Note: No phenotypes present.
+--make-bed to figures/genes/local_full-2//temp.A2A6/plink.bed +
+figures/genes/local_full-2//temp.A2A6/plink.bim +
+figures/genes/local_full-2//temp.A2A6/plink.fam ... done.
+
+End time: Sun Nov  5 18:38:48 2017
