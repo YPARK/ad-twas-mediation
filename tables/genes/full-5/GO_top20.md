@@ -1,55 +1,55 @@
 
 
-  category    go.pval   numDEInCat   numInCat                                        term                                         ontology 
------------- --------- ------------ ---------- --------------------------------------------------------------------------------- ----------
- GO:0048038   0.00016       4           6                                       quinone binding                                      MF    
- GO:0006354   0.0018        7           31                          DNA-templated transcription, elongation                          BP    
- GO:0015377   0.0036        2           2                             cation:chloride symporter activity                             MF    
- GO:0015379   0.0036        2           2                            potassium:chloride symporter activity                           MF    
- GO:0022820   0.0036        2           2                              potassium ion symporter activity                              MF    
- GO:0045598   0.0053        4           13                          regulation of fat cell differentiation                           BP    
- GO:0055008   0.0061        3           7                             cardiac muscle tissue morphogenesis                            BP    
- GO:0044087   0.0078        14         119                        regulation of cellular component biogenesis                        BP    
- GO:0031432   0.0078        2           3                                        titin binding                                       MF    
- GO:0045599   0.0099        2           3                       negative regulation of fat cell differentiation                      BP    
- GO:0071549    0.01         2           3                         cellular response to dexamethasone stimulus                        BP    
- GO:0043653    0.01         2           3                  mitochondrial fragmentation involved in apoptotic process                 BP    
- GO:0042288    0.01         2           3                                 MHC class I protein binding                                MF    
- GO:0060048    0.012        4           16                                cardiac muscle contraction                                 BP    
- GO:0070063    0.012        3           9                                   RNA polymerase binding                                   MF    
- GO:0048644    0.013        3           9                                 muscle organ morphogenesis                                 BP    
- GO:0060415    0.013        3           9                                 muscle tissue morphogenesis                                BP    
- GO:0043025    0.014        9           67                                    neuronal cell body                                     CC    
- GO:0045787    0.014        7           45                             positive regulation of cell cycle                             BP    
- GO:0016358    0.016        5           27                                   dendrite development                                    BP    
- GO:0030018    0.016        4           18                                          Z disc                                           CC    
- GO:0030048    0.017        4           18                               actin filament-based movement                               BP    
- GO:0003206    0.017        3           10                               cardiac chamber morphogenesis                               BP    
- GO:0090005    0.017        2           4       negative regulation of establishment of protein localization to plasma membrane      BP    
- GO:1903077    0.017        2           4               negative regulation of protein localization to plasma membrane               BP    
- GO:1904376    0.017        2           4                negative regulation of protein localization to cell periphery               BP    
- GO:0043161    0.018        8           58             proteasome-mediated ubiquitin-dependent protein catabolic process             BP    
- GO:0036477    0.018        11          94                                somatodendritic compartment                                CC    
- GO:2000105    0.018        2           4                    positive regulation of DNA-dependent DNA replication                    BP    
- GO:0030983    0.019        2           4                                   mismatched DNA binding                                   MF    
- GO:0071548    0.019        2           4                                  response to dexamethasone                                 BP    
- GO:0006936    0.019        8           59                                    muscle contraction                                     BP    
- GO:0032469    0.019        2           4                        endoplasmic reticulum calcium ion homeostasis                       BP    
- GO:0006511    0.02         10          83                       ubiquitin-dependent protein catabolic process                       BP    
- GO:0014888    0.02         2           4                                 striated muscle adaptation                                 BP    
- GO:0042287    0.02         2           4                                     MHC protein binding                                    MF    
- GO:0031529    0.02         2           4                                     ruffle organization                                    BP    
- GO:0045684    0.02         2           4                        positive regulation of epidermis development                        BP    
- GO:0019941    0.021        10          84                     modification-dependent protein catabolic process                      BP    
- GO:0043632    0.021        10          84                  modification-dependent macromolecule catabolic process                   BP    
- GO:0030017    0.022        5           29                                         sarcomere                                         CC    
- GO:0006900    0.022        4           19                                     membrane budding                                      BP    
- GO:0031674    0.023        4           20                                          I band                                           CC    
- GO:0000266    0.023        3           11                                   mitochondrial fission                                   BP    
- GO:0003015    0.024        6           39                                       heart process                                       BP    
- GO:0060047    0.024        6           39                                     heart contraction                                     BP    
- GO:0010498    0.024        8           61                           proteasomal protein catabolic process                           BP    
- GO:0017112    0.026        2           5                       Rab guanyl-nucleotide exchange factor activity                       MF    
- GO:0097306    0.026        3           12                               cellular response to alcohol                                BP    
- GO:0030016    0.027        5           31                                         myofibril                                         CC    
+  category    go.pval   numDEInCat   numInCat                                                   term                                                    ontology 
+------------ --------- ------------ ---------- ------------------------------------------------------------------------------------------------------- ----------
+ GO:0008610   0.00015       6          117                                           lipid biosynthetic process                                            BP    
+ GO:0030148   0.00028       3           18                                        sphingolipid biosynthetic process                                        BP    
+ GO:0048038   0.00073       2           6                                                  quinone binding                                                 MF    
+ GO:0046467   0.00082       3           26                                       membrane lipid biosynthetic process                                       BP    
+ GO:0006665   0.0011        3           29                                         sphingolipid metabolic process                                          BP    
+ GO:0030173   0.0018        2           9                                       integral component of Golgi membrane                                       CC    
+ GO:0031228   0.0018        2           9                                       intrinsic component of Golgi membrane                                      CC    
+ GO:0044255   0.0028        6          204                                        cellular lipid metabolic process                                         BP    
+ GO:0006643   0.0031        3           41                                        membrane lipid metabolic process                                         BP    
+ GO:0046474   0.0035        3           44                                    glycerophospholipid biosynthetic process                                     BP    
+ GO:0046470   0.0042        2           14                                      phosphatidylcholine metabolic process                                      BP    
+ GO:0008654    0.006        3           52                                        phospholipid biosynthetic process                                        BP    
+ GO:0090155   0.0071        1           1                             negative regulation of sphingolipid biosynthetic process                             BP    
+ GO:0080154   0.0071        1           1                                            regulation of fertilization                                           BP    
+ GO:0006987   0.0072        1           1                  activation of signaling protein activity involved in unfolded protein response                  BP    
+ GO:0032075   0.0072        1           1                                     positive regulation of nuclease activity                                     BP    
+ GO:0044790   0.0072        1           1                            negative regulation by host of viral release from host cell                           BP    
+ GO:0046725   0.0072        1           1                         negative regulation by virus of viral protein levels in host cell                        BP    
+ GO:0033149   0.0072        1           1                                                FFAT motif binding                                                MF    
+ GO:1903621   0.0073        1           1                              protein localization to photoreceptor connecting cilium                             BP    
+ GO:0047134   0.0073        1           1                                       protein-disulfide reductase activity                                       MF    
+ GO:0001574   0.0073        1           1                                         ganglioside biosynthetic process                                         BP    
+ GO:0006629   0.0074        6          250                                             lipid metabolic process                                             BP    
+ GO:0016901   0.0074        1           1       oxidoreductase activity, acting on the CH-OH group of donors, quinone or similar compound as acceptor      MF    
+ GO:0006672   0.0077        2           18                                           ceramide metabolic process                                            BP    
+ GO:0045017   0.0079        3           58                                        glycerolipid biosynthetic process                                        BP    
+ GO:0042439   0.0081        2           19                               ethanolamine-containing compound metabolic process                                BP    
+ GO:0006650   0.0086        3           60                                      glycerophospholipid metabolic process                                      BP    
+ GO:0016651   0.0097        2           22                                   oxidoreductase activity, acting on NAD(P)H                                    MF    
+ GO:0044711    0.011        7          361                                      single-organism biosynthetic process                                       BP    
+ GO:0090153    0.013        1           2                                  regulation of sphingolipid biosynthetic process                                 BP    
+ GO:0044828    0.014        1           2                              negative regulation by host of viral genome replication                             BP    
+ GO:1900003    0.014        1           2                                 regulation of serine-type endopeptidase activity                                 BP    
+ GO:1900004    0.014        1           2                             negative regulation of serine-type endopeptidase activity                            BP    
+ GO:1902571    0.014        1           2                                   regulation of serine-type peptidase activity                                   BP    
+ GO:1902572    0.014        1           2                               negative regulation of serine-type peptidase activity                              BP    
+ GO:0032299    0.014        1           2                                              ribonuclease H2 complex                                             CC    
+ GO:0004523    0.014        1           2                                       RNA-DNA hybrid ribonuclease activity                                       MF    
+ GO:0046719    0.014        1           2                             regulation by virus of viral protein levels in host cell                             BP    
+ GO:0001573    0.015        1           2                                           ganglioside metabolic process                                          BP    
+ GO:0097503    0.015        1           2                                                    sialylation                                                   BP    
+ GO:0008373    0.015        1           2                                            sialyltransferase activity                                            MF    
+ GO:0051127    0.015        1           2                                      positive regulation of actin nucleation                                     BP    
+ GO:0044789    0.015        1           2                                modulation by host of viral release from host cell                                BP    
+ GO:0044791    0.015        1           2                            positive regulation by host of viral release from host cell                           BP    
+ GO:0097499    0.015        1           2                                 protein localization to nonmotile primary cilium                                 BP    
+ GO:1903546    0.015        1           2                                protein localization to photoreceptor outer segment                               BP    
+ GO:0047498    0.015        1           2                                    calcium-dependent phospholipase A2 activity                                   MF    
+ GO:0044829    0.016        1           2                              positive regulation by host of viral genome replication                             BP    
+ GO:0006644    0.018        3           77                                         phospholipid metabolic process                                          BP    
 

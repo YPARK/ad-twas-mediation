@@ -46,7 +46,7 @@ match.heights.grob <- function(g.list, stretch = TRUE)  {
 
 match.heights <- function(p.list, stretch = FALSE) {
     g.list <- lapply(p.list, ggplotGrob)
-    return(match.heights(g.list, stretch))
+    return(match.heights.grob(g.list, stretch))
 }
 
 grid.hcat <- function(p.list, ...) {

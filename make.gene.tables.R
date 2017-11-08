@@ -66,12 +66,11 @@ make.pandoc.tab <- function(med.tab) {
     .out <- .out %>%
         mutate(Mediation = theta %&&% ' (' %&&% theta.se %&&% ', ' %&&% pip %&&% ')')
     .out <- .out %>%
-        mutate(LD = ld.gwas.rs %&&% ' (' %&&% ld.gwas.z %&&% ', ' %&&% ld.gwas.loc %&&% ')') %>%
-            mutate(GWAS = best.gwas.rs %&&% ' (' %&&% best.gwas.z %&&% ')') %>%
-                mutate(QTL = best.qtl.rs %&&% ' (' %&&% best.qtl.z %&&% ')')
+        mutate(GWAS = ld.gwas.rs %&&% ' (' %&&% ld.gwas.z %&&% ', ' %&&% ld.gwas.loc %&&% ')') %>%
+            mutate(QTL = best.qtl.rs %&&% ' (' %&&% best.qtl.z %&&% ')')
 
     .out <- .out %>%
-        dplyr::select(Gene, chr, TSS, TES, Mediation, LD, GWAS, QTL, PVE, pval, qval)
+        dplyr::select(Gene, chr, TSS, TES, Mediation, GWAS, QTL, PVE, pval, qval)
 
     ret <- pandoc.table.return(.out, row.names = FALSE, style = 'simple',
                                split.tables = 200, digits = 2)
@@ -79,10 +78,12 @@ make.pandoc.tab <- function(med.tab) {
 }
 
 
-take.goseq <- function(gene.test.tab, qval.cutoff = 1e-2,
+take.goseq <- function(gene.test.tab,
+                       qval.cutoff = 1e-2,
+                       pve.cutoff = 1e-2,
                        go.pval.cutoff = 1e-2) {
 
-    de.genes <- gene.test.tab %>% dplyr::filter(qval < qval.cutoff)
+    de.genes <- gene.test.tab %>% dplyr::filter(qval < qval.cutoff, PVE > pve.cutoff)
     genes.tot <- gene.test.tab$med.id %>% unique()
     gene.vector <- as.integer(genes.tot %in% de.genes$med.id)
     print(mean(gene.vector))
@@ -159,7 +160,7 @@ draw.go.tab <- function(go.summary, goseq.result, go.pdf.file) {
     ggsave(filename = go.pdf.file, plot = gg, height = hh, width = ww, units = 'in', limitsize=FALSE)
 }
 
-write.tables <- function(qtl.data, qval.cutoff = 1e-2) {
+write.tables <- function(qtl.data, qval.cutoff = 1e-2, pve.cutoff = 1e-2) {
 
     gwas.summary.stat <- read_tsv('stat/IGAP/ld.summary.txt.gz', col_names = TRUE) %>%
         dplyr::rename(ld.gwas.z = gwas.z, ld.gwas.rs = rs, ld.gwas.p = gwas.p, ld.gwas.loc = snp.loc)
@@ -205,7 +206,9 @@ write.tables <- function(qtl.data, qval.cutoff = 1e-2) {
         return(NULL)
     }
 
-    goseq.result <- take.goseq(med.tab, qval.cutoff = qval.cutoff,
+    goseq.result <- take.goseq(med.tab,
+                               qval.cutoff = qval.cutoff,
+                               pve.cutoff = pve.cutoff,
                                go.pval.cutoff = 1e-2)
 
     if(!is.null(goseq.result$ensg2cat)) {
@@ -261,8 +264,8 @@ write.tables <- function(qtl.data, qval.cutoff = 1e-2) {
     write_tsv(med.tab, path = out.tot.file)
 }
 
-qtl.data.vec <- c('full-' %&&% c(5, 3), 'hic-' %&&% c(5, 3))
+qtl.data.vec <- c('full-' %&&% c(5, 3, 0), 'hic-' %&&% c(5, 3, 0))
 
 for(qtl.data in qtl.data.vec) {
-    write.tables(qtl.data, qval.cutoff = 5e-2)
+    write.tables(qtl.data, qval.cutoff = 5e-2, pve.cutoff = 5e-2)
 }

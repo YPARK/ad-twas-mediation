@@ -133,10 +133,10 @@ empty.theme <- theme(axis.text = element_blank(),
                      legend.position = c(1,1), legend.justification = c(1, 1))
 
 p1 <- gg.plot(model.tab.sorted) + ylab('% variance explained') + xlab('') + .gwas.x.scale +
-    geom_segment(aes(x = .gene.loc, xend = .gene.loc, y = 0, yend = 100 * PVE), size = 3,
-                 color = 'orange') +
+    geom_segment(aes(x = .gene.loc, xend = .gene.loc, y = 0, yend = 100 * PVE, color = theta/theta.se), size = 3) +
     geom_text(aes(x = .gene.loc, y = 100 * PVE, label = 100 * signif(PVE, 2)), size = 3,
               hjust=0, vjust=0) +
+    scale_color_gradient2(low = 'blue', high = 'red', mid = 'gray40', guide = FALSE) +
     theme(axis.text.x = element_blank(), axis.ticks.x = element_blank())
 
 top.genes <- model.tab %>% arrange(desc(PVE)) %>% head(1)
