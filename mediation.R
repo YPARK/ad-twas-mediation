@@ -131,9 +131,14 @@ make.zqtl.data <- function(plink, sum.stat, genes) {
     qtl.theta <- matrix(NA, nrow = ncol(X), ncol = nrow(genes))
     qtl.se <- matrix(NA, nrow = ncol(X), ncol = nrow(genes))
 
-    qtl.idx <- sum.stat %>% dplyr::select(x.pos, y.pos) %>% as.matrix()
-    qtl.theta[qtl.idx] <- sum.stat$qtl.theta
-    qtl.se[qtl.idx] <- sum.stat$qtl.se
+    sum.stat.qtl <- sum.stat %>% dplyr::filter(!is.na(y.pos))
+
+    qtl.idx <- sum.stat.qtl %>%
+        dplyr::select(x.pos, y.pos) %>%
+            as.matrix()
+
+    qtl.theta[qtl.idx] <- sum.stat.qtl$qtl.theta
+    qtl.se[qtl.idx] <- sum.stat.qtl$qtl.se
 
     gwas.stat <- sum.stat %>% group_by(x.pos) %>%
         dplyr::summarize(gwas.theta = mean(gwas.theta), gwas.se = mean(gwas.se))
@@ -150,18 +155,10 @@ make.zqtl.data <- function(plink, sum.stat, genes) {
     gwas.theta <- gwas.theta %r% valid.x.loc
     gwas.se <- gwas.se %r% valid.x.loc
 
-    snps <- data.frame(plink$BIM, gwas.theta = NA, gwas.se = NA)
-    snps[gwas.stat$x.pos, 'gwas.theta'] <- gwas.stat$gwas.theta
-    snps[gwas.stat$x.pos, 'gwas.se'] <- gwas.stat$gwas.se
-
-    snps <- (snps %r% valid.x.loc) %>%
-        dplyr::select(chr, rs, snp.loc, plink.a1, plink.a2, gwas.theta, gwas.se)
-
     X <- X %c% valid.x.loc
 
     return(list(X = X, qtl.theta = qtl.theta, qtl.se = qtl.se,
-                gwas.theta = gwas.theta, gwas.se = gwas.se,
-                snps = snps))
+                gwas.theta = gwas.theta, gwas.se = gwas.se))
 }
 
 melt.effect <- function(effect.obj, .rnames, .cnames) {

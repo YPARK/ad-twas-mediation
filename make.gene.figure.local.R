@@ -122,6 +122,13 @@ gg.plot <- function(...) {
                                      legend.background = element_blank())    
 }
 
+
+## TODO: show LD between linked QTL SNPs and top GWAS SNPs
+
+
+
+
+
 ################################################################
 ## -- GWAS
 
@@ -217,6 +224,9 @@ ggsave(filename = out.file, plot = gg, width = 8, height = 6, useDingbats = FALS
 
 ################################################################
 ## show PVE
+
+## TODO: fix this
+
 get.plt <- function(...) {
     ret <- gg.plot(...) +
         theme(axis.text.x = element_blank(), axis.title = element_blank())

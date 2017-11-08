@@ -2,22 +2,23 @@
 
 argv <- commandArgs(trailingOnly = TRUE)
 
-if(length(argv) < 8) q()
+if(length(argv) < 9) q()
 
 ld.file <- argv[1]                      # e.g., ld.file = 'stat/IGAP/ld/1.ld.gz'
 sum.file <- argv[2]                     # e.g., sum.file = 'stat/IGAP/hic-data/CO/hs-lm/1.eqtl_bed.gz'
-plink.hdr <- argv[3]                    # e.g., plink.hdr = 'geno/rosmap1709-chr1'
-ld.idx <- as.integer(argv[4])           # e.g., ld.idx = 37
-gwas.sample.size <- as.numeric(argv[5]) # e.g., gwas.sample.size = 74000
-qtl.sample.size <- as.numeric(argv[6])  # e.g., qtl.sample.size = 356
-is.eqtl <- as.logical(argv[7])          # e.g., is.eqtl = TRUE
+gwas.file <- argv[3]                    # e.g., gwas.file = 'IGAP/chr1.txt.gz'
+plink.hdr <- argv[4]                    # e.g., plink.hdr = 'geno/rosmap1709-chr1'
+ld.idx <- as.integer(argv[5])           # e.g., ld.idx = 37
+gwas.sample.size <- as.numeric(argv[6]) # e.g., gwas.sample.size = 74000
+qtl.sample.size <- as.numeric(argv[7])  # e.g., qtl.sample.size = 356
+is.eqtl <- as.logical(argv[8])          # e.g., is.eqtl = TRUE
 
 qtl.cutoff <- 0
-if(length(argv) > 8) {
-    qtl.cutoff <- as.numeric(argv[8])
-    out.hdr <- argv[9]
+if(length(argv) > 9) {
+    qtl.cutoff <- as.numeric(argv[9])
+    out.hdr <- argv[10]
 } else {
-    out.hdr <- argv[8]
+    out.hdr <- argv[9]
 }
 
 dir.create(dirname(out.hdr), recursive = TRUE)
@@ -37,6 +38,7 @@ library(zqtl)
 library(dplyr)
 library(methods)
 library(broom)
+library(readr)
 source('mediation.R')
 
 n.snp.cutoff <- 10
@@ -55,11 +57,40 @@ sum.stat.out <- extract.sum.stat(ld.info, sum.file, x.bim, temp.dir, is.eqtl, qt
 
 sum.stat <- sum.stat.out$sum.stat
 mediators <- sum.stat.out$mediators
+rm(sum.stat.out)
+gc()
 
-best.tab <- find.argmax.snps(sum.stat)
+if(is.null(mediators) || nrow(mediators) < 1) {
+    log.msg('There is no mediator\n\n\n')
+    system('printf "" | gzip > ' %&&% z.out.file)
+    system('rm -r ' %&&% temp.dir)
+    q()    
+}
+
+## should include additional GWAS SNPs not matched with QTL
+gwas.cols <- c('chr', 'snp.loc.1', 'snp.loc', 'rs', 'gwas.a1', 'gwas.a2',
+               'gwas.z', 'gwas.theta', 'gwas.se')
+
+gwas.tab <- read_tsv(gwas.file, col_names = gwas.cols) %>%
+    dplyr::filter(snp.loc.1 >= ld.info$ld.lb, snp.loc <= ld.info$ld.ub) %>%
+        mutate(chr = as.integer(gsub(chr, pattern = 'chr', replacement = '')))
+
+missing.gwas <- x.bim %>% left_join(gwas.tab) %>%
+    na.omit() %>%
+        dplyr::anti_join(sum.stat, by = c('chr', 'rs', 'snp.loc')) %>%
+            mutate(gwas.z = if_else(plink.a1 != gwas.a1, -gwas.z, gwas.z)) %>%
+                mutate(gwas.theta = if_else(plink.a1 != gwas.a1, -gwas.theta, gwas.theta)) %>%
+                    mutate(y.pos = NA, qtl.theta = NA, qtl.se = NA)
+
+sum.stat.combined <-
+    rbind(sum.stat %>% dplyr::select(x.pos, y.pos, gwas.theta, gwas.se, qtl.theta, qtl.se),
+          missing.gwas %>%
+              dplyr::select(x.pos, y.pos, gwas.theta, gwas.se, qtl.theta, qtl.se))
 
 ## Only work on sufficiently large LD blocks
-n.snps <- sum.stat %>% select(snp.loc) %>% unique() %>% nrow()
+snps <- x.bim %>% dplyr::filter(x.pos %in% sum.stat.combined$x.pos)
+n.snps <- nrow(snps)
+
 if(n.snps < n.snp.cutoff) {
     log.msg('This LD block is too small : %d SNPs < %d\n\n\n', n.snps, n.snp.cutoff)
     system('printf "" | gzip > ' %&&% z.out.file)
@@ -67,7 +98,7 @@ if(n.snps < n.snp.cutoff) {
     q()
 }
 
-zqtl.data <- make.zqtl.data(plink, sum.stat, mediators)
+zqtl.data <- make.zqtl.data(plink, sum.stat.combined, mediators)
 
 ## Just run the zQTL w/o finemap
 vb.opt <- list(pi = -2, tau = -4, do.hyper = FALSE, tol = 1e-8, gammax = 1e4,
@@ -128,12 +159,13 @@ var.each <- function(k) {
 
 var.med.vec <- sapply(1:ncol(zqtl.data$qtl.theta), var.each)
 
-
 ################################################################
 out.tab <- melt.effect(z.out$param.mediated, mediators$med.id, 1) %>%
     rename(med.id = Var1) %>%
         mutate(theta.se = sqrt(theta.var)) %>%
             mutate(chr = ld.info[1,1], ld.lb = ld.info[1,2], ld.ub = ld.info[1,3])
+
+best.tab <- find.argmax.snps(sum.stat)
 
 out.tab <- out.tab %>%
     left_join(mediators, by = 'med.id') %>%

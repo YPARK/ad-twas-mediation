@@ -138,14 +138,13 @@ stat/IGAP/hic-data/HC/%.mqtl_bed.gz:
 
 ################################################################
 # Model estimation, bootstrap, PVE, etc.
-step3: jobs/step3-eqtl-jobs.txt.gz jobs/step3-mqtl-jobs.txt.gz jobs/step3-joint-jobs.txt.gz
+step3: jobs/step3-eqtl-jobs.txt.gz jobs/step3-mqtl-jobs.txt.gz
 
-step3-resubmit: jobs/step3-eqtl-jobs-resubmit.txt.gz jobs/step3-mqtl-jobs-resubmit.txt.gz \
-  jobs/step3-joint-jobs-resubmit.txt.gz
+step3-resubmit: jobs/step3-eqtl-jobs-resubmit.txt.gz jobs/step3-mqtl-jobs-resubmit.txt.gz
 
 jobs/step3-%-jobs-resubmit.txt.gz: jobs/step3-%-jobs.txt.gz
 	zcat $< | awk 'system("[ ! -f " $$NF ".mediation.gz ]") == 0 && system("[ ! -f " $$NF " ]") == 0 && system("[ ! -f " $$NF ".gene-mediation.gz ]") == 0 && system("[ ! -f " $$NF ".cpg-mediation.gz ]") == 0' | gzip > $@
-	@[ $$(zcat $@ | wc -l) -lt 1 ] || qsub -t 1-$$(zcat $@ | wc -l) -N Re-$*-ZQTL -binding "linear:1" -l h_rt=10:00:00 -l h_vmem=4g -P compbio_lab -V -cwd -o /dev/null -b y -j y ./run_rscript.sh $@
+	@[ $$(zcat $@ | wc -l) -lt 1 ] || qsub -t 1-$$(zcat $@ | wc -l) -N Re-$*-ZQTL -binding "linear:1" -l h_rt=24:00:00 -l h_vmem=8g -P compbio_lab -V -cwd -o /dev/null -b y -j y ./run_rscript.sh $@
 
 jobs/step3-%-jobs.txt.gz: $(foreach chr, $(CHR), $(foreach task, full hic, jobs/step3/$(task)-%-$(chr).jobs))
 	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
@@ -166,36 +165,36 @@ jobs/step3/nwas-mqtl-%.jobs:
 jobs/step3/hic-eqtl-%.jobs:
 	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
 	@printf "" > $@
-	for z_cutoff in 8 6 4 2; do for qtl_data in $(QTL_DATA); do zcat stat/IGAP/ld/$*.ld.gz | awk -vZ=$${z_cutoff} -vchr=$* -vGWAS=IGAP -vQD=$${qtl_data} '$$(NF) >= 100 { print "./make.mediation.R" OFS ("stat/" GWAS "/ld/" chr ".ld.gz") OFS ("stat/" GWAS "/hic-merged/" QD "/" chr ".eqtl_bed.gz") FS ("geno/rosmap1709-chr" chr) FS NR FS 74046 FS 356 FS "TRUE" FS Z FS ("result/hic-" Z "/" GWAS "/eqtl/" QD "/" chr "/" NR) }' >> $@; done; done
+	for z_cutoff in 5 3 0; do for qtl_data in $(QTL_DATA); do zcat stat/IGAP/ld/$*.ld.gz | awk -vZ=$${z_cutoff} -vchr=$* -vGWAS=IGAP -vQD=$${qtl_data} '$$(NF) >= 100 { print "./make.mediation.R" OFS ("stat/" GWAS "/ld/" chr ".ld.gz") OFS ("stat/" GWAS "/hic-merged/" QD "/" chr ".eqtl_bed.gz") OFS ("IGAP/chr" chr ".txt.gz") OFS ("geno/rosmap1709-chr" chr) FS NR FS 74046 FS 356 FS "TRUE" FS Z FS ("result/hic-" Z "/" GWAS "/eqtl/" QD "/" chr "/" NR) }' >> $@; done; done
 
 jobs/step3/hic-mqtl-%.jobs:
 	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
 	@printf "" > $@
-	for z_cutoff in 8 6 4 2; do for qtl_data in $(QTL_DATA); do zcat stat/IGAP/ld/$*.ld.gz | awk -vZ=$${z_cutoff} -vchr=$* -vGWAS=IGAP -vQD=$${qtl_data} '$$(NF) >= 100 { print "./make.mediation.R" OFS ("stat/" GWAS "/ld/" chr ".ld.gz") OFS ("stat/" GWAS "/hic-merged/" QD "/" chr ".mqtl_bed.gz") FS ("geno/rosmap1709-chr" chr) FS NR FS 74046 FS 598 FS "FALSE" FS Z FS ("result/hic-" Z "/" GWAS "/mqtl/" QD "/" chr "/" NR) }' >> $@; done; done
+	for z_cutoff in 5 3 0; do for qtl_data in $(QTL_DATA); do zcat stat/IGAP/ld/$*.ld.gz | awk -vZ=$${z_cutoff} -vchr=$* -vGWAS=IGAP -vQD=$${qtl_data} '$$(NF) >= 100 { print "./make.mediation.R" OFS ("stat/" GWAS "/ld/" chr ".ld.gz") OFS ("stat/" GWAS "/hic-merged/" QD "/" chr ".mqtl_bed.gz") OFS ("IGAP/chr" chr ".txt.gz") FS ("geno/rosmap1709-chr" chr) FS NR FS 74046 FS 598 FS "FALSE" FS Z FS ("result/hic-" Z "/" GWAS "/mqtl/" QD "/" chr "/" NR) }' >> $@; done; done
 
 jobs/step3/hic-joint-%.jobs:
 	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
 	@printf "" > $@
-	for z_cutoff in 8 6 4 2; do for qtl_data in $(QTL_DATA); do zcat stat/IGAP/ld/$*.ld.gz | awk -vZ=$${z_cutoff} -vchr=$* -vGWAS=IGAP -vQD=$${qtl_data} '$$(NF) >= 100 { print "./make.mediation-joint.R" OFS ("stat/" GWAS "/ld/" chr ".ld.gz") OFS ("stat/" GWAS "/hic-merged/" QD "/" chr ".mqtl_bed.gz") OFS ("stat/" GWAS "/hic-merged/" QD "/" chr ".eqtl_bed.gz") FS ("geno/rosmap1709-chr" chr) FS NR FS Z FS ("result/hic-" Z "/" GWAS "/joint/" QD "/" chr "/" NR) }' >> $@; done; done
+	for z_cutoff in 5 3 0; do for qtl_data in $(QTL_DATA); do zcat stat/IGAP/ld/$*.ld.gz | awk -vZ=$${z_cutoff} -vchr=$* -vGWAS=IGAP -vQD=$${qtl_data} '$$(NF) >= 100 { print "./make.mediation-joint.R" OFS ("stat/" GWAS "/ld/" chr ".ld.gz") OFS ("stat/" GWAS "/hic-merged/" QD "/" chr ".mqtl_bed.gz") OFS ("stat/" GWAS "/hic-merged/" QD "/" chr ".eqtl_bed.gz") OFS ("IGAP/chr" chr ".txt.gz") FS ("geno/rosmap1709-chr" chr) FS NR FS Z FS ("result/hic-" Z "/" GWAS "/joint/" QD "/" chr "/" NR) }' >> $@; done; done
 
 jobs/step3/full-eqtl-%.jobs:
 	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
 	@printf "" > $@
-	for z_cutoff in 8 6 4 2; do for qtl_data in $(QTL_DATA); do zcat stat/IGAP/ld/$*.ld.gz | awk -vZ=$${z_cutoff} -vchr=$* -vGWAS=IGAP -vQD=$${qtl_data} '$$(NF) >= 100 { print "./make.mediation.R" OFS ("stat/" GWAS "/ld/" chr ".ld.gz") OFS ("stat/" GWAS "/data/" QD "/" chr ".eqtl_bed.gz") FS ("geno/rosmap1709-chr" chr) FS NR FS 74046 FS 356 FS "TRUE" FS Z FS ("result/full-" Z "/" GWAS "/eqtl/" QD "/" chr "/" NR) }' >> $@; done; done
+	for z_cutoff in 5 3 0; do for qtl_data in $(QTL_DATA); do zcat stat/IGAP/ld/$*.ld.gz | awk -vZ=$${z_cutoff} -vchr=$* -vGWAS=IGAP -vQD=$${qtl_data} '$$(NF) >= 100 { print "./make.mediation.R" OFS ("stat/" GWAS "/ld/" chr ".ld.gz") OFS ("stat/" GWAS "/data/" QD "/" chr ".eqtl_bed.gz") OFS ("IGAP/chr" chr ".txt.gz") FS ("geno/rosmap1709-chr" chr) FS NR FS 74046 FS 356 FS "TRUE" FS Z FS ("result/full-" Z "/" GWAS "/eqtl/" QD "/" chr "/" NR) }' >> $@; done; done
 
 jobs/step3/full-mqtl-%.jobs:
 	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
 	@printf "" > $@
-	for z_cutoff in 8 6 4 2; do for qtl_data in $(QTL_DATA); do zcat stat/IGAP/ld/$*.ld.gz | awk -vZ=$${z_cutoff} -vchr=$* -vGWAS=IGAP -vQD=$${qtl_data} '$$(NF) >= 100 { print "./make.mediation.R" OFS ("stat/" GWAS "/ld/" chr ".ld.gz") OFS ("stat/" GWAS "/data/" QD "/" chr ".mqtl_bed.gz") FS ("geno/rosmap1709-chr" chr) FS NR FS 74046 FS 598 FS "FALSE" FS Z FS ("result/full-" Z "/" GWAS "/mqtl/" QD "/" chr "/" NR) }' >> $@; done; done
+	for z_cutoff in 5 3 0; do for qtl_data in $(QTL_DATA); do zcat stat/IGAP/ld/$*.ld.gz | awk -vZ=$${z_cutoff} -vchr=$* -vGWAS=IGAP -vQD=$${qtl_data} '$$(NF) >= 100 { print "./make.mediation.R" OFS ("stat/" GWAS "/ld/" chr ".ld.gz") OFS ("stat/" GWAS "/data/" QD "/" chr ".mqtl_bed.gz") OFS ("IGAP/chr" chr ".txt.gz") FS ("geno/rosmap1709-chr" chr) FS NR FS 74046 FS 598 FS "FALSE" FS Z FS ("result/full-" Z "/" GWAS "/mqtl/" QD "/" chr "/" NR) }' >> $@; done; done
 
 jobs/step3/full-joint-%.jobs:
 	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
 	@printf "" > $@
-	for z_cutoff in 8 6 4 2; do for qtl_data in $(QTL_DATA); do zcat stat/IGAP/ld/$*.ld.gz | awk -vZ=$${z_cutoff} -vchr=$* -vGWAS=IGAP -vQD=$${qtl_data} '$$(NF) >= 100 { print "./make.mediation-joint.R" OFS ("stat/" GWAS "/ld/" chr ".ld.gz") OFS ("stat/" GWAS "/data/" QD "/" chr ".mqtl_bed.gz") OFS ("stat/" GWAS "/data/" QD "/" chr ".eqtl_bed.gz") FS ("geno/rosmap1709-chr" chr) FS NR FS Z FS ("result/full-" Z "/" GWAS "/joint/" QD "/" chr "/" NR) }' >> $@; done; done
+	for z_cutoff in 5 3 0; do for qtl_data in $(QTL_DATA); do zcat stat/IGAP/ld/$*.ld.gz | awk -vZ=$${z_cutoff} -vchr=$* -vGWAS=IGAP -vQD=$${qtl_data} '$$(NF) >= 100 { print "./make.mediation-joint.R" OFS ("stat/" GWAS "/ld/" chr ".ld.gz") OFS ("stat/" GWAS "/data/" QD "/" chr ".mqtl_bed.gz") OFS ("stat/" GWAS "/data/" QD "/" chr ".eqtl_bed.gz") OFS ("IGAP/chr" chr ".txt.gz") FS ("geno/rosmap1709-chr" chr) FS NR FS Z FS ("result/full-" Z "/" GWAS "/joint/" QD "/" chr "/" NR) }' >> $@; done; done
 
 ################################################################
 # combine all data
-step3-post : $(foreach inter, full hic, $(foreach cutoff, 8 6 4 2, $(foreach qtl, eqtl mqtl, $(foreach chr, $(CHR), $(foreach stat, mediation null, result/$(stat)/$(inter)-$(cutoff)_IGAP_$(qtl)_hs-lm_$(chr).$(stat).gz)))))
+step3-post : $(foreach inter, full hic, $(foreach cutoff, 5 3, $(foreach qtl, eqtl, $(foreach chr, $(CHR), $(foreach stat, mediation null, result/$(stat)/$(inter)-$(cutoff)_IGAP_$(qtl)_hs-lm_$(chr).$(stat).gz)))))
 
 # % = $(hic-8)_IGAP_$(mqtl)_hs-lm_$(21)
 result/mediation/%.mediation.gz:
