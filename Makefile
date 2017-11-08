@@ -194,7 +194,7 @@ jobs/step3/full-joint-%.jobs:
 
 ################################################################
 # combine all data
-step3-post : $(foreach inter, full hic, $(foreach cutoff, 5 3, $(foreach qtl, eqtl, $(foreach chr, $(CHR), $(foreach stat, mediation null, result/$(stat)/$(inter)-$(cutoff)_IGAP_$(qtl)_hs-lm_$(chr).$(stat).gz)))))
+step3-post : $(foreach inter, full hic, $(foreach cutoff, 5 3 0, $(foreach qtl, eqtl, $(foreach chr, $(CHR), $(foreach stat, mediation null, result/$(stat)/$(inter)-$(cutoff)_IGAP_$(qtl)_hs-lm_$(chr).$(stat).gz)))))
 
 # % = $(hic-8)_IGAP_$(mqtl)_hs-lm_$(21)
 result/mediation/%.mediation.gz:
