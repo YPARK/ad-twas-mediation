@@ -9,6 +9,7 @@ library(qvalue)
 library(readr)
 library(pander)
 library(goseq)
+library(xlsx)
 source('figure.util.R')
 source('mediation.R')
 
@@ -27,7 +28,10 @@ read.mediation <- function(in.hdr) {
           'best.qtl.z', 'best.qtl.rs', 'best.qtl.loc', 'n.qtls',
           'v.med', 'v.med.tot', 'v.dir', 'v.resid')
 
-    return(read.chr(in.hdr, in.cols, 'mediation'))
+    ## It is unstable to use mediation based on less than 50 QTLs
+    ret <- read.chr(in.hdr, in.cols, 'mediation')
+
+    return(ret)
 }
 
 read.null <- function(in.hdr) {
@@ -42,7 +46,7 @@ make.pandoc.tab <- function(med.tab) {
                theta.se = signif(theta.se, 2),
                pip = signif(1/(1+exp(-lodds)), 1),
                best.gwas.z = signif(best.gwas.z, 2),
-               best.qtl.z = signif(best.gwas.z, 2),
+               best.qtl.z = signif(best.qtl.z, 2),
                Gene = hgnc)
 
     .out <- .out %>%
@@ -60,7 +64,7 @@ make.pandoc.tab <- function(med.tab) {
             mutate(QTL = best.qtl.rs %&&% ' (' %&&% best.qtl.z %&&% ')')
 
     .out <- .out %>%
-        dplyr::select(Gene, chr, TSS, TES, Mediation, GWAS, QTL, PVE, pval, qval)
+        dplyr::select(Gene, chr, TSS, TES, Mediation, GWAS, QTL, Var, pval, qval)
 
     ret <- pandoc.table.return(.out, row.names = FALSE, style = 'simple',
                                split.tables = 200, digits = 2)
@@ -159,6 +163,7 @@ write.tables <- function(qtl.data, qval.cutoff = 1e-2) {
     out.significant.file <- out.dir %&&% '/significant_genes.txt.gz'
     out.ld.file <- out.dir %&&% '/significant_LD.txt.gz'
     out.significant.pandoc <- out.dir %&&% '/significant_genes.md'
+    out.significant.xlsx <- out.dir %&&% '/significant_genes.xlsx'
     out.tot.file <- out.dir %&&% '/total_genes.txt.gz'
 
     out.figure.pval.file <- out.dir %&&% '/pvalues.pdf'
@@ -171,7 +176,7 @@ write.tables <- function(qtl.data, qval.cutoff = 1e-2) {
     q.obj <- qvalue(pval)
     med.tab <- cbind(med.tab, pval = pval, qval = q.obj$qvalues) %>%
         mutate(gwas.p = pmin(l10.p.two(abs(best.gwas.z)),20)) %>%
-            mutate(PVE = signif(v.med / (v.med.tot + v.dir + v.resid), 2))
+            mutate(Var = signif(v.med, 2))
 
     pdf(file = out.figure.pval.file)
     hist(pval, 30)
@@ -191,42 +196,49 @@ write.tables <- function(qtl.data, qval.cutoff = 1e-2) {
     goseq.result <- take.goseq(med.tab, qval.cutoff = qval.cutoff,
                                go.pval.cutoff = 1e-2)
 
-    go.summary <-
-        sig.tab %>%
-            dplyr::select(med.id, chr, hgnc) %>%
-                dplyr::rename(ensg = med.id) %>%
-                    left_join(goseq.result$ensg2cat) %>% na.omit() %>%
-                        left_join(goseq.result$go.tab) %>%
-                            dplyr::select(chr, ensg, hgnc, category, term, ontology) %>%
-                                unique() %>%
-                                    arrange(chr)
+    if(!is.null(goseq.result$ensg2cat)) {
+        go.summary <-
+            sig.tab %>%
+                dplyr::select(med.id, chr, hgnc) %>%
+                    dplyr::rename(ensg = med.id) %>%
+                        left_join(goseq.result$ensg2cat) %>% na.omit() %>%
+                            left_join(goseq.result$go.tab) %>%
+                                dplyr::select(chr, ensg, hgnc, category, term, ontology) %>%
+                                    unique() %>%
+                                        arrange(chr)
 
-    go.tab.file <- out.dir %&&% '/GO.txt.gz'
-    write_tsv(goseq.result$go.tab, path = go.tab.file)
+        go.tab.file <- out.dir %&&% '/GO.txt.gz'
+        write_tsv(goseq.result$go.tab, path = go.tab.file)
 
-    ## show top 20 GO tables
-    .tab <- goseq.result$go.tab %>% head(50) %>%
-        dplyr::select(-under_represented_pvalue)
+        ## show top 20 GO tables
+        .tab <- goseq.result$go.tab %>% head(50) %>%
+            dplyr::select(-under_represented_pvalue)
 
-    .ret <- pandoc.table.return(.tab, row.names = FALSE, style = 'simple',
-                                split.tables = 200, digits = 2)
+        .ret <- pandoc.table.return(.tab, row.names = FALSE, style = 'simple',
+                                    split.tables = 200, digits = 2)
 
-    cat(.ret, file = out.dir %&&% '/GO_top20.md')
+        cat(.ret, file = out.dir %&&% '/GO_top20.md')
 
-    if(nrow(go.summary) > 0) {
-        go.pdf.file <- out.dir %&&% '/GO.pdf'
-        draw.go.tab(go.summary, goseq.result, go.pdf.file)
+        if(nrow(go.summary) > 0) {
+            go.pdf.file <- out.dir %&&% '/GO.pdf'
+            draw.go.tab(go.summary, goseq.result, go.pdf.file)
+        }
     }
 
     write_tsv(sig.tab, path = out.significant.file)
 
     .temp.tab <- med.tab %>%
-        dplyr::filter(qval < qval.cutoff, PVE >= .1, gwas.p >= 4) %>%
+        dplyr::filter(qval <= qval.cutoff, Var >= 1e-3, gwas.p <= 1e-3) %>%
             arrange(chr, tss)
 
     .temp <- make.pandoc.tab(.temp.tab)
 
     cat(.temp, file = out.significant.pandoc)
+
+    if(nrow(.temp.tab) > 0) {
+        write.xlsx(.temp.tab %>% as.data.frame(), out.significant.xlsx,
+                   sheetName = 'Var > 1e-3 and GWAS p < 1e-3')
+    }
 
     .temp <- med.tab %>% dplyr::filter(qval < qval.cutoff) %>%
         dplyr::select(chr, ld.lb, ld.ub) %>% unique()
@@ -237,8 +249,8 @@ write.tables <- function(qtl.data, qval.cutoff = 1e-2) {
     write_tsv(med.tab, path = out.tot.file)
 }
 
-qtl.data.vec <- c('full-' %&&% seq(2, 8, 2), 'hic-' %&&% seq(2, 8, 2))
+qtl.data.vec <- c('full-' %&&% c(5, 3), 'hic-' %&&% c(5, 3))
 
 for(qtl.data in qtl.data.vec) {
-    write.tables(qtl.data)
+    write.tables(qtl.data, qval.cutoff = 5e-2)
 }
