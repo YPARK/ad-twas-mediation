@@ -3,19 +3,23 @@ require(gridExtra)
 require(gtable)
 require(ggplot2)
 
-match.widths <- function(p.list) {
+match.widths.grob <- function(g.list) {
 
-    g.list <- lapply(p.list, ggplotGrob)
-    max.width <- g.list[[1]]$widths[2:5]
+    max.width <- g.list[[1]]$widths[2:7]
 
     for(j in 2:length(g.list)) {
-        max.width <- grid::unit.pmax(max.width, g.list[[j]]$widths[2:5])
+        max.width <- grid::unit.pmax(max.width, g.list[[j]]$widths[2:7])
     }
 
     for(j in 1:length(g.list)) {
-        g.list[[j]]$widths[2:5] <- as.list(max.width)
+        g.list[[j]]$widths[2:7] <- as.list(max.width)
     }
     return(g.list)
+}
+
+match.widths <- function(p.list) {
+    g.list <- lapply(p.list, ggplotGrob)
+    return(match.widths.grob(g.list))
 }
 
 grid.vcat <- function(p.list, ...) {
@@ -24,10 +28,7 @@ grid.vcat <- function(p.list, ...) {
     return(ret)
 }
 
-
-match.heights <- function(p.list, stretch = FALSE) {
-
-    g.list <- lapply(p.list, ggplotGrob)
+match.heights.grob <- function(g.list, stretch = TRUE)  {
     max.height <- g.list[[1]]$heights[2:7]
 
     if(stretch) {
@@ -41,6 +42,11 @@ match.heights <- function(p.list, stretch = FALSE) {
     }
 
     return(g.list)
+}
+
+match.heights <- function(p.list, stretch = FALSE) {
+    g.list <- lapply(p.list, ggplotGrob)
+    return(match.heights(g.list, stretch))
 }
 
 grid.hcat <- function(p.list, ...) {

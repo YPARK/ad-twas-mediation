@@ -97,6 +97,31 @@ find.argmax.snps <- function(.stat.tab) {
     return(ret)
 }
 
+read.gwas.tab <- function(gwas.file, ld.info) {
+    gwas.cols <- c('chr', 'snp.loc.1', 'snp.loc', 'rs', 'gwas.a1', 'gwas.a2',
+                   'gwas.z', 'gwas.theta', 'gwas.se')
+
+    gwas.tab <- read_tsv(gwas.file, col_names = gwas.cols) %>%
+        dplyr::filter(snp.loc.1 >= ld.info$ld.lb, snp.loc <= ld.info$ld.ub) %>%
+            mutate(chr = as.integer(gsub(chr, pattern = 'chr', replacement = '')))
+
+    return(gwas.tab)
+}
+
+find.missing.gwas <- function(gwas.file, ld.info, sum.stat) {
+
+    gwas.tab <- read.gwas.tab(gwas.file, ld.info)
+
+    missing.gwas <- x.bim %>% left_join(gwas.tab) %>%
+        na.omit() %>%
+            dplyr::anti_join(sum.stat, by = c('chr', 'rs', 'snp.loc')) %>%
+                mutate(gwas.z = if_else(plink.a1 != gwas.a1, -gwas.z, gwas.z)) %>%
+                    mutate(gwas.theta = if_else(plink.a1 != gwas.a1, -gwas.theta, gwas.theta)) %>%
+                        mutate(y.pos = NA, qtl.theta = NA, qtl.se = NA)
+
+    return(missing.gwas)
+}
+
 subset.plink <- function(ld.info, temp.dir, plink.hdr) {
 
     ## read plink

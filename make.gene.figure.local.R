@@ -4,8 +4,8 @@ argv <- commandArgs(trailingOnly = TRUE)
 if(length(argv) < 3) q()
 
 ld.idx <- as.integer(argv[1]) # e.g., ld.idx <- 1
-ld.tab.file <- argv[2] # e.g., ld.tab.file <- 'tables/genes_ld_significant.txt.gz'
-out.dir <- argv[3]     # e.g., out.dir <- 'temp' 
+ld.tab.file <- argv[2]        # e.g., ld.tab.file <- 'tables/genes/full-5/significant_LD.txt.gz'
+out.dir <- argv[3]            # e.g., out.dir <- 'temp' 
 
 options(stringsAsFators = FALSE)
 source('util.R')
@@ -38,6 +38,7 @@ sum.file.dir <- 'stat/IGAP/data/hs-lm/'
 
 ld.info <- ld.key[ld.idx, ]
 chr <- as.integer(ld.info[1])
+gwas.file <- 'IGAP/chr' %&&% chr %&&% '.txt.gz'
 
 ld.out.file <- sprintf('%s/chr%d_ld%d_gwas_med_twas.pdf', out.dir, chr, ld.idx)
 
@@ -59,50 +60,39 @@ sum.stat.obj <- extract.sum.stat(ld.info = ld.info,
 sum.stat <- sum.stat.obj$sum.stat
 genes <- sum.stat.obj$mediators
 
+################################################################
+## should include additional GWAS SNPs not matched with QTL
+missing.gwas <- find.missing.gwas(gwas.file, ld.info, sum.stat)
+
+sum.stat.combined <-
+    rbind(sum.stat %>% dplyr::select(x.pos, y.pos, gwas.theta, gwas.se, qtl.theta, qtl.se),
+          missing.gwas %>%
+              dplyr::select(x.pos, y.pos, gwas.theta, gwas.se, qtl.theta, qtl.se))
+
+
+################################################################
 model.tab <- ld.tab %>%
     right_join(ld.info, by = c('chr', 'ld.lb', 'ld.ub'))
 
 model.tab <- model.tab %>%
     mutate(med.p = -log10(pval))
 
-model.tab <- model.tab %>%
-    mutate(pve = v.med / (v.med.tot + v.resid + v.dir))
-
-zqtl.data <- make.zqtl.data(plink, sum.stat, genes)
+gwas.df <- read.gwas.tab(gwas.file, ld.info) %>%
+    mutate(gwas.p = l10.p.two(abs(gwas.z)))
 
 ################################################################
-## just run on genes that exist on the list
-y.pos <- match(model.tab$med.id, genes$med.id)
-zqtl.data$qtl.theta <- zqtl.data$qtl.theta %c% y.pos
-zqtl.data$qtl.se <- zqtl.data$qtl.se %c% y.pos
-
-## QTL information
-gwas.z <- zqtl.data$gwas.theta[, 1] / zqtl.data$gwas.se[, 1]
-gwas.df <- data.frame(snp.loc = zqtl.data$snps$snp.loc, gwas = gwas.z) %>%
-    mutate(gwas.p = l10.p.two(abs(gwas)))
-
-qtl.z <- zqtl.data$qtl.theta / zqtl.data$qtl.se
-colnames(qtl.z) <- model.tab$hgnc
-rownames(qtl.z) <- zqtl.data$snps$snp.loc
-
-qtl.melt <- melt(qtl.z, varnames = c('snp.loc', 'hgnc'))
-qtl.melt$hgnc <- as.character(qtl.melt$hgnc)
-qtl.melt <- qtl.melt %>% left_join(gwas.df, by = 'snp.loc')
-qtl.melt <- qtl.melt %>% na.omit() %>%
-    mutate(qtl.p = l10.p.two(abs(value)))
-qtl.melt$hgnc <- as.character(qtl.melt$hgnc)
-
+## Figure out the range
 blk.width <- 1e4
 
 gwas.block.df <- gwas.df %>%
     mutate(blk.loc = floor(snp.loc/blk.width)*blk.width) %>%
-        group_by(blk.loc) %>% slice(which.max(abs(gwas))) %>%
-            mutate(gwas.p = l10.p.two(abs(gwas)))
+        group_by(blk.loc) %>% slice(which.max(abs(gwas.z)))
 
-blk.range <- range(c(gwas.block.df$blk.loc, model.tab$tss, model.tab$tes, max(gwas.block.df$blk.loc) + blk.width))
-
+gwas.range <- range(gwas.block.df$snp.loc)
+gene.range <- range(c(model.tab$tss, model.tab$tes))
+blk.range <- range(c(gwas.range, gene.range))
+blk.range <- range(c(min(blk.range - blk.width), blk.range, max(gwas.block.df$blk.loc) + blk.width))
 blk.length <- blk.range[2] - blk.range[1]
-
 .gwas.w <- blk.length / blk.width * 0.02 + 1
 
 .gwas.kb <- function() {
@@ -115,149 +105,125 @@ blk.length <- blk.range[2] - blk.range[1]
 .gwas.x.scale.top <- scale_x_continuous(limits = blk.range + c(-1000, 1000), expand = c(0, 0),
                                     labels = .gwas.kb(), position = 'top')
 
-gg.plot <- function(...) {
-    ggplot(...) + theme_bw() + theme(plot.background = element_blank(),
-                                     panel.background = element_blank(),
-                                     strip.background = element_blank(),
-                                     legend.background = element_blank())    
-}
-
-
-## TODO: show LD between linked QTL SNPs and top GWAS SNPs
-
-
-
-
-
-################################################################
-## -- GWAS
-
 plt.gwas <-
     gg.plot() + ylab('-log10 GWAS p-value') +
     theme(axis.title.x = element_blank()) +
     geom_rect(data=gwas.block.df, aes(xmin=blk.loc, xmax=blk.loc+blk.width, ymin=0, ymax=gwas.p),
               fill = 'gray80') +
-                  geom_point(data=gwas.df, aes(x=snp.loc, y = gwas.p), size = .1)
+    geom_point(data=gwas.df, aes(x=snp.loc, y = gwas.p), size = .1)
 
 if(max(gwas.df$gwas.p) > -log10(5e-8)) {
     plt.gwas <- plt.gwas + geom_hline(yintercept = -log10(5e-8), color = 'red')
 }
 
-out.file <- sprintf('%s/chr%d_ld%d_gwas.pdf', out.dir, chr, ld.idx)
-
-ggsave(file = out.file, plot = plt.gwas + .gwas.x.scale, width = .gwas.w, height = 2,
-       useDingbats = FALSE, limitsize = FALSE)
+plt.gwas <- plt.gwas + scale_y_reverse() + .gwas.x.scale.top
 
 ################################################################
-## -- QTLs
-lb <- min(gwas.block.df$blk.loc)
-ub <- max(gwas.block.df$blk.loc)
+## [1] PVE of genes (uniformly distributed)
+## [2] grid - gene location
+## [3] genes - SNPs
+## [4] SNPs - linked SNPs
+## [5] GWAS upside down
 
-plt.qtl <- gg.plot(qtl.melt) +
-    theme(axis.text.x = element_blank(), axis.title.x = element_blank()) +
-    geom_point(aes(x = snp.loc, y = qtl.p), size = .2, color = 'gray20') +
-    ylab('-log10 QTL p') +
-    .gwas.x.scale
+model.tab.sorted <- model.tab %>% arrange((tss+tes)/2) %>%
+    mutate(.gene.loc = seq(blk.range[1] + blk.width/2, blk.range[2] - blk.width/2,
+               by = blk.length / n()))
 
-out.file <- sprintf('%s/chr%d_ld%d_qtl.pdf', out.dir, chr, ld.idx)
+empty.theme <- theme(axis.text = element_blank(), 
+                     line = element_blank(), axis.line = element_blank(),
+                     axis.ticks = element_blank(), panel.border = element_blank(),
+                     legend.position = c(1,1), legend.justification = c(1, 1))
 
-ggsave(file = out.file, plot = plt.qtl, width = .gwas.w, height = 2,
-       useDingbats = FALSE, limitsize = FALSE)
+p1 <- gg.plot(model.tab.sorted) + ylab('% variance explained') + xlab('') + .gwas.x.scale +
+    geom_segment(aes(x = .gene.loc, xend = .gene.loc, y = 0, yend = 100 * PVE), size = 3,
+                 color = 'orange') +
+    geom_text(aes(x = .gene.loc, y = 100 * PVE, label = 100 * signif(PVE, 2)), size = 3,
+              hjust=0, vjust=0) +
+    theme(axis.text.x = element_blank(), axis.ticks.x = element_blank())
 
-plt.edge <- gg.plot() + .gwas.x.scale + theme_void()
+top.genes <- model.tab %>% arrange(desc(PVE)) %>% head(1)
+strong.genes <- model.tab %>% filter(PVE > .01 | qval < 5e-2)
+show.genes <- unique(c(top.genes$med.id, strong.genes$med.id))
 
-## show QTLs with PVE > 1%
-.gene <- model.tab %>%
-    dplyr::filter(pve >= .01) %>%
-    dplyr::select(hgnc, tss, tes) %>%
-    mutate(x = (tss + tes)/2, y = 1)
+p2 <- gg.plot(model.tab.sorted) +
+    ylab('') + xlab('') + .gwas.x.scale +
+    geom_segment(aes(x = tss, xend = tes, y=0, yend=0), color = '#005500', size = 3) +
+    geom_segment(aes(x = (tss+tes)/2, xend = .gene.loc, y = 0, yend =1), color = 'gray') +
+    geom_text(aes(x = .gene.loc, y = 1, label = format(pval, digits=2, scientific=TRUE)),
+              vjust = 1, hjust = 0, size = 3) +
+    geom_text(aes(x = .gene.loc, y = 1, label = hgnc),
+              vjust = 0, hjust = 0, size = 3) +
+    empty.theme + ylim(c(0, 2))
 
-if(nrow(.gene) > 0) {
+.qtl.aes <- aes(x = snp.loc, xend = (tss+tes)/2, y = 0, yend = 1,
+                color = pmin(pmax(qtl.z, -5), 5), size = abs(qtl.z))
 
-    .temp <- qtl.melt %>% dplyr::left_join(.gene) %>%
-        dplyr::left_join(model.tab)
+sum.stat.significant <- sum.stat %>% filter(med.id %in% show.genes)
+sum.stat.significant$rs <- as.character(sum.stat.significant$rs)
 
-    .aes.txt <- aes(x = (tss + tes)/2, y = 1, label = hgnc)
-    .aes.qtl <- aes(x = snp.loc, xend = (tss+tes)/2, y = 0, yend = 1, color = sign(value), size = qtl.p)
+p3 <- gg.plot(sum.stat.significant) + ylab('') + xlab('') + .gwas.x.scale +
+    geom_segment(.qtl.aes) +
+    scale_size_continuous(range = c(0, 1), guide = FALSE) +
+    scale_color_gradientn('QTL', colors = c('blue', 'white', 'red')) +
+    empty.theme +
+    theme(legend.position = c(1,1), legend.justification = c(1, 1))
 
-    plt.edge <- plt.edge +
-        geom_segment(data = .temp, .aes.qtl, show.legend = FALSE) +
-            geom_text(data = model.tab, .aes.txt, hjust = 0, angle = 90, size = 3) +
-                scale_y_continuous(limits = c(0, 1.2), breaks = c(0, 0.5, 1)) +
-                    scale_color_gradientn(colors = c('#9999FF', '#FF9999')) +
-    scale_size_continuous(range = c(0, 1))
+## Who are significant LD partners?
+x.bim.matched <- 
+    sum.stat.significant %>% dplyr::select(rs) %>% unique() %>%
+    left_join(x.bim)
+
+svd.out <- take.ld.svd(plink$BED, options = list(do.stdize = TRUE))
+
+Vd <- sweep(t(svd.out$V.t), 2, svd.out$D, `*`)
+Vd.sub <- Vd %r% (x.bim.matched$x.pos)
+LD <- Vd.sub %*% t(Vd)
+
+take.ld.bound <- function(r) {
+    .temp <- which(abs(LD[r, ]) > .1)
+    data.frame(r = r, lb = min(.temp), ub = max(.temp))
 }
 
-## mediation p-value
-sig.genes <- model.tab %>% filter(qval < 1e-2)
-sig.genes.name <- paste(unique(sig.genes$hgnc), collapse = '_')
+ld.bound <- do.call(rbind, lapply(1:nrow(LD), take.ld.bound))
 
-plt.med <-
-    gg.plot(model.tab) +
-    geom_hline(yintercept = -log10(med.cutoff), lty = 2, color = 'gray') + 
-    geom_segment(aes(x = (tss + tes)/2, xend = (tss + tes)/2, y = 0, yend = med.p, color = theta),
-                 arrow = arrow(length = unit(.075, 'inches')), size = 1.5) +
-    scale_color_gradient2(low = 'blue', high = 'red', mid = 'gray40', guide = FALSE) +
-    .gwas.x.scale + ylab('-log10 mediation p-value') +
-    xlab('genomic location (kb)')
+.ld.bound.tab <- data.frame(rs = as.character(x.bim.matched$rs),
+                           snp.loc = x.bim.matched$snp.loc,
+                           ld.lb = plink$BIM[ld.bound[, 2], 4],
+                           ld.ub = plink$BIM[ld.bound[, 3], 4])
 
-out.file <- sprintf('%s/chr%d_ld%d_%s_gwas_med.pdf', out.dir, chr, ld.idx, sig.genes.name)
+ld.bound.tab <- sum.stat.significant %>% left_join(.ld.bound.tab) %>% na.omit() %>%
+    group_by(med.id) %>%
+    summarize(snp.lb = min(snp.loc), snp.ub = max(snp.loc),
+              ld.lb = min(ld.lb), ld.ub = max(ld.ub))
 
-plt.list <- list(plt.med, plt.edge, plt.gwas + scale_y_reverse() + .gwas.x.scale.top)
-gg <- grid.vcat(plt.list)
-ggsave(filename = out.file, plot = gg, width = 8, height = 6, useDingbats = FALSE)
+ld.poly.tab <- ld.bound.tab %>%
+    gather(key = 'y.loc', value = 'x', -med.id) %>%
+    mutate(y.loc = gsub(y.loc, pattern = '.lb', replacement = '')) %>%
+    mutate(y.loc = gsub(y.loc, pattern = '.ub', replacement = '')) %>%
+    mutate(y = ifelse(y.loc == 'snp', 1, 0)) %>%
+    arrange(x)
 
-## mediation PVE
-plt.med.pve <-
-    gg.plot(model.tab %>% dplyr::filter(pval <= med.cutoff)) + 
-    geom_segment(aes(x = (tss + tes)/2, xend = (tss + tes)/2, y = 0, yend = pve * 100, color = theta),
-                 arrow = arrow(length = unit(.075, 'inches')), size = 1.5) +
-    scale_color_gradient2(low = 'blue', high = 'red', mid = 'gray40', guide = FALSE) +
-    .gwas.x.scale + ylab('% local GWAS variance') +
-    xlab('genomic location (kb)')
+p4 <-
+    gg.plot() + empty.theme + .gwas.x.scale +
+    geom_polygon(data = ld.poly.tab,
+                 aes(x = x, y = y, group = med.id),
+                 alpha = 0.25, fill = 'green', show.legend = FALSE) +
+    geom_segment(data = ld.bound.tab,
+                 aes(x = snp.lb, xend = ld.lb, y = 1, yend = 0, color = med.id),
+                 show.legend = FALSE) +
+    geom_segment(data = ld.bound.tab,
+                 aes(x = snp.ub, xend = ld.ub, y = 1, yend = 0, color = med.id),
+                 show.legend = FALSE) +
+    theme(axis.title = element_blank())
 
-out.file <- sprintf('%s/chr%d_ld%d_%s_gwas_med_pve.pdf', out.dir, chr, ld.idx, sig.genes.name)
+gg <- grid.vcat(list(p1, p2, p3, p4, plt.gwas), heights = c(2, .5, .5, .5, 2))
 
-plt.list <- list(plt.med.pve, plt.edge, plt.gwas + scale_y_reverse() + .gwas.x.scale.top)
-gg <- grid.vcat(plt.list)
-ggsave(filename = out.file, plot = gg, width = 8, height = 6, useDingbats = FALSE)
 
-################################################################
-## show PVE
+out.file <- sprintf('%s/local_chr%d_%d_%d_%s.pdf',
+                    out.dir, chr, round(ld.info$ld.lb/1e6), round(ld.info$ld.ub/1e6),
+                    top.genes$hgnc)
 
-## TODO: fix this
-
-get.plt <- function(...) {
-    ret <- gg.plot(...) +
-        theme(axis.text.x = element_blank(), axis.title = element_blank())
-    return(ret)
-}
-
-v.tot <- model.tab %>%
-    mutate(v.tot = v.med.tot + v.resid + v.dir) %>%
-    slice(which.max(v.tot)) %>% dplyr::select(v.tot, v.med.tot, v.resid, v.dir) %>%
-    melt()
-
-v.tot.val <- v.tot %>% filter(variable == 'v.tot') %>% dplyr::select(value) %>% as.numeric()
-
-v.tot <- v.tot %>% filter(variable != 'v.tot') %>% mutate(pve = value / v.tot.val) %>%
-    mutate(x = '0') %>% arrange(pve) %>% 
-    mutate(cum.pve = cumsum(pve))
-
-gene.pve <- model.tab %>% dplyr::select(hgnc, v.med, v.med.tot) %>%
-    mutate(pve = v.med / v.med.tot) %>% dplyr::select(-v.med.tot) %>%
-    dplyr::rename(variable = hgnc, value = v.med) %>%
-    arrange(pve) %>% filter(pve > 0.01) %>%
-    mutate(x = '1') %>%
-    mutate(cum.pve = cumsum(pve))
-
-out.file <- sprintf('%s/chr%d_ld%d_pve.pdf', out.dir, chr, ld.idx)
-pdf(file = out.file, width = 4, height = 3, useDingbats = FALSE)
-plt <- get.plt(rbind(v.tot, gene.pve)) +
-    geom_bar(aes(x = x, y = pve, fill = variable), stat = 'identity', width = 0.2) +
-    geom_text_repel(aes(x = x, y = cum.pve, label = signif(pve, 2)), size = 3)
-print(plt)
-dev.off()
+ggsave(filename = out.file, plot = gg, width = 8, height = 8, units = 'in', limitsize = FALSE)
 
 system('rm -r ' %&&% temp.dir)
 log.msg('Finished figure drawing\n\n\n')
