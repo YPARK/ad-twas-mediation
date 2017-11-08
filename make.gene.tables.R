@@ -19,7 +19,9 @@ read.chr <- function(in.hdr, in.cols, file.name) {
     return(do.call(rbind, .dat))
 }
 
+
 read.mediation <- function(in.hdr) {
+
     in.cols <-
         c('chr', 'ld.lb', 'ld.ub', 'med.id',
           'theta', 'theta.se', 'lodds', 'hgnc',
@@ -45,9 +47,12 @@ make.pandoc.tab <- function(med.tab) {
         mutate(theta = signif(theta, 2),
                theta.se = signif(theta.se, 2),
                pip = signif(1/(1+exp(-lodds)), 1),
+               ld.gwas.z = signif(ld.gwas.z, 2),
                best.gwas.z = signif(best.gwas.z, 2),
                best.qtl.z = signif(best.qtl.z, 2),
-               Gene = hgnc)
+               Gene = hgnc,
+               pval = signif(pval, 1),
+               qval = signif(qval, 1))
 
     .out <- .out %>%
         mutate(TSS = ifelse(strand == '+',
@@ -55,16 +60,18 @@ make.pandoc.tab <- function(med.tab) {
                    format(tes, big.mark=',')),
                TES = ifelse(strand == '-',
                    format(tss, big.mark=','),
-                   format(tes, big.mark=',')))
+                   format(tes, big.mark=',')),
+               ld.gwas.loc = format(ld.gwas.loc, big.mark=','))
 
     .out <- .out %>%
         mutate(Mediation = theta %&&% ' (' %&&% theta.se %&&% ', ' %&&% pip %&&% ')')
     .out <- .out %>%
+        mutate(LD = ld.gwas.rs %&&% ' (' %&&% ld.gwas.z %&&% ', ' %&&% ld.gwas.loc %&&% ')') %>%
         mutate(GWAS = best.gwas.rs %&&% ' (' %&&% best.gwas.z %&&% ')') %>%
             mutate(QTL = best.qtl.rs %&&% ' (' %&&% best.qtl.z %&&% ')')
 
     .out <- .out %>%
-        dplyr::select(Gene, chr, TSS, TES, Mediation, GWAS, QTL, Var, pval, qval)
+        dplyr::select(Gene, chr, TSS, TES, Mediation, LD, GWAS, QTL, Var, pval, qval)
 
     ret <- pandoc.table.return(.out, row.names = FALSE, style = 'simple',
                                split.tables = 200, digits = 2)
@@ -154,6 +161,9 @@ draw.go.tab <- function(go.summary, goseq.result, go.pdf.file) {
 
 write.tables <- function(qtl.data, qval.cutoff = 1e-2) {
 
+    gwas.summary.stat <- read_tsv('stat/IGAP/ld.summary.txt.gz', col_names = TRUE) %>%
+        dplyr::rename(ld.gwas.z = gwas.z, ld.gwas.rs = rs, ld.gwas.p = gwas.p, ld.gwas.loc = snp.loc)
+
     med.hdr <- 'result/mediation/' %&&% qtl.data %&&% '_IGAP_eqtl_hs-lm_'
     null.hdr <- 'result/null/' %&&% qtl.data %&&% '_IGAP_eqtl_hs-lm_'
 
@@ -174,9 +184,11 @@ write.tables <- function(qtl.data, qval.cutoff = 1e-2) {
 
     pval <- empPvals(stat = med.tab$lodds, stat0 = null.tab$null.lodds)
     q.obj <- qvalue(pval)
+
     med.tab <- cbind(med.tab, pval = pval, qval = q.obj$qvalues) %>%
         mutate(gwas.p = pmin(l10.p.two(abs(best.gwas.z)),20)) %>%
-            mutate(Var = signif(v.med, 2))
+            mutate(Var = signif(v.med, 2)) %>%
+                left_join(gwas.summary.stat)
 
     pdf(file = out.figure.pval.file)
     hist(pval, 30)
@@ -228,7 +240,7 @@ write.tables <- function(qtl.data, qval.cutoff = 1e-2) {
     write_tsv(sig.tab, path = out.significant.file)
 
     .temp.tab <- med.tab %>%
-        dplyr::filter(qval <= qval.cutoff, Var >= 1e-3, gwas.p <= 1e-3) %>%
+        dplyr::filter(qval <= qval.cutoff, Var >= 1e-3, ld.gwas.p <= 1e-3) %>%
             arrange(chr, tss)
 
     .temp <- make.pandoc.tab(.temp.tab)
