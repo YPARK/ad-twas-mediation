@@ -67,11 +67,11 @@ make.pandoc.tab <- function(med.tab) {
         mutate(Mediation = theta %&&% ' (' %&&% theta.se %&&% ', ' %&&% pip %&&% ')')
     .out <- .out %>%
         mutate(LD = ld.gwas.rs %&&% ' (' %&&% ld.gwas.z %&&% ', ' %&&% ld.gwas.loc %&&% ')') %>%
-        mutate(GWAS = best.gwas.rs %&&% ' (' %&&% best.gwas.z %&&% ')') %>%
-            mutate(QTL = best.qtl.rs %&&% ' (' %&&% best.qtl.z %&&% ')')
+            mutate(GWAS = best.gwas.rs %&&% ' (' %&&% best.gwas.z %&&% ')') %>%
+                mutate(QTL = best.qtl.rs %&&% ' (' %&&% best.qtl.z %&&% ')')
 
     .out <- .out %>%
-        dplyr::select(Gene, chr, TSS, TES, Mediation, LD, GWAS, QTL, Var, pval, qval)
+        dplyr::select(Gene, chr, TSS, TES, Mediation, LD, GWAS, QTL, PVE, pval, qval)
 
     ret <- pandoc.table.return(.out, row.names = FALSE, style = 'simple',
                                split.tables = 200, digits = 2)
@@ -187,7 +187,7 @@ write.tables <- function(qtl.data, qval.cutoff = 1e-2) {
 
     med.tab <- cbind(med.tab, pval = pval, qval = q.obj$qvalues) %>%
         mutate(gwas.p = pmin(l10.p.two(abs(best.gwas.z)),20)) %>%
-            mutate(Var = signif(v.med, 2)) %>%
+            mutate(PVE = signif(v.med / (max(v.med, v.med.tot) + v.dir + v.resid), 2)) %>%
                 left_join(gwas.summary.stat)
 
     pdf(file = out.figure.pval.file)
@@ -240,7 +240,7 @@ write.tables <- function(qtl.data, qval.cutoff = 1e-2) {
     write_tsv(sig.tab, path = out.significant.file)
 
     .temp.tab <- med.tab %>%
-        dplyr::filter(qval <= qval.cutoff, Var >= 1e-3, ld.gwas.p <= 1e-3) %>%
+        dplyr::filter(qval <= qval.cutoff, PVE > 5e-2, ld.gwas.p < 1e-4) %>%
             arrange(chr, tss)
 
     .temp <- make.pandoc.tab(.temp.tab)
@@ -249,7 +249,7 @@ write.tables <- function(qtl.data, qval.cutoff = 1e-2) {
 
     if(nrow(.temp.tab) > 0) {
         write.xlsx(.temp.tab %>% as.data.frame(), out.significant.xlsx,
-                   sheetName = 'Var > 1e-3 and GWAS p < 1e-3')
+                   sheetName = 'PVE > 5% and GWAS p < 1e-4')
     }
 
     .temp <- med.tab %>% dplyr::filter(qval < qval.cutoff) %>%
