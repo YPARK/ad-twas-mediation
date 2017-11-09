@@ -97,13 +97,19 @@ find.argmax.snps <- function(.stat.tab) {
     return(ret)
 }
 
-read.gwas.tab <- function(gwas.file, ld.info) {
+read.gwas.tab <- function(gwas.file, ld.info = NULL) {
+    require(readr)
     gwas.cols <- c('chr', 'snp.loc.1', 'snp.loc', 'rs', 'gwas.a1', 'gwas.a2',
                    'gwas.z', 'gwas.theta', 'gwas.se')
 
-    gwas.tab <- read_tsv(gwas.file, col_names = gwas.cols) %>%
-        dplyr::filter(snp.loc.1 >= ld.info$ld.lb, snp.loc <= ld.info$ld.ub) %>%
+    if(is.null(ld.info)) {
+        gwas.tab <- read_tsv(gwas.file, col_names = gwas.cols) %>%
             mutate(chr = as.integer(gsub(chr, pattern = 'chr', replacement = '')))
+    } else {
+        gwas.tab <- read_tsv(gwas.file, col_names = gwas.cols) %>%
+            dplyr::filter(snp.loc.1 >= ld.info$ld.lb, snp.loc <= ld.info$ld.ub) %>%
+                mutate(chr = as.integer(gsub(chr, pattern = 'chr', replacement = '')))
+    }
 
     return(gwas.tab)
 }
