@@ -30,10 +30,11 @@ draw.plots <- function(qtl.data) {
     ## GWAS vs PIP vs PVE
     df <- gene.tab %>%
         mutate(ld.gwas.p = pmin(-log10(ld.gwas.p), 20)) %>%
-            mutate(pip = 1/(1+exp(-lodds))) %>%
-                mutate(gene.loc = ifelse(strand == '+', tss, tes)) %>%
-                    as.data.frame()
-
+            mutate(qtl.p = pmin(-log10(2*pnorm(abs(best.qtl.z), lower.tail = FALSE)), 20)) %>%
+                mutate(pip = 1/(1+exp(-lodds))) %>%
+                    mutate(gene.loc = ifelse(strand == '+', tss, tes)) %>%
+                        as.data.frame()
+    
     df.sig <- df %>% filter(hgnc %in% gene.tab.sig$hgnc)
 
     df.strict <- df.sig %>% filter(PVE >= 5e-2, ld.gwas.p > 4)
@@ -62,6 +63,38 @@ draw.plots <- function(qtl.data) {
             ret <- ret +
                 geom_hline(yintercept = .pip.cutoff, color = 'red', lty = 2, size = 1) +
                     xlab('best -log10 GWAS p-value in LD') + ylab('posterior probability of mediation')
+
+            ret <- ret + scale_y_continuous(breaks = c(0.01, 0.5, 0.99), trans = logit.trans)
+        }
+
+        ret <- ret + geom_point(data = df.strict, color = 'black', fill = 'red', pch = 21) +
+            geom_text_repel(data = df.strict, size = 4, segment.color = 'green', segment.alpha = 0.5)
+
+        return(ret)
+    }
+
+    qtl.pip.plot <- function(transpose = FALSE) {
+
+        .pip.cutoff <- min(df.sig$pip)
+        
+        if(transpose) {
+            aes.qtl <- aes(y = qtl.p, x = pip, label = hgnc)
+        } else {
+            aes.qtl <- aes(x = qtl.p, y = pip, label = hgnc)
+        }
+
+        ret <- gg.plot(df, aes.qtl) + geom_hex(bins = 40, color = 'gray') + scale.grad 
+
+        if(transpose) {
+            ret <- ret +
+                geom_vline(xintercept = .pip.cutoff, color = 'red', lty = 2, size = 1) +
+                    ylab('best -log10 QTL p-value') + xlab('posterior probability of mediation')
+
+            ret <- ret + scale_x_continuous(breaks = c(0.01, 0.5, 0.99), trans = logit.trans)
+        } else {
+            ret <- ret +
+                geom_hline(yintercept = .pip.cutoff, color = 'red', lty = 2, size = 1) +
+                    xlab('best -log10 QTL p-value') + ylab('posterior probability of mediation')
 
             ret <- ret + scale_y_continuous(breaks = c(0.01, 0.5, 0.99), trans = logit.trans)
         }
@@ -128,8 +161,72 @@ draw.plots <- function(qtl.data) {
         return(ret)
     }
 
+    gwas.qtl.plot <- function(transpose = FALSE) {
+
+        if(transpose) {
+            aes.gwas <- aes(y = gwas.p, x = qtl.p, label = hgnc)
+        } else {
+            aes.gwas <- aes(x = gwas.p, y = qtl.p, label = hgnc)
+        }
+
+        ret <- gg.plot(df, aes.gwas) +
+            geom_hex(bins = 40, color = 'gray') + scale.grad
+
+        ret <- ret + geom_point(data = df.strict, pch = 21, color = 'black', fill = 'red') +
+            geom_text_repel(data = df.strict,
+                            size = 4, segment.color = 'green',
+                            segment.alpha = 0.5)
+
+        if(transpose) {
+            ret <- ret + xlab('best -log10 QTL p-value') +
+                ylab('best -log10 GWAS p-value')
+        } else {
+            ret <- ret + ylab('best -log10 QTL p-value') +
+                xlab('best -log10 GWAS p-value')
+        }
+
+        return(ret)
+    }
+
+    qtl.pve.plot <- function(transpose = FALSE) {
+
+        if(transpose) {
+            aes.qtl <- aes(y = qtl.p, x = PVE, label = hgnc)
+        } else {
+            aes.qtl <- aes(x = qtl.p, y = PVE, label = hgnc)
+        }
+
+        ret <- gg.plot(df, aes.qtl) +
+            geom_hex(bins = 40, color = 'gray') + scale.grad
+
+        ret <- ret + geom_point(data = df.strict, pch = 21, color = 'black', fill = 'red') +
+            geom_text_repel(data = df.strict,
+                            size = 4, segment.color = 'green',
+                            segment.alpha = 0.5)
+
+        if(transpose) {
+            ret <- ret + xlab('proportion of variance explained by mediation') +
+                ylab('best -log10 QTL p-value')
+
+            ret <- ret + scale_x_continuous(limits = c(1e-8, 10),
+                                            breaks = c(1e-4, 1e-2, 1e-1, 0.99), trans = logit.trans)
+        } else {
+            ret <- ret + ylab('proportion of variance explained by mediation') +
+                xlab('best -log10 QTL p-value')
+
+            ret <- ret + scale_y_continuous(limits = c(1e-8, 10),
+                                            breaks = c(1e-4, 1e-2, 1e-1, 0.99), trans = logit.trans)
+        }
+
+        return(ret)
+    }
+
+
     ggsave(filename = 'figures/genes/Fig_global_' %&&% qtl.data %&&% '_gwas_pip.pdf',
            plot = gwas.pip.plot(), width = 6, height = 4, units = 'in')
+
+    ggsave(filename = 'figures/genes/Fig_global_' %&&% qtl.data %&&% '_qtl_pip.pdf',
+           plot = qtl.pip.plot(), width = 6, height = 4, units = 'in')
 
     ggsave(filename = 'figures/genes/Fig_global_' %&&% qtl.data %&&% '_pip_gwas.pdf',
            plot = gwas.pip.plot(TRUE), width = 6, height = 4, units = 'in')
@@ -139,6 +236,12 @@ draw.plots <- function(qtl.data) {
 
     ggsave(filename = 'figures/genes/Fig_global_' %&&% qtl.data %&&% '_gwas_pve.pdf',
            plot = gwas.pve.plot(), width = 6, height = 4, units = 'in')
+
+    ggsave(filename = 'figures/genes/Fig_global_' %&&% qtl.data %&&% '_gwas_qtl.pdf',
+           plot = gwas.qtl.plot(), width = 6, height = 4, units = 'in')
+
+    ggsave(filename = 'figures/genes/Fig_global_' %&&% qtl.data %&&% '_qtl_pve.pdf',
+           plot = qtl.pve.plot(), width = 6, height = 4, units = 'in')
 
     ggsave(filename = 'figures/genes/Fig_global_' %&&% qtl.data %&&% '_pve_gwas.pdf',
            plot = gwas.pve.plot(TRUE), width = 6, height = 4, units = 'in')
