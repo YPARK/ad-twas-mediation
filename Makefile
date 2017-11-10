@@ -212,12 +212,12 @@ step3-figure: jobs/step3-figures.jobs.gz
 
 jobs/step3-figures.jobs.gz: $(foreach d, $(shell ls -1 tables/genes/ 2> /dev/null), jobs/step3/$(d)-figures.jobs.gz)
 	cat $^ > $@
-	@[ $$(zcat $@ | wc -l) -lt 1 ] || qsub -t 1-$$(zcat $@ | wc -l) -N figure -binding "linear:1" -l h_rt=1800 -l h_vmem=4g -P compbio_lab -V -cwd -o /dev/null -b y -j y ./run_rscript.sh $@
+	@[ $$(zcat $@ | wc -l) -lt 1 ] || qsub -t 1-$$(zcat $@ | wc -l) -N figure -binding "linear:1" -l h_rt=3600 -l h_vmem=8g -P compbio_lab -V -cwd -o /dev/null -b y -j y ./run_rscript.sh $@
 
 jobs/step3/%-figures.jobs.gz: tables/genes/%/significant_LD.txt.gz 
 	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
 	@printf "" | gzip > $@
-	awk -vN=$$(zcat $< | tail -n+2 | awk '{ k=$$1 FS $$2 FS $$3; keys[k]++ } END { print length(keys) }') 'BEGIN { for(j=1; j<=N; ++j) print "./make.gene.figure.local.R" FS j FS "$<" FS "figures/genes/local_$*/" }' | gzip >> $@
+	zcat $< | tail -n+2 | awk '{ k=$$1 FS $$2 FS $$3; pve = $$(NF - 4); if(!(k in keys) || keys[k] < pve) { keys[k] = pve; gene[k] = $$8} } END { for(k in keys) print k FS keys[k] FS gene[k] }'| sort -k1 -k2n | awk '{ printf "./make.gene.figure.local.R %s %d %d %d figures/genes/local_$*/local_chr%d_%0.0f_%0.0f_%s.pdf\n", "$<", $$1, $$2, $$3, $$1, ($$2/1e6), ($$3/1e6), $$5 }' | awk 'system("[ ! -f " $$NF " ]") == 0' | gzip >> $@
 
 
 ################################################################

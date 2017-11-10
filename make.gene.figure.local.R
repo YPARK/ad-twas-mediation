@@ -1,11 +1,15 @@
 #!/usr/bin/env Rscript
 argv <- commandArgs(trailingOnly = TRUE)
 
-if(length(argv) < 3) q()
+if(length(argv) < 5) q()
 
-ld.idx <- as.integer(argv[1]) # e.g., ld.idx <- 1
-ld.tab.file <- argv[2]        # e.g., ld.tab.file <- 'tables/genes/full-5/significant_LD.txt.gz'
-out.dir <- argv[3]            # e.g., out.dir <- 'temp' 
+ld.tab.file <- argv[1]        # e.g., ld.tab.file <- 'tables/genes/full-5/significant_LD.txt.gz'
+chr <- as.integer(argv[2])
+ld.lb <- as.integer(argv[3])
+ld.ub <- as.integer(argv[4])
+out.file <- argv[5]
+
+if(file.exists(out.file)) q()
 
 options(stringsAsFators = FALSE)
 source('util.R')
@@ -20,27 +24,19 @@ library(reshape2)
 library(scales)
 
 ld.tab <- read.table(ld.tab.file, header = TRUE)
-ld.key <- ld.tab %>% select(chr, ld.lb, ld.ub) %>% unique()
-
-if(ld.idx > nrow(ld.key)) q()
 
 med.cutoff <- ld.tab %>% filter(qval < 1e-2) %>%
     slice(which.max(pval))
 
 med.cutoff <- med.cutoff$pval
 
-dir.create(out.dir, recursive = TRUE, showWarnings = FALSE)
+dir.create(dirname(out.file), recursive = TRUE, showWarnings = FALSE)
 
 plink.hdr <- 'geno/rosmap1709-chr'
 sum.file.dir <- 'stat/IGAP/data/hs-lm/'
 
-ld.info <- ld.key[ld.idx, ]
-chr <- as.integer(ld.info[1])
+ld.info <- data.frame(chr = chr, ld.lb = ld.lb, ld.ub = ld.ub)
 gwas.file <- 'IGAP/chr' %&&% chr %&&% '.txt.gz'
-
-ld.out.file <- sprintf('%s/chr%d_ld%d_gwas_med_twas.pdf', out.dir, chr, ld.idx)
-
-if(file.exists(ld.out.file)) q()
 
 ## Draw all genes within the same LD block
 temp.dir <- system('mktemp -d ' %&&% out.dir %&&% '/temp.XXXX',
@@ -215,11 +211,6 @@ p4 <-
     theme(axis.title = element_blank())
 
 gg <- grid.vcat(list(p1, p2, p3, p4, plt.gwas), heights = c(2, .5, .5, .5, 2))
-
-
-out.file <- sprintf('%s/local_chr%d_%d_%d_%s.pdf',
-                    out.dir, chr, round(ld.info$ld.lb/1e6), round(ld.info$ld.ub/1e6),
-                    top.genes$hgnc)
 
 ggsave(filename = out.file, plot = gg, width = 8, height = 8, units = 'in', limitsize = FALSE)
 
