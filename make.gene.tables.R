@@ -56,21 +56,23 @@ make.pandoc.tab <- function(med.tab) {
 
     .out <- .out %>%
         mutate(TSS = ifelse(strand == '+',
-                   format(tss, big.mark=','),
-                   format(tes, big.mark=',')),
+                   format(round(tss/1e3), big.mark=','),
+                   format(round(tes/1e3), big.mark=',')),
                TES = ifelse(strand == '-',
-                   format(tss, big.mark=','),
-                   format(tes, big.mark=',')),
-               ld.gwas.loc = format(ld.gwas.loc, big.mark=','))
+                   format(round(tss/1e3), big.mark=','),
+                   format(round(tes/1e3), big.mark=',')),
+               ld.gwas.loc = format(round(ld.gwas.loc/1e3), big.mark=','),
+               best.qtl.loc = format(round(best.qtl.loc/1e3), big.mark=','),
+               PVE = round(100 * PVE, 1))
 
     .out <- .out %>%
         mutate(Mediation = theta %&&% ' (' %&&% theta.se %&&% ', ' %&&% pip %&&% ')')
     .out <- .out %>%
         mutate(GWAS = ld.gwas.rs %&&% ' (' %&&% ld.gwas.z %&&% ', ' %&&% ld.gwas.loc %&&% ')') %>%
-            mutate(QTL = best.qtl.rs %&&% ' (' %&&% best.qtl.z %&&% ')')
+            mutate(QTL = best.qtl.rs %&&% ' (' %&&% best.qtl.z %&&% ', ' %&&% best.qtl.loc %&&% ')')
 
     .out <- .out %>%
-        dplyr::select(Gene, chr, TSS, TES, Mediation, GWAS, QTL, PVE, pval, qval)
+        dplyr::select(Gene, chr, TSS, TES, Mediation, GWAS, QTL, PVE)
 
     ret <- pandoc.table.return(.out, row.names = FALSE, style = 'simple',
                                split.tables = 200, digits = 2)
