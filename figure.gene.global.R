@@ -223,22 +223,24 @@ draw.plots <- function(qtl.data, p.cutoff = 1e-4) {
 
     gg <- gwas.pve.plot()
 
-    ggsave(filename = 'figures/genes/Fig_global_' %&&% qtl.data %&&% '_gwas_pve.pdf',
+    .ggsave <- function(...) ggsave(..., useDingbats = FALSE)
+
+    .ggsave(filename = 'figures/genes/Fig_global_' %&&% qtl.data %&&% '_gwas_pve.pdf',
            plot = gg, width = 6, height = 4, units = 'in')
 
-    ggsave(filename = 'figures/genes/Fig_global_' %&&% qtl.data %&&% '_gwas_pip.pdf',
+    .ggsave(filename = 'figures/genes/Fig_global_' %&&% qtl.data %&&% '_gwas_pip.pdf',
            plot = gwas.pip.plot(), width = 4, height = 4, units = 'in')
 
-    ggsave(filename = 'figures/genes/Fig_global_' %&&% qtl.data %&&% '_qtl_pip.pdf',
+    .ggsave(filename = 'figures/genes/Fig_global_' %&&% qtl.data %&&% '_qtl_pip.pdf',
            plot = qtl.pip.plot(), width = 4, height = 4, units = 'in')
 
-    ggsave(filename = 'figures/genes/Fig_global_' %&&% qtl.data %&&% '_gwas_qtl_ld.pdf',
+    .ggsave(filename = 'figures/genes/Fig_global_' %&&% qtl.data %&&% '_gwas_qtl_ld.pdf',
            plot = gwas.qtl.plot(ld.level = TRUE), width = 4, height = 4, units = 'in')
 
-    ggsave(filename = 'figures/genes/Fig_global_' %&&% qtl.data %&&% '_gwas_qtl.pdf',
+    .ggsave(filename = 'figures/genes/Fig_global_' %&&% qtl.data %&&% '_gwas_qtl.pdf',
            plot = gwas.qtl.plot(ld.level = FALSE), width = 4, height = 4, units = 'in')
 
-    ggsave(filename = 'figures/genes/Fig_global_' %&&% qtl.data %&&% '_qtl_pve.pdf',
+    .ggsave(filename = 'figures/genes/Fig_global_' %&&% qtl.data %&&% '_qtl_pve.pdf',
            plot = qtl.pve.plot(), width = 4, height = 4, units = 'in')
 
     ################################################################
@@ -289,7 +291,7 @@ draw.plots <- function(qtl.data, p.cutoff = 1e-4) {
                                  aes(y = theta), color = 'red', segment.alpha = 0.5,
                                  nudge_y = .2, size = 3, segment.size = .5, segment.color = 'orange')
 
-    ggsave(filename = 'figures/genes/Fig_global_' %&&% qtl.data %&&% '_mediation_effect.pdf',
+    .ggsave(filename = 'figures/genes/Fig_global_' %&&% qtl.data %&&% '_mediation_effect.pdf',
            plot = ret, width = 12, height = 4, units = 'in',
            limitsize = FALSE)
 }
