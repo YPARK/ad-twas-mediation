@@ -221,20 +221,25 @@ draw.plots <- function(qtl.data, p.cutoff = 1e-4) {
     }
 
 
-    ggsave(filename = 'figures/genes/Fig_global_' %&&% qtl.data %&&% '_gwas_pip.pdf',
-           plot = gwas.pip.plot(), width = 6, height = 4, units = 'in')
-
-    ggsave(filename = 'figures/genes/Fig_global_' %&&% qtl.data %&&% '_qtl_pip.pdf',
-           plot = qtl.pip.plot(), width = 6, height = 4, units = 'in')
+    gg <- gwas.pve.plot()
 
     ggsave(filename = 'figures/genes/Fig_global_' %&&% qtl.data %&&% '_gwas_pve.pdf',
-           plot = gwas.pve.plot(), width = 6, height = 4, units = 'in')
+           plot = gg, width = 6, height = 4, units = 'in')
+
+    ggsave(filename = 'figures/genes/Fig_global_' %&&% qtl.data %&&% '_gwas_pip.pdf',
+           plot = gwas.pip.plot(), width = 4, height = 4, units = 'in')
+
+    ggsave(filename = 'figures/genes/Fig_global_' %&&% qtl.data %&&% '_qtl_pip.pdf',
+           plot = qtl.pip.plot(), width = 4, height = 4, units = 'in')
+
+    ggsave(filename = 'figures/genes/Fig_global_' %&&% qtl.data %&&% '_gwas_qtl_ld.pdf',
+           plot = gwas.qtl.plot(ld.level = TRUE), width = 4, height = 4, units = 'in')
 
     ggsave(filename = 'figures/genes/Fig_global_' %&&% qtl.data %&&% '_gwas_qtl.pdf',
-           plot = gwas.qtl.plot(), width = 6, height = 4, units = 'in')
+           plot = gwas.qtl.plot(ld.level = FALSE), width = 4, height = 4, units = 'in')
 
     ggsave(filename = 'figures/genes/Fig_global_' %&&% qtl.data %&&% '_qtl_pve.pdf',
-           plot = qtl.pve.plot(), width = 6, height = 4, units = 'in')
+           plot = qtl.pve.plot(), width = 4, height = 4, units = 'in')
 
     ################################################################
     ## Global effect sizes
@@ -285,7 +290,7 @@ draw.plots <- function(qtl.data, p.cutoff = 1e-4) {
                                  nudge_y = .2, size = 3, segment.size = .5, segment.color = 'orange')
 
     ggsave(filename = 'figures/genes/Fig_global_' %&&% qtl.data %&&% '_mediation_effect.pdf',
-           plot = ret, width = 8, height = 4, units = 'in',
+           plot = ret, width = 12, height = 4, units = 'in',
            limitsize = FALSE)
 }
 
