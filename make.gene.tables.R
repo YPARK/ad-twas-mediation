@@ -63,7 +63,7 @@ make.pandoc.tab <- function(med.tab) {
                    format(round(tes/1e3), big.mark=',')),
                ld.gwas.loc = format(round(ld.gwas.loc/1e3), big.mark=','),
                best.qtl.loc = format(round(best.qtl.loc/1e3), big.mark=','),
-               PVE = round(100 * PVE, 1))
+               PVE = ifelse(PVE > 0.01, round(100 * PVE, 1), signif(100 * PVE, 2)))
 
     .out <- .out %>%
         mutate(Mediation = theta %&&% ' (' %&&% theta.se %&&% ', ' %&&% pip %&&% ')')
@@ -179,6 +179,9 @@ write.tables <- function(qtl.data, qval.cutoff = 1e-2, pve.cutoff = 1e-2) {
     out.significant.xlsx <- out.dir %&&% '/significant_genes.xlsx'
     out.tot.file <- out.dir %&&% '/total_genes.txt.gz'
 
+    out.subthreshold.pandoc <- out.dir %&&% '/subthreshold_genes.md'
+    out.subthreshold.xlsx <- out.dir %&&% '/subthreshold_genes.xlsx'
+
     out.figure.pval.file <- out.dir %&&% '/pvalues.pdf'
     out.figure.qval.file <- out.dir %&&% '/qvalues.pdf'
 
@@ -244,6 +247,7 @@ write.tables <- function(qtl.data, qval.cutoff = 1e-2, pve.cutoff = 1e-2) {
 
     write_tsv(sig.tab, path = out.significant.file)
 
+    ## priority
     .temp.tab <- med.tab %>%
         dplyr::filter(qval <= qval.cutoff, PVE > 5e-2, ld.gwas.p < 1e-4) %>%
             arrange(chr, tss)
@@ -255,6 +259,20 @@ write.tables <- function(qtl.data, qval.cutoff = 1e-2, pve.cutoff = 1e-2) {
     if(nrow(.temp.tab) > 0) {
         write.xlsx(.temp.tab %>% as.data.frame(), out.significant.xlsx,
                    sheetName = 'PVE > 5% and GWAS p < 1e-4')
+    }
+
+    ## overall subthreshold
+    .temp.tab <- med.tab %>%
+        dplyr::filter(qval < 1e-4, ld.gwas.p < 1e-4) %>%
+            arrange(chr, tss)
+
+    .temp <- make.pandoc.tab(.temp.tab)
+
+    cat(.temp, file = out.subthreshold.pandoc)
+
+    if(nrow(.temp.tab) > 0) {
+        write.xlsx(.temp.tab %>% as.data.frame(), out.subthreshold.xlsx,
+                   sheetName = 'Significant q < 1e-4 and GWAS p < 1e-4')
     }
 
     .temp <- med.tab %>% dplyr::filter(qval < qval.cutoff) %>%
