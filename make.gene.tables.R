@@ -211,37 +211,47 @@ write.tables <- function(qtl.data, qval.cutoff = 1e-2, pve.cutoff = 1e-2) {
         return(NULL)
     }
 
-    goseq.result <- take.goseq(med.tab,
-                               qval.cutoff = qval.cutoff,
-                               pve.cutoff = pve.cutoff,
-                               go.pval.cutoff = 1e-2)
+    for(go.cutoff in c(1e-2, 1e-4)) {
 
-    if(!is.null(goseq.result$ensg2cat)) {
-        go.summary <-
-            sig.tab %>%
-                dplyr::select(med.id, chr, hgnc) %>%
-                    dplyr::rename(ensg = med.id) %>%
-                        left_join(goseq.result$ensg2cat) %>% na.omit() %>%
-                            left_join(goseq.result$go.tab) %>%
-                                dplyr::select(chr, ensg, hgnc, category, term, ontology) %>%
-                                    unique() %>%
-                                        arrange(chr)
-
-        go.tab.file <- out.dir %&&% '/GO.txt.gz'
-        write_tsv(goseq.result$go.tab, path = go.tab.file)
-
-        ## show top 20 GO tables
-        .tab <- goseq.result$go.tab %>% head(50) %>%
-            dplyr::select(-under_represented_pvalue)
-
-        .ret <- pandoc.table.return(.tab, row.names = FALSE, style = 'simple',
-                                    split.tables = 200, digits = 2)
-
-        cat(.ret, file = out.dir %&&% '/GO_top20.md')
-
-        if(nrow(go.summary) > 0) {
-            go.pdf.file <- out.dir %&&% '/GO.pdf'
-            draw.go.tab(go.summary, goseq.result, go.pdf.file)
+        goseq.result <- take.goseq(med.tab,
+                                   qval.cutoff = go.cutoff,
+                                   pve.cutoff = 0,
+                                   go.pval.cutoff = 1e-2)
+        
+        if(!is.null(goseq.result$ensg2cat)) {
+            go.summary <-
+                sig.tab %>%
+                    dplyr::select(med.id, chr, hgnc) %>%
+                        dplyr::rename(ensg = med.id) %>%
+                            left_join(goseq.result$ensg2cat) %>% na.omit() %>%
+                                left_join(goseq.result$go.tab) %>%
+                                    dplyr::select(chr, ensg, hgnc, category, term, ontology) %>%
+                                        unique() %>%
+                                            arrange(chr)
+            
+            go.tab.file <- out.dir %&&% '/GO_' %&&% as.character(go.cutoff) %&&% '.txt.gz'
+            write_tsv(goseq.result$go.tab %>% dplyr::filter(numInCat <= 100), path = go.tab.file)
+            
+            ## show top 50 GO tables
+            .tab <- goseq.result$go.tab %>% dplyr::filter(numInCat <= 100) %>% head(50) %>%
+                dplyr::mutate(category = gsub(pattern = 'GO:', replacement = '', category)) %>%
+                    dplyr::rename(pval=go.pval) %>%
+                        dplyr::mutate(pval=signif(pval,2)) %>%
+                            dplyr::mutate(numDEInCat = numDEInCat %&&% "/" %&&% numInCat) %>%
+                                dplyr::rename(num=numDEInCat, "-"=ontology) %>%
+                                    dplyr::select(-under_represented_pvalue,-numInCat)
+            
+            
+            .ret <- pandoc.table.return(.tab, row.names = FALSE, style = 'simple',
+                                        justify = 'right',
+                                        split.tables = 200, digits = 2)
+            
+            cat(.ret, file = out.dir %&&% '/GO_top50_' %&&% as.character(go.cutoff) %&&% '.md')
+            
+            if(nrow(go.summary) > 0) {
+                go.pdf.file <- out.dir %&&% '/GO' %&&% as.character(go.cutoff) %&&% '.pdf'
+                draw.go.tab(go.summary, goseq.result, go.pdf.file)
+            }
         }
     }
 
@@ -249,7 +259,7 @@ write.tables <- function(qtl.data, qval.cutoff = 1e-2, pve.cutoff = 1e-2) {
 
     ## priority
     .temp.tab <- med.tab %>%
-        dplyr::filter(qval <= qval.cutoff, PVE > 5e-2, ld.gwas.p < 1e-4) %>%
+        dplyr::filter(qval <= qval.cutoff, PVE > pve.cutoff, ld.gwas.p < 1e-4) %>%
             arrange(chr, tss)
 
     .temp <- make.pandoc.tab(.temp.tab)
@@ -258,7 +268,7 @@ write.tables <- function(qtl.data, qval.cutoff = 1e-2, pve.cutoff = 1e-2) {
 
     if(nrow(.temp.tab) > 0) {
         write.xlsx(.temp.tab %>% as.data.frame(), out.significant.xlsx,
-                   sheetName = 'PVE > 5% and GWAS p < 1e-4')
+                   sheetName = sprintf('PVE > %d%% and GWAS p < 1e-4', 100 * pve.cutoff))
     }
 
     ## overall subthreshold
@@ -284,8 +294,9 @@ write.tables <- function(qtl.data, qval.cutoff = 1e-2, pve.cutoff = 1e-2) {
     write_tsv(med.tab, path = out.tot.file)
 }
 
-qtl.data.vec <- c('full-' %&&% c(5, 3, 0), 'hic-' %&&% c(5, 3, 0))
+write.tables('full-0', qval.cutoff = 1e-4, pve.cutoff = 5e-2)
 
-for(qtl.data in qtl.data.vec) {
-    write.tables(qtl.data, qval.cutoff = 5e-2, pve.cutoff = 5e-2)
-}
+##qtl.data.vec <- c('full-' %&&% c(5, 3, 0), 'hic-' %&&% c(5, 3, 0))
+##for(qtl.data in qtl.data.vec) {
+##    write.tables(qtl.data, qval.cutoff = 5e-2, pve.cutoff = 5e-2)
+##}
