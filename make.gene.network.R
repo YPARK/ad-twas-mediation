@@ -32,5 +32,5 @@ net.pairs.relaxed <- net.tab %>%
     filter(gene.1 != gene.2) %>%
     filter(gene.1 %in% gene.tab$hgnc | gene.2 %in% gene.tab$hgnc)
 
-write_tsv(net.pairs, path = gzfile('network/ppi-strict.pairs.gz'), col_names = FALSE)
-write_tsv(net.pairs.relaxed, path = gzfile('network/ppi.pairs.gz'), col_names = FALSE)
+write_tsv(net.pairs, path = 'network/ppi-strict.pairs', col_names = TRUE)
+write_tsv(net.pairs.relaxed, path = 'network/ppi.pairs', col_names = TRUE)
