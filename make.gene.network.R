@@ -21,7 +21,8 @@ net.pairs <- net.tab %>%
     rename(gene.1 = 'Official Symbol Interactor A',
            gene.2 = 'Official Symbol Interactor B') %>%
     filter(gene.1 != gene.2) %>%
-    filter(gene.1 %in% gene.tab$hgnc, gene.2 %in% gene.tab$hgnc)
+    filter(gene.1 %in% gene.tab$hgnc, gene.2 %in% gene.tab$hgnc) %>%
+    unique()
 
 net.pairs.relaxed <- net.tab %>%
     rename(pair.type = 'Experimental System Type') %>%
@@ -30,7 +31,8 @@ net.pairs.relaxed <- net.tab %>%
     rename(gene.1 = 'Official Symbol Interactor A',
            gene.2 = 'Official Symbol Interactor B') %>%
     filter(gene.1 != gene.2) %>%
-    filter(gene.1 %in% gene.tab$hgnc | gene.2 %in% gene.tab$hgnc)
+    filter(gene.1 %in% gene.tab$hgnc | gene.2 %in% gene.tab$hgnc) %>%
+    unique()
 
 write_tsv(net.pairs, path = 'network/ppi-strict.pairs', col_names = TRUE)
 write_tsv(net.pairs.relaxed, path = 'network/ppi.pairs', col_names = TRUE)
