@@ -1,0 +1,888 @@
+/broad/software/scripts/useuse: line 4: /broad/software/dotkit/make_hsblock.sh:t/.dk_init: No such file or directory
+[Wed Jan  3 15:05:11 2018] reading data: network/ppi-strict.pairs
+[Wed Jan  3 15:05:11 2018] model = dsb, alg = lcvi
+[Wed Jan  3 15:05:11 2018] initial fitting by iterative bisection
+[Wed Jan  3 15:05:11 2018] running variational inference with depth = 1
+ -- read full data network ... V=423
+ -- repeat = 1 / 20
+ -- latent update [              1]  diff [          149.6] -- latent update [              2]  diff [          1.414] -- latent update [              3]  diff [          4.243] -- latent update [              4]  diff [              0] -> converged   [          -3240]
+ -- latent update [              1]  diff [          149.6] -- latent update [              2]  diff [              0] -> converged   [          -3239]
+ -- converged 
+ -- repeat = 2 / 20
+ -- latent update [              1]  diff [          149.9] -- latent update [              2]  diff [          2.121] -- latent update [              3]  diff [          1.414] -- latent update [              4]  diff [              0] -> converged   [          -3264]
+ -- latent update [              1]  diff [          149.8] -- latent update [              2]  diff [              0] -> converged   [          -3264]
+ -- converged 
+ -- repeat = 3 / 20
+ -- latent update [              1]  diff [            151] -- latent update [              2]  diff [          4.243] -- latent update [              3]  diff [              0] -> converged   [          -3246]
+ -- latent update [              1]  diff [          150.4] -- latent update [              2]  diff [              0] -> converged   [          -3246]
+ -- converged 
+ -- repeat = 4 / 20
+ -- latent update [              1]  diff [          149.7] -- latent update [              2]  diff [          11.31] -- latent update [              3]  diff [              0] -> converged   [          -3256]
+ -- latent update [              1]  diff [          149.6] -- latent update [              2]  diff [              0] -> converged   [          -3254]
+ -- converged 
+ -- repeat = 5 / 20
+ -- latent update [              1]  diff [          149.9] -- latent update [              2]  diff [          2.828] -- latent update [              3]  diff [          2.828] -- latent update [              4]  diff [         0.7071] -- latent update [              5]  diff [         0.7071] -- latent update [              6]  diff [              0] -> converged   [          -3254]
+ -- latent update [              1]  diff [          149.8] -- latent update [              2]  diff [              0] -> converged   [          -3254]
+ -- converged 
+ -- repeat = 6 / 20
+ -- latent update [              1]  diff [            150] -- latent update [              2]  diff [          7.071] -- latent update [              3]  diff [         0.7071] -- latent update [              4]  diff [              0] -> converged   [          -3248]
+ -- latent update [              1]  diff [          149.6] -- latent update [              2]  diff [              0] -> converged   [          -3248]
+ -- converged 
+ -- repeat = 7 / 20
+ -- latent update [              1]  diff [          149.6] -- latent update [              2]  diff [          1.414] -- latent update [              3]  diff [          2.121] -- latent update [              4]  diff [              0] -> converged   [          -3256]
+ -- latent update [              1]  diff [          149.8] -- latent update [              2]  diff [              0] -> converged   [          -3256]
+ -- converged 
+ -- repeat = 8 / 20
+ -- latent update [              1]  diff [          149.8] -- latent update [              2]  diff [          11.31] -- latent update [              3]  diff [          3.536] -- latent update [              4]  diff [          1.414] -- latent update [              5]  diff [              0] -> converged   [          -3251]
+ -- latent update [              1]  diff [          149.7] -- latent update [              2]  diff [              0] -> converged   [          -3251]
+ -- converged 
+ -- repeat = 9 / 20
+ -- latent update [              1]  diff [          149.9] -- latent update [              2]  diff [          11.31] -- latent update [              3]  diff [          2.828] -- latent update [              4]  diff [         0.7071] -- latent update [              5]  diff [              0] -> converged   [          -3255]
+ -- latent update [              1]  diff [          149.6] -- latent update [              2]  diff [              0] -> converged   [          -3255]
+ -- converged 
+ -- repeat = 10 / 20
+ -- latent update [              1]  diff [          149.6] -- latent update [              2]  diff [          2.828] -- latent update [              3]  diff [              0] -> converged   [          -3250]
+ -- latent update [              1]  diff [          149.6] -- latent update [              2]  diff [              0] -> converged   [          -3250]
+ -- converged 
+ -- repeat = 11 / 20
+ -- latent update [              1]  diff [          149.7] -- latent update [              2]  diff [         0.7071] -- latent update [              3]  diff [              0] -> converged   [          -3255]
+ -- latent update [              1]  diff [          149.7] -- latent update [              2]  diff [         0.7071] -- latent update [              3]  diff [              0] -> converged   [          -3253]
+ -- converged 
+ -- repeat = 12 / 20
+ -- latent update [              1]  diff [          150.2] -- latent update [              2]  diff [          6.364] -- latent update [              3]  diff [          2.121] -- latent update [              4]  diff [          1.414] -- latent update [              5]  diff [         0.7071] -- latent update [              6]  diff [              0] -> converged   [          -3251]
+ -- latent update [              1]  diff [          151.5] -- latent update [              2]  diff [              0] -> converged   [          -3251]
+ -- converged 
+ -- repeat = 13 / 20
+ -- latent update [              1]  diff [          150.2] -- latent update [              2]  diff [          1.414] -- latent update [              3]  diff [         0.7071] -- latent update [              4]  diff [              0] -> converged   [          -3254]
+ -- latent update [              1]  diff [          150.1] -- latent update [              2]  diff [              0] -> converged   [          -3254]
+ -- converged 
+ -- repeat = 14 / 20
+ -- latent update [              1]  diff [          150.6] -- latent update [              2]  diff [          14.85] -- latent update [              3]  diff [           4.95] -- latent update [              4]  diff [         0.7071] -- latent update [              5]  diff [              0] -> converged   [          -3257]
+ -- latent update [              1]  diff [          149.6] -- latent update [              2]  diff [              0] -> converged   [          -3257]
+ -- converged 
+ -- repeat = 15 / 20
+ -- latent update [              1]  diff [          149.6] -- latent update [              2]  diff [          1.414] -- latent update [              3]  diff [          2.121] -- latent update [              4]  diff [          2.121] -- latent update [              5]  diff [              0] -> converged   [          -3258]
+ -- latent update [              1]  diff [          149.8] -- latent update [              2]  diff [              0] -> converged   [          -3258]
+ -- converged 
+ -- repeat = 16 / 20
+ -- latent update [              1]  diff [          149.8] -- latent update [              2]  diff [              0] -> converged   [          -3254]
+ -- latent update [              1]  diff [          149.8] -- latent update [              2]  diff [         0.7071] -- latent update [              3]  diff [              0] -> converged   [          -3251]
+ -- latent update [              1]  diff [          149.9] -- latent update [              2]  diff [              0] -> converged   [          -3251]
+ -- converged 
+ -- repeat = 17 / 20
+ -- latent update [              1]  diff [          149.6] -- latent update [              2]  diff [          2.121] -- latent update [              3]  diff [         0.7071] -- latent update [              4]  diff [              0] -> converged   [          -3252]
+ -- latent update [              1]  diff [          149.6] -- latent update [              2]  diff [              0] -> converged   [          -3251]
+ -- converged 
+ -- repeat = 18 / 20
+ -- latent update [              1]  diff [            150] -- latent update [              2]  diff [          4.243] -- latent update [              3]  diff [          2.121] -- latent update [              4]  diff [              0] -> converged   [          -3251]
+ -- latent update [              1]  diff [          149.8] -- latent update [              2]  diff [              0] -> converged   [          -3251]
+ -- converged 
+ -- repeat = 19 / 20
+ -- latent update [              1]  diff [            150] -- latent update [              2]  diff [          1.414] -- latent update [              3]  diff [         0.7071] -- latent update [              4]  diff [          1.414] -- latent update [              5]  diff [              0] -> converged   [          -3259]
+ -- latent update [              1]  diff [          149.7] -- latent update [              2]  diff [              0] -> converged   [          -3259]
+ -- converged 
+ -- repeat = 20 / 20
+ -- latent update [              1]  diff [          149.6] -- latent update [              2]  diff [          8.485] -- latent update [              3]  diff [          2.828] -- latent update [              4]  diff [              0] -> converged   [          -3246]
+ -- latent update [              1]  diff [            150] -- latent update [              2]  diff [              0] -> converged   [          -3246]
+ -- converged 
+ -- collapsing tree
+ -- writing output files
+[Wed Jan  3 15:05:11 2018] running variational inference with depth = 1
+ -- read full data network ... V=218
+ -- repeat = 1 / 20
+ -- latent update [              1]  diff [          77.23] -- latent update [              2]  diff [         0.7071] -- latent update [              3]  diff [              0] -> converged   [          -1144]
+ -- latent update [              1]  diff [          77.19] -- latent update [              2]  diff [              0] -> converged   [          -1144]
+ -- converged 
+ -- repeat = 2 / 20
+ -- latent update [              1]  diff [          77.16] -- latent update [              2]  diff [          9.192] -- latent update [              3]  diff [              0] -> converged   [          -1138]
+ -- latent update [              1]  diff [          77.34] -- latent update [              2]  diff [              0] -> converged   [          -1138]
+ -- converged 
+ -- repeat = 3 / 20
+ -- latent update [              1]  diff [          77.71] -- latent update [              2]  diff [          1.414] -- latent update [              3]  diff [          1.414] -- latent update [              4]  diff [              0] -> converged   [          -1139]
+ -- latent update [              1]  diff [          78.24] -- latent update [              2]  diff [              0] -> converged   [          -1139]
+ -- converged 
+ -- repeat = 4 / 20
+ -- latent update [              1]  diff [          77.13] -- latent update [              2]  diff [         0.7071] -- latent update [              3]  diff [         0.7071] -- latent update [              4]  diff [         0.7071] -- latent update [              5]  diff [              0] -> converged   [          -1135]
+ -- latent update [              1]  diff [           77.1] -- latent update [              2]  diff [              0] -> converged   [          -1135]
+ -- converged 
+ -- repeat = 5 / 20
+ -- latent update [              1]  diff [          77.23] -- latent update [              2]  diff [           4.95] -- latent update [              3]  diff [              0] -> converged   [          -1129]
+ -- latent update [              1]  diff [          77.08] -- latent update [              2]  diff [              0] -> converged   [          -1129]
+ -- converged 
+ -- repeat = 6 / 20
+ -- latent update [              1]  diff [          77.08] -- latent update [              2]  diff [          1.414] -- latent update [              3]  diff [              0] -> converged   [          -1138]
+ -- latent update [              1]  diff [          77.13] -- latent update [              2]  diff [              0] -> converged   [          -1138]
+ -- converged 
+ -- repeat = 7 / 20
+ -- latent update [              1]  diff [           77.1] -- latent update [              2]  diff [         0.7071] -- latent update [              3]  diff [              0] -> converged   [          -1138]
+ -- latent update [              1]  diff [           77.1] -- latent update [              2]  diff [              0] -> converged   [          -1138]
+ -- converged 
+ -- repeat = 8 / 20
+ -- latent update [              1]  diff [          77.47] -- latent update [              2]  diff [         0.7071] -- latent update [              3]  diff [         0.7071] -- latent update [              4]  diff [              0] -> converged   [          -1138]
+ -- latent update [              1]  diff [          77.71] -- latent update [              2]  diff [              0] -> converged   [          -1138]
+ -- converged 
+ -- repeat = 9 / 20
+ -- latent update [              1]  diff [          77.13] -- latent update [              2]  diff [          1.414] -- latent update [              3]  diff [              0] -> converged   [          -1137]
+ -- latent update [              1]  diff [          77.09] -- latent update [              2]  diff [              0] -> converged   [          -1137]
+ -- converged 
+ -- repeat = 10 / 20
+ -- latent update [              1]  diff [           77.1] -- latent update [              2]  diff [          5.657] -- latent update [              3]  diff [              0] -> converged   [          -1132]
+ -- latent update [              1]  diff [          77.19] -- latent update [              2]  diff [              0] -> converged   [          -1132]
+ -- converged 
+ -- repeat = 11 / 20
+ -- latent update [              1]  diff [          77.47] -- latent update [              2]  diff [         0.7071] -- latent update [              3]  diff [         0.7071] -- latent update [              4]  diff [              0] -> converged   [          -1134]
+ -- latent update [              1]  diff [          77.34] -- latent update [              2]  diff [              0] -> converged   [          -1134]
+ -- converged 
+ -- repeat = 12 / 20
+ -- latent update [              1]  diff [          77.08] -- latent update [              2]  diff [          1.414] -- latent update [              3]  diff [          1.414] -- latent update [              4]  diff [          1.414] -- latent update [              5]  diff [         0.7071] -- latent update [              6]  diff [          1.414] -- latent update [              7]  diff [              0] -> converged   [          -1137]
+ -- latent update [              1]  diff [          77.28] -- latent update [              2]  diff [              0] -> converged   [          -1137]
+ -- converged 
+ -- repeat = 13 / 20
+ -- latent update [              1]  diff [          77.09] -- latent update [              2]  diff [          1.414] -- latent update [              3]  diff [         0.7071] -- latent update [              4]  diff [              0] -> converged   [          -1143]
+ -- latent update [              1]  diff [          77.08] -- latent update [              2]  diff [              0] -> converged   [          -1143]
+ -- converged 
+ -- repeat = 14 / 20
+ -- latent update [              1]  diff [          77.13] -- latent update [              2]  diff [          2.828] -- latent update [              3]  diff [          4.243] -- latent update [              4]  diff [              0] -> converged   [          -1136]
+ -- latent update [              1]  diff [          77.23] -- latent update [              2]  diff [              0] -> converged   [          -1136]
+ -- converged 
+ -- repeat = 15 / 20
+ -- latent update [              1]  diff [          77.28] -- latent update [              2]  diff [         0.7071] -- latent update [              3]  diff [              0] -> converged   [          -1145]
+ -- latent update [              1]  diff [           77.4] -- latent update [              2]  diff [              0] -> converged   [          -1145]
+ -- converged 
+ -- repeat = 16 / 20
+ -- latent update [              1]  diff [          77.16] -- latent update [              2]  diff [         0.7071] -- latent update [              3]  diff [              0] -> converged   [          -1132]
+ -- latent update [              1]  diff [          77.19] -- latent update [              2]  diff [              0] -> converged   [          -1132]
+ -- converged 
+ -- repeat = 17 / 20
+ -- latent update [              1]  diff [          77.16] -- latent update [              2]  diff [          4.243] -- latent update [              3]  diff [              0] -> converged   [          -1139]
+ -- latent update [              1]  diff [          77.54] -- latent update [              2]  diff [              0] -> converged   [          -1139]
+ -- converged 
+ -- repeat = 18 / 20
+ -- latent update [              1]  diff [          77.23] -- latent update [              2]  diff [         0.7071] -- latent update [              3]  diff [         0.7071] -- latent update [              4]  diff [              0] -> converged   [          -1140]
+ -- latent update [              1]  diff [          77.23] -- latent update [              2]  diff [              0] -> converged   [          -1140]
+ -- converged 
+ -- repeat = 19 / 20
+ -- latent update [              1]  diff [          77.28] -- latent update [              2]  diff [          5.657] -- latent update [              3]  diff [              0] -> converged   [          -1138]
+ -- latent update [              1]  diff [          77.07] -- latent update [              2]  diff [              0] -> converged   [          -1138]
+ -- converged 
+ -- repeat = 20 / 20
+ -- latent update [              1]  diff [          77.19] -- latent update [              2]  diff [          2.121] -- latent update [              3]  diff [              0] -> converged   [          -1143]
+ -- latent update [              1]  diff [           77.4] -- latent update [              2]  diff [              0] -> converged   [          -1143]
+ -- converged 
+ -- collapsing tree
+ -- writing output files
+[Wed Jan  3 15:05:11 2018] running variational inference with depth = 1
+ -- read full data network ... V=205
+ -- repeat = 1 / 20
+ -- latent update [              1]  diff [          73.41] -- latent update [              2]  diff [          2.828] -- latent update [              3]  diff [         0.7071] -- latent update [              4]  diff [              0] -> converged   [          -1201]
+ -- latent update [              1]  diff [          72.93] -- latent update [              2]  diff [              0] -> converged   [          -1201]
+ -- converged 
+ -- repeat = 2 / 20
+ -- latent update [              1]  diff [          74.52] -- latent update [              2]  diff [          7.778] -- latent update [              3]  diff [         0.7071] -- latent update [              4]  diff [              0] -> converged   [          -1192]
+ -- latent update [              1]  diff [          73.02] -- latent update [              2]  diff [              0] -> converged   [          -1192]
+ -- converged 
+ -- repeat = 3 / 20
+ -- latent update [              1]  diff [          72.58] -- latent update [              2]  diff [          2.828] -- latent update [              3]  diff [              0] -> converged   [          -1189]
+ -- latent update [              1]  diff [          72.49] -- latent update [              2]  diff [              0] -> converged   [          -1189]
+ -- converged 
+ -- repeat = 4 / 20
+ -- latent update [              1]  diff [          73.41] -- latent update [              2]  diff [         0.7071] -- latent update [              3]  diff [              0] -> converged   [          -1208]
+ -- latent update [              1]  diff [           73.3] -- latent update [              2]  diff [              0] -> converged   [          -1208]
+ -- converged 
+ -- repeat = 5 / 20
+ -- latent update [              1]  diff [          72.73] -- latent update [              2]  diff [          6.364] -- latent update [              3]  diff [          1.414] -- latent update [              4]  diff [              0] -> converged   [          -1182]
+ -- latent update [              1]  diff [           72.5] -- latent update [              2]  diff [              0] -> converged   [          -1182]
+ -- converged 
+ -- repeat = 6 / 20
+ -- latent update [              1]  diff [          74.52] -- latent update [              2]  diff [         0.7071] -- latent update [              3]  diff [              0] -> converged   [          -1204]
+ -- latent update [              1]  diff [          74.52] -- latent update [              2]  diff [              0] -> converged   [          -1206]
+ -- latent update [              1]  diff [          74.52] -- latent update [              2]  diff [              0] -> converged   [          -1206]
+ -- converged 
+ -- repeat = 7 / 20
+ -- latent update [              1]  diff [          72.79] -- latent update [              2]  diff [         0.7071] -- latent update [              3]  diff [              0] -> converged   [          -1187]
+ -- latent update [              1]  diff [          72.67] -- latent update [              2]  diff [              0] -> converged   [          -1186]
+ -- latent update [              1]  diff [          72.62] -- latent update [              2]  diff [              0] -> converged   [          -1186]
+ -- converged 
+ -- repeat = 8 / 20
+ -- latent update [              1]  diff [          72.62] -- latent update [              2]  diff [          4.243] -- latent update [              3]  diff [              0] -> converged   [          -1188]
+ -- latent update [              1]  diff [          73.02] -- latent update [              2]  diff [              0] -> converged   [          -1188]
+ -- converged 
+ -- repeat = 9 / 20
+ -- latent update [              1]  diff [          72.73] -- latent update [              2]  diff [              0] -> converged   [          -1186]
+ -- latent update [              1]  diff [          72.62] -- latent update [              2]  diff [              0] -> converged   [          -1185]
+ -- latent update [              1]  diff [          72.52] -- latent update [              2]  diff [          3.536] -- latent update [              3]  diff [              0] -> converged   [          -1182]
+ -- latent update [              1]  diff [          72.67] -- latent update [              2]  diff [              0] -> converged   [          -1182]
+ -- converged 
+ -- repeat = 10 / 20
+ -- latent update [              1]  diff [          72.79] -- latent update [              2]  diff [              0] -> converged   [          -1182]
+ -- latent update [              1]  diff [          72.67] -- latent update [              2]  diff [              0] -> converged   [          -1182]
+ -- latent update [              1]  diff [          72.62] -- latent update [              2]  diff [              0] -> converged   [          -1182]
+ -- converged 
+ -- repeat = 11 / 20
+ -- latent update [              1]  diff [          72.52] -- latent update [              2]  diff [          1.414] -- latent update [              3]  diff [         0.7071] -- latent update [              4]  diff [              0] -> converged   [          -1187]
+ -- latent update [              1]  diff [          72.48] -- latent update [              2]  diff [              0] -> converged   [          -1187]
+ -- converged 
+ -- repeat = 12 / 20
+ -- latent update [              1]  diff [          73.65] -- latent update [              2]  diff [         0.7071] -- latent update [              3]  diff [              0] -> converged   [          -1205]
+ -- latent update [              1]  diff [          73.41] -- latent update [              2]  diff [              0] -> converged   [          -1204]
+ -- converged 
+ -- repeat = 13 / 20
+ -- latent update [              1]  diff [          73.78] -- latent update [              2]  diff [          2.121] -- latent update [              3]  diff [              0] -> converged   [          -1193]
+ -- latent update [              1]  diff [          73.41] -- latent update [              2]  diff [              0] -> converged   [          -1193]
+ -- converged 
+ -- repeat = 14 / 20
+ -- latent update [              1]  diff [          72.73] -- latent update [              2]  diff [         0.7071] -- latent update [              3]  diff [              0] -> converged   [          -1188]
+ -- latent update [              1]  diff [          72.67] -- latent update [              2]  diff [              0] -> converged   [          -1188]
+ -- converged 
+ -- repeat = 15 / 20
+ -- latent update [              1]  diff [          72.49] -- latent update [              2]  diff [         0.7071] -- latent update [              3]  diff [              0] -> converged   [          -1185]
+ -- latent update [              1]  diff [          72.52] -- latent update [              2]  diff [              0] -> converged   [          -1185]
+ -- converged 
+ -- repeat = 16 / 20
+ -- latent update [              1]  diff [          73.53] -- latent update [              2]  diff [         0.7071] -- latent update [              3]  diff [              0] -> converged   [          -1199]
+ -- latent update [              1]  diff [          73.41] -- latent update [              2]  diff [              0] -> converged   [          -1199]
+ -- converged 
+ -- repeat = 17 / 20
+ -- latent update [              1]  diff [           73.1] -- latent update [              2]  diff [          2.121] -- latent update [              3]  diff [              0] -> converged   [          -1197]
+ -- latent update [              1]  diff [          73.02] -- latent update [              2]  diff [              0] -> converged   [          -1200]
+ -- latent update [              1]  diff [          73.02] -- latent update [              2]  diff [              0] -> converged   [          -1200]
+ -- converged 
+ -- repeat = 18 / 20
+ -- latent update [              1]  diff [          72.55] -- latent update [              2]  diff [          1.414] -- latent update [              3]  diff [              0] -> converged   [          -1188]
+ -- latent update [              1]  diff [          72.55] -- latent update [              2]  diff [              0] -> converged   [          -1188]
+ -- latent update [              1]  diff [          72.58] -- latent update [              2]  diff [              0] -> converged   [          -1186]
+ -- latent update [              1]  diff [          72.62] -- latent update [              2]  diff [              0] -> converged   [          -1186]
+ -- converged 
+ -- repeat = 19 / 20
+ -- latent update [              1]  diff [          75.62] -- latent update [              2]  diff [          1.414] -- latent update [              3]  diff [              0] -> converged   [          -1235]
+ -- latent update [              1]  diff [          75.23] -- latent update [              2]  diff [              0] -> converged   [          -1235]
+ -- converged 
+ -- repeat = 20 / 20
+ -- latent update [              1]  diff [          72.67] -- latent update [              2]  diff [          2.121] -- latent update [              3]  diff [              0] -> converged   [          -1186]
+ -- latent update [              1]  diff [          72.67] -- latent update [              2]  diff [              0] -> converged   [          -1186]
+ -- latent update [              1]  diff [          72.62] -- latent update [              2]  diff [              0] -> converged   [          -1186]
+ -- converged 
+ -- collapsing tree
+ -- writing output files
+[Wed Jan  3 15:05:11 2018] running variational inference with depth = 1
+ -- read full data network ... V=103
+ -- repeat = 1 / 20
+ -- latent update [              1]  diff [          36.43] -- latent update [              2]  diff [              0] -> converged   [         -373.2]
+ -- latent update [              1]  diff [          36.43] -- latent update [              2]  diff [              0] -> converged   [         -373.2]
+ -- converged 
+ -- repeat = 2 / 20
+ -- latent update [              1]  diff [          36.46] -- latent update [              2]  diff [         0.7071] -- latent update [              3]  diff [              0] -> converged   [         -372.4]
+ -- latent update [              1]  diff [          36.43] -- latent update [              2]  diff [              0] -> converged   [         -372.4]
+ -- converged 
+ -- repeat = 3 / 20
+ -- latent update [              1]  diff [          36.43] -- latent update [              2]  diff [         0.7071] -- latent update [              3]  diff [              0] -> converged   [         -374.1]
+ -- latent update [              1]  diff [          36.46] -- latent update [              2]  diff [              0] -> converged   [         -374.1]
+ -- converged 
+ -- repeat = 4 / 20
+ -- latent update [              1]  diff [          37.03] -- latent update [              2]  diff [          2.121] -- latent update [              3]  diff [         0.7071] -- latent update [              4]  diff [              0] -> converged   [         -375.2]
+ -- latent update [              1]  diff [          36.62] -- latent update [              2]  diff [              0] -> converged   [         -375.2]
+ -- converged 
+ -- repeat = 5 / 20
+ -- latent update [              1]  diff [          38.24] -- latent update [              2]  diff [         0.7071] -- latent update [              3]  diff [              0] -> converged   [         -384.1]
+ -- latent update [              1]  diff [          38.03] -- latent update [              2]  diff [              0] -> converged   [         -384.1]
+ -- converged 
+ -- repeat = 6 / 20
+ -- latent update [              1]  diff [          36.55] -- latent update [              2]  diff [         0.7071] -- latent update [              3]  diff [              0] -> converged   [         -375.3]
+ -- latent update [              1]  diff [           36.5] -- latent update [              2]  diff [              0] -> converged   [         -375.3]
+ -- converged 
+ -- repeat = 7 / 20
+ -- latent update [              1]  diff [          36.55] -- latent update [              2]  diff [         0.7071] -- latent update [              3]  diff [         0.7071] -- latent update [              4]  diff [              0] -> converged   [         -371.6]
+ -- latent update [              1]  diff [          36.46] -- latent update [              2]  diff [              0] -> converged   [         -371.6]
+ -- converged 
+ -- repeat = 8 / 20
+ -- latent update [              1]  diff [          36.43] -- latent update [              2]  diff [          1.414] -- latent update [              3]  diff [              0] -> converged   [         -371.5]
+ -- latent update [              1]  diff [          36.55] -- latent update [              2]  diff [              0] -> converged   [         -371.5]
+ -- latent update [              1]  diff [          36.55] -- latent update [              2]  diff [              0] -> converged   [         -371.5]
+ -- converged 
+ -- repeat = 9 / 20
+ -- latent update [              1]  diff [           36.7] -- latent update [              2]  diff [          2.828] -- latent update [              3]  diff [         0.7071] -- latent update [              4]  diff [              0] -> converged   [           -374]
+ -- latent update [              1]  diff [          36.42] -- latent update [              2]  diff [         0.7071] -- latent update [              3]  diff [              0] -> converged   [         -373.2]
+ -- latent update [              1]  diff [          36.42] -- latent update [              2]  diff [              0] -> converged   [         -373.2]
+ -- converged 
+ -- repeat = 10 / 20
+ -- latent update [              1]  diff [          37.03] -- latent update [              2]  diff [              0] -> converged   [         -377.5]
+ -- latent update [              1]  diff [          37.03] -- latent update [              2]  diff [              0] -> converged   [         -377.5]
+ -- converged 
+ -- repeat = 11 / 20
+ -- latent update [              1]  diff [          38.03] -- latent update [              2]  diff [          2.121] -- latent update [              3]  diff [         0.7071] -- latent update [              4]  diff [              0] -> converged   [           -381]
+ -- latent update [              1]  diff [          37.31] -- latent update [              2]  diff [              0] -> converged   [           -381]
+ -- converged 
+ -- repeat = 12 / 20
+ -- latent update [              1]  diff [          36.42] -- latent update [              2]  diff [              0] -> converged   [         -377.2]
+ -- latent update [              1]  diff [          36.42] -- latent update [              2]  diff [              0] -> converged   [         -377.1]
+ -- latent update [              1]  diff [          36.43] -- latent update [              2]  diff [              0] -> converged   [         -375.6]
+ -- latent update [              1]  diff [          36.43] -- latent update [              2]  diff [              0] -> converged   [         -375.6]
+ -- converged 
+ -- repeat = 13 / 20
+ -- latent update [              1]  diff [          36.42] -- latent update [              2]  diff [          2.121] -- latent update [              3]  diff [              0] -> converged   [         -375.8]
+ -- latent update [              1]  diff [          36.46] -- latent update [              2]  diff [              0] -> converged   [         -375.8]
+ -- converged 
+ -- repeat = 14 / 20
+ -- latent update [              1]  diff [          37.17] -- latent update [              2]  diff [          3.536] -- latent update [              3]  diff [              0] -> converged   [         -375.3]
+ -- latent update [              1]  diff [          36.62] -- latent update [              2]  diff [              0] -> converged   [         -375.3]
+ -- converged 
+ -- repeat = 15 / 20
+ -- latent update [              1]  diff [          38.03] -- latent update [              2]  diff [          2.121] -- latent update [              3]  diff [              0] -> converged   [         -384.2]
+ -- latent update [              1]  diff [          37.47] -- latent update [              2]  diff [              0] -> converged   [         -384.2]
+ -- converged 
+ -- repeat = 16 / 20
+ -- latent update [              1]  diff [           36.5] -- latent update [              2]  diff [              0] -> converged   [         -373.2]
+ -- latent update [              1]  diff [          36.55] -- latent update [              2]  diff [              0] -> converged   [         -371.5]
+ -- latent update [              1]  diff [          36.62] -- latent update [              2]  diff [              0] -> converged   [         -371.5]
+ -- latent update [              1]  diff [          36.62] -- latent update [              2]  diff [              0] -> converged   [         -371.5]
+ -- converged 
+ -- repeat = 17 / 20
+ -- latent update [              1]  diff [          36.46] -- latent update [              2]  diff [          1.414] -- latent update [              3]  diff [         0.7071] -- latent update [              4]  diff [              0] -> converged   [           -374]
+ -- latent update [              1]  diff [          36.42] -- latent update [              2]  diff [              0] -> converged   [           -374]
+ -- converged 
+ -- repeat = 18 / 20
+ -- latent update [              1]  diff [          36.62] -- latent update [              2]  diff [          3.536] -- latent update [              3]  diff [              0] -> converged   [           -374]
+ -- latent update [              1]  diff [          36.42] -- latent update [              2]  diff [              0] -> converged   [           -374]
+ -- latent update [              1]  diff [          36.43] -- latent update [              2]  diff [              0] -> converged   [         -373.2]
+ -- latent update [              1]  diff [          36.43] -- latent update [              2]  diff [              0] -> converged   [         -373.2]
+ -- converged 
+ -- repeat = 19 / 20
+ -- latent update [              1]  diff [          37.65] -- latent update [              2]  diff [          2.828] -- latent update [              3]  diff [              0] -> converged   [         -378.5]
+ -- latent update [              1]  diff [          37.03] -- latent update [              2]  diff [              0] -> converged   [         -378.5]
+ -- converged 
+ -- repeat = 20 / 20
+ -- latent update [              1]  diff [          36.46] -- latent update [              2]  diff [              0] -> converged   [           -374]
+ -- latent update [              1]  diff [           36.5] -- latent update [              2]  diff [         0.7071] -- latent update [              3]  diff [              0] -> converged   [         -371.5]
+ -- latent update [              1]  diff [          36.55] -- latent update [              2]  diff [              0] -> converged   [         -371.5]
+ -- converged 
+ -- collapsing tree
+ -- writing output files
+[Wed Jan  3 15:05:12 2018] running variational inference with depth = 1
+ -- read full data network ... V=114
+ -- repeat = 1 / 20
+ -- latent update [              1]  diff [          40.53] -- latent update [              2]  diff [         0.7071] -- latent update [              3]  diff [              0] -> converged   [         -521.8]
+ -- latent update [              1]  diff [           40.4] -- latent update [              2]  diff [          1.414] -- latent update [              3]  diff [              0] -> converged   [         -520.8]
+ -- latent update [              1]  diff [           40.4] -- latent update [              2]  diff [              0] -> converged   [           -521]
+ -- latent update [              1]  diff [          40.36] -- latent update [              2]  diff [              0] -> converged   [         -521.1]
+ -- latent update [              1]  diff [          40.33] -- latent update [              2]  diff [              0] -> converged   [         -521.3]
+ -- latent update [              1]  diff [          40.33] -- latent update [              2]  diff [              0] -> converged   [         -521.3]
+ -- converged 
+ -- repeat = 2 / 20
+ -- latent update [              1]  diff [          41.86] -- latent update [              2]  diff [           4.95] -- latent update [              3]  diff [              0] -> converged   [         -521.9]
+ -- latent update [              1]  diff [          40.61] -- latent update [              2]  diff [              0] -> converged   [         -521.6]
+ -- latent update [              1]  diff [          40.46] -- latent update [              2]  diff [              0] -> converged   [         -521.8]
+ -- latent update [              1]  diff [          40.46] -- latent update [              2]  diff [              0] -> converged   [         -521.8]
+ -- converged 
+ -- repeat = 3 / 20
+ -- latent update [              1]  diff [          43.46] -- latent update [              2]  diff [         0.7071] -- latent update [              3]  diff [              0] -> converged   [         -546.4]
+ -- latent update [              1]  diff [           43.2] -- latent update [              2]  diff [              0] -> converged   [         -546.4]
+ -- converged 
+ -- repeat = 4 / 20
+ -- latent update [              1]  diff [          43.73] -- latent update [              2]  diff [           4.95] -- latent update [              3]  diff [              0] -> converged   [         -527.8]
+ -- latent update [              1]  diff [          42.06] -- latent update [              2]  diff [              0] -> converged   [         -527.8]
+ -- converged 
+ -- repeat = 5 / 20
+ -- latent update [              1]  diff [           43.2] -- latent update [              2]  diff [          1.414] -- latent update [              3]  diff [              0] -> converged   [         -536.8]
+ -- latent update [              1]  diff [          42.71] -- latent update [              2]  diff [              0] -> converged   [         -536.8]
+ -- converged 
+ -- repeat = 6 / 20
+ -- latent update [              1]  diff [          41.68] -- latent update [              2]  diff [          3.536] -- latent update [              3]  diff [          2.828] -- latent update [              4]  diff [              0] -> converged   [         -523.9]
+ -- latent update [              1]  diff [          40.53] -- latent update [              2]  diff [              0] -> converged   [         -523.9]
+ -- converged 
+ -- repeat = 7 / 20
+ -- latent update [              1]  diff [          42.06] -- latent update [              2]  diff [         0.7071] -- latent update [              3]  diff [              0] -> converged   [         -542.8]
+ -- latent update [              1]  diff [          42.27] -- latent update [              2]  diff [              0] -> converged   [         -542.8]
+ -- converged 
+ -- repeat = 8 / 20
+ -- latent update [              1]  diff [          42.06] -- latent update [              2]  diff [          4.243] -- latent update [              3]  diff [              0] -> converged   [         -530.1]
+ -- latent update [              1]  diff [          41.05] -- latent update [              2]  diff [              0] -> converged   [         -530.1]
+ -- converged 
+ -- repeat = 9 / 20
+ -- latent update [              1]  diff [          41.68] -- latent update [              2]  diff [         0.7071] -- latent update [              3]  diff [          3.536] -- latent update [              4]  diff [              0] -> converged   [         -524.3]
+ -- latent update [              1]  diff [           40.8] -- latent update [              2]  diff [              0] -> converged   [         -524.3]
+ -- converged 
+ -- repeat = 10 / 20
+ -- latent update [              1]  diff [           40.7] -- latent update [              2]  diff [          1.414] -- latent update [              3]  diff [              0] -> converged   [         -521.1]
+ -- latent update [              1]  diff [           40.4] -- latent update [              2]  diff [              0] -> converged   [         -520.8]
+ -- latent update [              1]  diff [          40.33] -- latent update [              2]  diff [              0] -> converged   [         -520.8]
+ -- latent update [              1]  diff [          40.33] -- latent update [              2]  diff [              0] -> converged   [         -520.8]
+ -- converged 
+ -- repeat = 11 / 20
+ -- latent update [              1]  diff [          42.95] -- latent update [              2]  diff [          3.536] -- latent update [              3]  diff [              0] -> converged   [         -533.2]
+ -- latent update [              1]  diff [          41.86] -- latent update [              2]  diff [              0] -> converged   [         -533.2]
+ -- converged 
+ -- repeat = 12 / 20
+ -- latent update [              1]  diff [          41.05] -- latent update [              2]  diff [          1.414] -- latent update [              3]  diff [              0] -> converged   [         -530.3]
+ -- latent update [              1]  diff [           40.8] -- latent update [              2]  diff [              0] -> converged   [         -530.3]
+ -- converged 
+ -- repeat = 13 / 20
+ -- latent update [              1]  diff [          41.19] -- latent update [              2]  diff [          2.121] -- latent update [              3]  diff [              0] -> converged   [         -528.2]
+ -- latent update [              1]  diff [           40.8] -- latent update [              2]  diff [              0] -> converged   [         -528.2]
+ -- converged 
+ -- repeat = 14 / 20
+ -- latent update [              1]  diff [           40.8] -- latent update [              2]  diff [          4.243] -- latent update [              3]  diff [              0] -> converged   [         -520.6]
+ -- latent update [              1]  diff [          40.36] -- latent update [              2]  diff [              0] -> converged   [         -520.6]
+ -- converged 
+ -- repeat = 15 / 20
+ -- latent update [              1]  diff [          41.05] -- latent update [              2]  diff [          4.243] -- latent update [              3]  diff [              0] -> converged   [         -518.5]
+ -- latent update [              1]  diff [          40.46] -- latent update [              2]  diff [              0] -> converged   [         -518.5]
+ -- converged 
+ -- repeat = 16 / 20
+ -- latent update [              1]  diff [          42.27] -- latent update [              2]  diff [          1.414] -- latent update [              3]  diff [              0] -> converged   [         -527.9]
+ -- latent update [              1]  diff [          41.86] -- latent update [              2]  diff [              0] -> converged   [         -527.9]
+ -- converged 
+ -- repeat = 17 / 20
+ -- latent update [              1]  diff [           43.2] -- latent update [              2]  diff [         0.7071] -- latent update [              3]  diff [          1.414] -- latent update [              4]  diff [              0] -> converged   [         -527.5]
+ -- latent update [              1]  diff [          42.49] -- latent update [              2]  diff [              0] -> converged   [         -527.5]
+ -- converged 
+ -- repeat = 18 / 20
+ -- latent update [              1]  diff [          40.53] -- latent update [              2]  diff [          2.828] -- latent update [              3]  diff [              0] -> converged   [         -521.8]
+ -- latent update [              1]  diff [          40.31] -- latent update [              2]  diff [              0] -> converged   [         -521.6]
+ -- latent update [              1]  diff [          40.31] -- latent update [              2]  diff [              0] -> converged   [         -521.6]
+ -- converged 
+ -- repeat = 19 / 20
+ -- latent update [              1]  diff [          43.73] -- latent update [              2]  diff [          3.536] -- latent update [              3]  diff [              0] -> converged   [         -542.8]
+ -- latent update [              1]  diff [          42.49] -- latent update [              2]  diff [              0] -> converged   [         -542.8]
+ -- converged 
+ -- repeat = 20 / 20
+ -- latent update [              1]  diff [           40.7] -- latent update [              2]  diff [          2.121] -- latent update [              3]  diff [              0] -> converged   [         -521.8]
+ -- latent update [              1]  diff [          40.46] -- latent update [              2]  diff [              0] -> converged   [         -521.8]
+ -- converged 
+ -- collapsing tree
+ -- writing output files
+[Wed Jan  3 15:05:12 2018] running variational inference with depth = 1
+ -- read full data network ... V=79
+ -- repeat = 1 / 20
+ -- latent update [              1]  diff [          28.57] -- latent update [              2]  diff [         0.7071] -- latent update [              3]  diff [              0] -> converged   [         -306.4]
+ -- latent update [              1]  diff [          28.43] -- latent update [              2]  diff [              0] -> converged   [         -306.4]
+ -- converged 
+ -- repeat = 2 / 20
+ -- latent update [              1]  diff [          30.55] -- latent update [              2]  diff [          1.414] -- latent update [              3]  diff [              0] -> converged   [         -311.7]
+ -- latent update [              1]  diff [             30] -- latent update [              2]  diff [              0] -> converged   [         -311.7]
+ -- converged 
+ -- repeat = 3 / 20
+ -- latent update [              1]  diff [             30] -- latent update [              2]  diff [              0] -> converged   [         -317.4]
+ -- latent update [              1]  diff [             30] -- latent update [              2]  diff [              0] -> converged   [         -317.4]
+ -- converged 
+ -- repeat = 4 / 20
+ -- latent update [              1]  diff [          32.14] -- latent update [              2]  diff [          6.364] -- latent update [              3]  diff [         0.7071] -- latent update [              4]  diff [              0] -> converged   [         -307.9]
+ -- latent update [              1]  diff [           29.3] -- latent update [              2]  diff [              0] -> converged   [         -307.9]
+ -- converged 
+ -- repeat = 5 / 20
+ -- latent update [              1]  diff [          30.84] -- latent update [              2]  diff [          2.828] -- latent update [              3]  diff [              0] -> converged   [         -314.7]
+ -- latent update [              1]  diff [          29.75] -- latent update [              2]  diff [              0] -> converged   [         -314.7]
+ -- converged 
+ -- repeat = 6 / 20
+ -- latent update [              1]  diff [          30.84] -- latent update [              2]  diff [          4.243] -- latent update [              3]  diff [              0] -> converged   [         -308.3]
+ -- latent update [              1]  diff [           29.3] -- latent update [              2]  diff [              0] -> converged   [         -308.3]
+ -- converged 
+ -- repeat = 7 / 20
+ -- latent update [              1]  diff [          30.27] -- latent update [              2]  diff [          1.414] -- latent update [              3]  diff [              0] -> converged   [         -310.2]
+ -- latent update [              1]  diff [          29.75] -- latent update [              2]  diff [              0] -> converged   [         -310.2]
+ -- converged 
+ -- repeat = 8 / 20
+ -- latent update [              1]  diff [          28.73] -- latent update [              2]  diff [         0.7071] -- latent update [              3]  diff [              0] -> converged   [         -313.2]
+ -- latent update [              1]  diff [           28.9] -- latent update [              2]  diff [              0] -> converged   [         -313.2]
+ -- converged 
+ -- repeat = 9 / 20
+ -- latent update [              1]  diff [           31.8] -- latent update [              2]  diff [          2.121] -- latent update [              3]  diff [          2.828] -- latent update [              4]  diff [         0.7071] -- latent update [              5]  diff [              0] -> converged   [         -314.3]
+ -- latent update [              1]  diff [          29.52] -- latent update [              2]  diff [              0] -> converged   [         -314.3]
+ -- converged 
+ -- repeat = 10 / 20
+ -- latent update [              1]  diff [          31.15] -- latent update [              2]  diff [          4.243] -- latent update [              3]  diff [              0] -> converged   [         -307.9]
+ -- latent update [              1]  diff [          29.52] -- latent update [              2]  diff [              0] -> converged   [         -307.9]
+ -- converged 
+ -- repeat = 11 / 20
+ -- latent update [              1]  diff [           29.3] -- latent update [              2]  diff [          2.121] -- latent update [              3]  diff [              0] -> converged   [         -307.3]
+ -- latent update [              1]  diff [          28.73] -- latent update [              2]  diff [              0] -> converged   [         -307.3]
+ -- converged 
+ -- repeat = 12 / 20
+ -- latent update [              1]  diff [          28.57] -- latent update [              2]  diff [          3.536] -- latent update [              3]  diff [              0] -> converged   [         -302.5]
+ -- latent update [              1]  diff [          28.04] -- latent update [              2]  diff [              0] -> converged   [         -302.5]
+ -- converged 
+ -- repeat = 13 / 20
+ -- latent update [              1]  diff [          30.27] -- latent update [              2]  diff [          3.536] -- latent update [              3]  diff [              0] -> converged   [         -306.9]
+ -- latent update [              1]  diff [          29.09] -- latent update [              2]  diff [              0] -> converged   [         -306.9]
+ -- converged 
+ -- repeat = 14 / 20
+ -- latent update [              1]  diff [          31.15] -- latent update [              2]  diff [          1.414] -- latent update [              3]  diff [              0] -> converged   [           -313]
+ -- latent update [              1]  diff [          30.55] -- latent update [              2]  diff [              0] -> converged   [           -313]
+ -- converged 
+ -- repeat = 15 / 20
+ -- latent update [              1]  diff [          30.55] -- latent update [              2]  diff [              0] -> converged   [         -315.7]
+ -- latent update [              1]  diff [          30.55] -- latent update [              2]  diff [              0] -> converged   [         -315.7]
+ -- converged 
+ -- repeat = 16 / 20
+ -- latent update [              1]  diff [          29.09] -- latent update [              2]  diff [              0] -> converged   [         -307.3]
+ -- latent update [              1]  diff [          29.09] -- latent update [              2]  diff [              0] -> converged   [         -307.3]
+ -- converged 
+ -- repeat = 17 / 20
+ -- latent update [              1]  diff [             30] -- latent update [              2]  diff [          1.414] -- latent update [              3]  diff [              0] -> converged   [         -310.5]
+ -- latent update [              1]  diff [          29.52] -- latent update [              2]  diff [              0] -> converged   [         -310.5]
+ -- converged 
+ -- repeat = 18 / 20
+ -- latent update [              1]  diff [          29.52] -- latent update [              2]  diff [          2.121] -- latent update [              3]  diff [              0] -> converged   [         -313.4]
+ -- latent update [              1]  diff [           28.9] -- latent update [              2]  diff [              0] -> converged   [         -313.4]
+ -- converged 
+ -- repeat = 19 / 20
+ -- latent update [              1]  diff [           28.9] -- latent update [              2]  diff [          1.414] -- latent update [              3]  diff [              0] -> converged   [         -303.6]
+ -- latent update [              1]  diff [          28.57] -- latent update [              2]  diff [              0] -> converged   [         -303.6]
+ -- converged 
+ -- repeat = 20 / 20
+ -- latent update [              1]  diff [          30.27] -- latent update [              2]  diff [              0] -> converged   [         -317.4]
+ -- latent update [              1]  diff [          30.27] -- latent update [              2]  diff [              0] -> converged   [         -317.4]
+ -- converged 
+ -- collapsing tree
+ -- writing output files
+[Wed Jan  3 15:05:12 2018] running variational inference with depth = 1
+ -- read full data network ... V=32
+ -- repeat = 1 / 20
+ -- latent update [              1]  diff [          11.51] -- latent update [              2]  diff [         0.7071] -- latent update [              3]  diff [              0] -> converged   [         -87.32]
+ -- latent update [              1]  diff [          11.66] -- latent update [              2]  diff [              0] -> converged   [         -87.32]
+ -- converged 
+ -- repeat = 2 / 20
+ -- latent update [              1]  diff [           11.4] -- latent update [              2]  diff [              0] -> converged   [         -85.61]
+ -- latent update [              1]  diff [          11.34] -- latent update [              2]  diff [              0] -> converged   [         -85.25]
+ -- latent update [              1]  diff [          11.34] -- latent update [              2]  diff [              0] -> converged   [         -85.25]
+ -- converged 
+ -- repeat = 3 / 20
+ -- latent update [              1]  diff [          12.35] -- latent update [              2]  diff [         0.7071] -- latent update [              3]  diff [              0] -> converged   [         -91.46]
+ -- latent update [              1]  diff [          12.35] -- latent update [              2]  diff [         0.7071] -- latent update [              3]  diff [              0] -> converged   [          -94.1]
+ -- latent update [              1]  diff [          12.65] -- latent update [              2]  diff [              0] -> converged   [          -94.1]
+ -- converged 
+ -- repeat = 4 / 20
+ -- latent update [              1]  diff [          11.51] -- latent update [              2]  diff [         0.7071] -- latent update [              3]  diff [              0] -> converged   [         -85.65]
+ -- latent update [              1]  diff [           11.4] -- latent update [              2]  diff [              0] -> converged   [         -85.65]
+ -- converged 
+ -- repeat = 5 / 20
+ -- latent update [              1]  diff [          11.34] -- latent update [              2]  diff [         0.7071] -- latent update [              3]  diff [              0] -> converged   [         -83.23]
+ -- latent update [              1]  diff [          11.31] -- latent update [              2]  diff [              0] -> converged   [         -83.23]
+ -- converged 
+ -- repeat = 6 / 20
+ -- latent update [              1]  diff [           11.4] -- latent update [              2]  diff [         0.7071] -- latent update [              3]  diff [              0] -> converged   [         -84.98]
+ -- latent update [              1]  diff [          11.34] -- latent update [              2]  diff [              0] -> converged   [         -84.98]
+ -- converged 
+ -- repeat = 7 / 20
+ -- latent update [              1]  diff [          11.31] -- latent update [              2]  diff [         0.7071] -- latent update [              3]  diff [              0] -> converged   [         -84.24]
+ -- latent update [              1]  diff [          11.34] -- latent update [              2]  diff [              0] -> converged   [         -84.24]
+ -- converged 
+ -- repeat = 8 / 20
+ -- latent update [              1]  diff [           11.4] -- latent update [              2]  diff [         0.7071] -- latent update [              3]  diff [              0] -> converged   [         -81.99]
+ -- latent update [              1]  diff [          11.34] -- latent update [              2]  diff [              0] -> converged   [         -81.99]
+ -- converged 
+ -- repeat = 9 / 20
+ -- latent update [              1]  diff [          11.34] -- latent update [              2]  diff [              0] -> converged   [         -83.73]
+ -- latent update [              1]  diff [          11.34] -- latent update [              2]  diff [              0] -> converged   [         -83.73]
+ -- converged 
+ -- repeat = 10 / 20
+ -- latent update [              1]  diff [          12.08] -- latent update [              2]  diff [         0.7071] -- latent update [              3]  diff [              0] -> converged   [         -89.52]
+ -- latent update [              1]  diff [          12.08] -- latent update [              2]  diff [         0.7071] -- latent update [              3]  diff [              0] -> converged   [         -89.93]
+ -- latent update [              1]  diff [          12.35] -- latent update [              2]  diff [              0] -> converged   [         -89.93]
+ -- converged 
+ -- repeat = 11 / 20
+ -- latent update [              1]  diff [          11.51] -- latent update [              2]  diff [         0.7071] -- latent update [              3]  diff [              0] -> converged   [         -84.24]
+ -- latent update [              1]  diff [           11.4] -- latent update [              2]  diff [              0] -> converged   [         -84.24]
+ -- converged 
+ -- repeat = 12 / 20
+ -- latent update [              1]  diff [          11.85] -- latent update [              2]  diff [          1.414] -- latent update [              3]  diff [              0] -> converged   [         -85.69]
+ -- latent update [              1]  diff [          11.51] -- latent update [              2]  diff [              0] -> converged   [         -85.69]
+ -- converged 
+ -- repeat = 13 / 20
+ -- latent update [              1]  diff [          11.34] -- latent update [              2]  diff [              0] -> converged   [         -84.23]
+ -- latent update [              1]  diff [          11.34] -- latent update [              2]  diff [              0] -> converged   [         -84.23]
+ -- converged 
+ -- repeat = 14 / 20
+ -- latent update [              1]  diff [          11.34] -- latent update [              2]  diff [              0] -> converged   [         -84.23]
+ -- latent update [              1]  diff [          11.34] -- latent update [              2]  diff [              0] -> converged   [         -84.23]
+ -- converged 
+ -- repeat = 15 / 20
+ -- latent update [              1]  diff [           11.4] -- latent update [              2]  diff [              0] -> converged   [         -85.12]
+ -- latent update [              1]  diff [           11.4] -- latent update [              2]  diff [              0] -> converged   [         -85.12]
+ -- converged 
+ -- repeat = 16 / 20
+ -- latent update [              1]  diff [          12.08] -- latent update [              2]  diff [         0.7071] -- latent update [              3]  diff [              0] -> converged   [         -89.39]
+ -- latent update [              1]  diff [          11.85] -- latent update [              2]  diff [              0] -> converged   [         -89.39]
+ -- converged 
+ -- repeat = 17 / 20
+ -- latent update [              1]  diff [          11.34] -- latent update [              2]  diff [          1.414] -- latent update [              3]  diff [              0] -> converged   [         -83.73]
+ -- latent update [              1]  diff [          11.34] -- latent update [              2]  diff [              0] -> converged   [         -83.73]
+ -- converged 
+ -- repeat = 18 / 20
+ -- latent update [              1]  diff [          11.66] -- latent update [              2]  diff [              0] -> converged   [         -85.35]
+ -- latent update [              1]  diff [          11.66] -- latent update [              2]  diff [              0] -> converged   [         -85.35]
+ -- converged 
+ -- repeat = 19 / 20
+ -- latent update [              1]  diff [          11.66] -- latent update [              2]  diff [         0.7071] -- latent update [              3]  diff [              0] -> converged   [         -85.12]
+ -- latent update [              1]  diff [          11.51] -- latent update [              2]  diff [              0] -> converged   [         -85.12]
+ -- converged 
+ -- repeat = 20 / 20
+ -- latent update [              1]  diff [          12.08] -- latent update [              2]  diff [         0.7071] -- latent update [              3]  diff [              0] -> converged   [         -91.56]
+ -- latent update [              1]  diff [          12.35] -- latent update [              2]  diff [              0] -> converged   [         -91.56]
+ -- converged 
+ -- collapsing tree
+ -- writing output files
+[Wed Jan  3 15:05:12 2018] running variational inference with depth = 1
+ -- read full data network ... V=47
+ -- repeat = 1 / 20
+ -- latent update [              1]  diff [           23.5] -- latent update [              2]  diff [              0] -> converged   [           -176]
+ -- latent update [              1]  diff [           23.5] -- latent update [              2]  diff [              0] -> converged   [           -176]
+ -- converged 
+ -- repeat = 2 / 20
+ -- latent update [              1]  diff [          20.72] -- latent update [              2]  diff [              0] -> converged   [         -150.3]
+ -- latent update [              1]  diff [          20.72] -- latent update [              2]  diff [              0] -> converged   [         -150.3]
+ -- converged 
+ -- repeat = 3 / 20
+ -- latent update [              1]  diff [           23.5] -- latent update [              2]  diff [              0] -> converged   [           -176]
+ -- latent update [              1]  diff [           23.5] -- latent update [              2]  diff [              0] -> converged   [           -176]
+ -- converged 
+ -- repeat = 4 / 20
+ -- latent update [              1]  diff [          22.52] -- latent update [              2]  diff [              0] -> converged   [         -169.5]
+ -- latent update [              1]  diff [          22.52] -- latent update [              2]  diff [              0] -> converged   [         -169.5]
+ -- converged 
+ -- repeat = 5 / 20
+ -- latent update [              1]  diff [          20.72] -- latent update [              2]  diff [              0] -> converged   [         -150.3]
+ -- latent update [              1]  diff [          20.72] -- latent update [              2]  diff [              0] -> converged   [         -150.3]
+ -- converged 
+ -- repeat = 6 / 20
+ -- latent update [              1]  diff [          21.59] -- latent update [              2]  diff [              0] -> converged   [         -156.3]
+ -- latent update [              1]  diff [          21.59] -- latent update [              2]  diff [              0] -> converged   [         -156.3]
+ -- converged 
+ -- repeat = 7 / 20
+ -- latent update [              1]  diff [          21.59] -- latent update [              2]  diff [              0] -> converged   [         -156.3]
+ -- latent update [              1]  diff [          21.59] -- latent update [              2]  diff [              0] -> converged   [         -156.3]
+ -- converged 
+ -- repeat = 8 / 20
+ -- latent update [              1]  diff [           23.5] -- latent update [              2]  diff [              0] -> converged   [           -176]
+ -- latent update [              1]  diff [           23.5] -- latent update [              2]  diff [              0] -> converged   [           -176]
+ -- converged 
+ -- repeat = 9 / 20
+ -- latent update [              1]  diff [          22.52] -- latent update [              2]  diff [              0] -> converged   [         -169.5]
+ -- latent update [              1]  diff [          22.52] -- latent update [              2]  diff [              0] -> converged   [         -169.5]
+ -- converged 
+ -- repeat = 10 / 20
+ -- latent update [              1]  diff [          22.52] -- latent update [              2]  diff [              0] -> converged   [         -169.5]
+ -- latent update [              1]  diff [          22.52] -- latent update [              2]  diff [              0] -> converged   [         -169.5]
+ -- converged 
+ -- repeat = 11 / 20
+ -- latent update [              1]  diff [          22.52] -- latent update [              2]  diff [              0] -> converged   [         -169.5]
+ -- latent update [              1]  diff [          22.52] -- latent update [              2]  diff [              0] -> converged   [         -169.5]
+ -- converged 
+ -- repeat = 12 / 20
+ -- latent update [              1]  diff [          20.72] -- latent update [              2]  diff [              0] -> converged   [         -150.3]
+ -- latent update [              1]  diff [          20.72] -- latent update [              2]  diff [              0] -> converged   [         -150.3]
+ -- converged 
+ -- repeat = 13 / 20
+ -- latent update [              1]  diff [          20.72] -- latent update [              2]  diff [              0] -> converged   [         -150.3]
+ -- latent update [              1]  diff [          20.72] -- latent update [              2]  diff [              0] -> converged   [         -150.3]
+ -- converged 
+ -- repeat = 14 / 20
+ -- latent update [              1]  diff [          21.59] -- latent update [              2]  diff [              0] -> converged   [         -156.3]
+ -- latent update [              1]  diff [          21.59] -- latent update [              2]  diff [              0] -> converged   [         -156.3]
+ -- converged 
+ -- repeat = 15 / 20
+ -- latent update [              1]  diff [           23.5] -- latent update [              2]  diff [              0] -> converged   [           -176]
+ -- latent update [              1]  diff [           23.5] -- latent update [              2]  diff [              0] -> converged   [           -176]
+ -- converged 
+ -- repeat = 16 / 20
+ -- latent update [              1]  diff [          21.59] -- latent update [              2]  diff [              0] -> converged   [         -156.3]
+ -- latent update [              1]  diff [          21.59] -- latent update [              2]  diff [              0] -> converged   [         -156.3]
+ -- converged 
+ -- repeat = 17 / 20
+ -- latent update [              1]  diff [          21.59] -- latent update [              2]  diff [              0] -> converged   [         -156.3]
+ -- latent update [              1]  diff [          21.59] -- latent update [              2]  diff [              0] -> converged   [         -156.3]
+ -- converged 
+ -- repeat = 18 / 20
+ -- latent update [              1]  diff [          21.59] -- latent update [              2]  diff [              0] -> converged   [         -156.3]
+ -- latent update [              1]  diff [          21.59] -- latent update [              2]  diff [              0] -> converged   [         -156.3]
+ -- converged 
+ -- repeat = 19 / 20
+ -- latent update [              1]  diff [          20.72] -- latent update [              2]  diff [              0] -> converged   [         -150.3]
+ -- latent update [              1]  diff [          20.72] -- latent update [              2]  diff [              0] -> converged   [         -150.3]
+ -- converged 
+ -- repeat = 20 / 20
+ -- latent update [              1]  diff [          20.72] -- latent update [              2]  diff [              0] -> converged   [         -150.3]
+ -- latent update [              1]  diff [          20.72] -- latent update [              2]  diff [              0] -> converged   [         -150.3]
+ -- converged 
+ -- collapsing tree
+ -- writing output files
+[Wed Jan  3 15:05:12 2018] running variational inference with depth = 1
+ -- read full data network ... V=20
+ -- repeat = 1 / 20
+ -- latent update [              1]  diff [          7.071] -- latent update [              2]  diff [          1.414] -- latent update [              3]  diff [              0] -> converged   [         -53.02]
+ -- latent update [              1]  diff [          7.211] -- latent update [              2]  diff [              0] -> converged   [         -53.02]
+ -- converged 
+ -- repeat = 2 / 20
+ -- latent update [              1]  diff [          7.616] -- latent update [              2]  diff [              0] -> converged   [         -53.31]
+ -- latent update [              1]  diff [          7.616] -- latent update [              2]  diff [              0] -> converged   [         -53.31]
+ -- converged 
+ -- repeat = 3 / 20
+ -- latent update [              1]  diff [          7.211] -- latent update [              2]  diff [              0] -> converged   [          -54.7]
+ -- latent update [              1]  diff [          7.211] -- latent update [              2]  diff [              0] -> converged   [          -54.7]
+ -- converged 
+ -- repeat = 4 / 20
+ -- latent update [              1]  diff [          8.246] -- latent update [              2]  diff [          1.414] -- latent update [              3]  diff [              0] -> converged   [         -53.31]
+ -- latent update [              1]  diff [          7.616] -- latent update [              2]  diff [              0] -> converged   [         -53.31]
+ -- converged 
+ -- repeat = 5 / 20
+ -- latent update [              1]  diff [          7.071] -- latent update [              2]  diff [              0] -> converged   [            -54]
+ -- latent update [              1]  diff [          7.071] -- latent update [              2]  diff [              0] -> converged   [            -54]
+ -- converged 
+ -- repeat = 6 / 20
+ -- latent update [              1]  diff [          7.211] -- latent update [              2]  diff [              0] -> converged   [         -53.02]
+ -- latent update [              1]  diff [          7.211] -- latent update [              2]  diff [              0] -> converged   [         -53.02]
+ -- converged 
+ -- repeat = 7 / 20
+ -- latent update [              1]  diff [          7.211] -- latent update [              2]  diff [              0] -> converged   [         -53.02]
+ -- latent update [              1]  diff [          7.211] -- latent update [              2]  diff [              0] -> converged   [         -53.02]
+ -- converged 
+ -- repeat = 8 / 20
+ -- latent update [              1]  diff [          7.906] -- latent update [              2]  diff [         0.7071] -- latent update [              3]  diff [              0] -> converged   [         -53.31]
+ -- latent update [              1]  diff [          7.616] -- latent update [              2]  diff [              0] -> converged   [         -53.31]
+ -- converged 
+ -- repeat = 9 / 20
+ -- latent update [              1]  diff [          7.071] -- latent update [              2]  diff [              0] -> converged   [            -54]
+ -- latent update [              1]  diff [          7.071] -- latent update [              2]  diff [              0] -> converged   [            -54]
+ -- converged 
+ -- repeat = 10 / 20
+ -- latent update [              1]  diff [          8.246] -- latent update [              2]  diff [          1.414] -- latent update [              3]  diff [              0] -> converged   [         -53.31]
+ -- latent update [              1]  diff [          7.616] -- latent update [              2]  diff [              0] -> converged   [         -53.31]
+ -- converged 
+ -- repeat = 11 / 20
+ -- latent update [              1]  diff [          7.616] -- latent update [              2]  diff [         0.7071] -- latent update [              3]  diff [         0.7071] -- latent update [              4]  diff [              0] -> converged   [          -52.8]
+ -- latent update [              1]  diff [          7.211] -- latent update [              2]  diff [              0] -> converged   [          -52.8]
+ -- converged 
+ -- repeat = 12 / 20
+ -- latent update [              1]  diff [          9.055] -- latent update [              2]  diff [              0] -> converged   [         -71.77]
+ -- latent update [              1]  diff [          9.055] -- latent update [              2]  diff [              0] -> converged   [         -71.77]
+ -- converged 
+ -- repeat = 13 / 20
+ -- latent update [              1]  diff [          7.382] -- latent update [              2]  diff [          1.414] -- latent update [              3]  diff [         0.7071] -- latent update [              4]  diff [              0] -> converged   [         -51.82]
+ -- latent update [              1]  diff [          7.071] -- latent update [              2]  diff [              0] -> converged   [         -51.82]
+ -- converged 
+ -- repeat = 14 / 20
+ -- latent update [              1]  diff [          7.106] -- latent update [              2]  diff [         0.7071] -- latent update [              3]  diff [              0] -> converged   [          -52.8]
+ -- latent update [              1]  diff [          7.211] -- latent update [              2]  diff [              0] -> converged   [          -52.8]
+ -- converged 
+ -- repeat = 15 / 20
+ -- latent update [              1]  diff [          8.246] -- latent update [              2]  diff [              0] -> converged   [         -65.89]
+ -- latent update [              1]  diff [          8.246] -- latent update [              2]  diff [              0] -> converged   [         -65.89]
+ -- converged 
+ -- repeat = 16 / 20
+ -- latent update [              1]  diff [          8.246] -- latent update [              2]  diff [              0] -> converged   [         -65.96]
+ -- latent update [              1]  diff [          8.246] -- latent update [              2]  diff [              0] -> converged   [         -65.96]
+ -- converged 
+ -- repeat = 17 / 20
+ -- latent update [              1]  diff [          7.071] -- latent update [              2]  diff [              0] -> converged   [         -54.29]
+ -- latent update [              1]  diff [          7.071] -- latent update [              2]  diff [              0] -> converged   [         -54.29]
+ -- converged 
+ -- repeat = 18 / 20
+ -- latent update [              1]  diff [          8.246] -- latent update [              2]  diff [              0] -> converged   [         -65.96]
+ -- latent update [              1]  diff [          8.246] -- latent update [              2]  diff [              0] -> converged   [         -65.96]
+ -- converged 
+ -- repeat = 19 / 20
+ -- latent update [              1]  diff [          7.071] -- latent update [              2]  diff [              0] -> converged   [         -53.36]
+ -- latent update [              1]  diff [          7.071] -- latent update [              2]  diff [              0] -> converged   [         -53.36]
+ -- converged 
+ -- repeat = 20 / 20
+ -- latent update [              1]  diff [          7.211] -- latent update [              2]  diff [              0] -> converged   [         -53.02]
+ -- latent update [              1]  diff [          7.211] -- latent update [              2]  diff [              0] -> converged   [         -53.02]
+ -- converged 
+ -- collapsing tree
+ -- writing output files
+[Wed Jan  3 15:05:12 2018] running variational inference with depth = 1
+ -- read full data network ... V=12
+ -- repeat = 1 / 20
+ -- latent update [              1]  diff [          4.243] -- latent update [              2]  diff [              0] -> converged   [         -31.68]
+ -- latent update [              1]  diff [          4.243] -- latent update [              2]  diff [              0] -> converged   [         -31.68]
+ -- converged 
+ -- repeat = 2 / 20
+ -- latent update [              1]  diff [          4.243] -- latent update [              2]  diff [              0] -> converged   [         -31.68]
+ -- latent update [              1]  diff [          4.243] -- latent update [              2]  diff [              0] -> converged   [         -31.68]
+ -- converged 
+ -- repeat = 3 / 20
+ -- latent update [              1]  diff [          4.243] -- latent update [              2]  diff [              0] -> converged   [         -31.68]
+ -- latent update [              1]  diff [          4.243] -- latent update [              2]  diff [              0] -> converged   [         -31.68]
+ -- converged 
+ -- repeat = 4 / 20
+ -- latent update [              1]  diff [          4.472] -- latent update [              2]  diff [              0] -> converged   [         -36.43]
+ -- latent update [              1]  diff [          4.472] -- latent update [              2]  diff [              0] -> converged   [         -36.43]
+ -- converged 
+ -- repeat = 5 / 20
+ -- latent update [              1]  diff [          4.472] -- latent update [              2]  diff [              0] -> converged   [         -31.41]
+ -- latent update [              1]  diff [          4.472] -- latent update [              2]  diff [              0] -> converged   [         -31.41]
+ -- converged 
+ -- repeat = 6 / 20
+ -- latent update [              1]  diff [          4.301] -- latent update [              2]  diff [         0.7071] -- latent update [              3]  diff [              0] -> converged   [         -31.41]
+ -- latent update [              1]  diff [          4.472] -- latent update [              2]  diff [              0] -> converged   [         -31.41]
+ -- converged 
+ -- repeat = 7 / 20
+ -- latent update [              1]  diff [          4.743] -- latent update [              2]  diff [         0.7071] -- latent update [              3]  diff [              0] -> converged   [         -36.43]
+ -- latent update [              1]  diff [          4.472] -- latent update [              2]  diff [              0] -> converged   [         -36.43]
+ -- converged 
+ -- repeat = 8 / 20
+ -- latent update [              1]  diff [          4.301] -- latent update [              2]  diff [         0.7071] -- latent update [              3]  diff [              0] -> converged   [         -31.68]
+ -- latent update [              1]  diff [          4.243] -- latent update [              2]  diff [              0] -> converged   [         -31.68]
+ -- converged 
+ -- repeat = 9 / 20
+ -- latent update [              1]  diff [          4.301] -- latent update [              2]  diff [         0.7071] -- latent update [              3]  diff [              0] -> converged   [         -31.41]
+ -- latent update [              1]  diff [          4.472] -- latent update [              2]  diff [              0] -> converged   [         -31.41]
+ -- converged 
+ -- repeat = 10 / 20
+ -- latent update [              1]  diff [          4.743] -- latent update [              2]  diff [         0.7071] -- latent update [              3]  diff [              0] -> converged   [         -36.43]
+ -- latent update [              1]  diff [          4.472] -- latent update [              2]  diff [              0] -> converged   [         -36.43]
+ -- converged 
+ -- repeat = 11 / 20
+ -- latent update [              1]  diff [          5.099] -- latent update [              2]  diff [              0] -> converged   [         -39.32]
+ -- latent update [              1]  diff [          5.099] -- latent update [              2]  diff [              0] -> converged   [         -39.32]
+ -- converged 
+ -- repeat = 12 / 20
+ -- latent update [              1]  diff [          4.301] -- latent update [              2]  diff [         0.7071] -- latent update [              3]  diff [              0] -> converged   [         -31.68]
+ -- latent update [              1]  diff [          4.243] -- latent update [              2]  diff [              0] -> converged   [         -31.68]
+ -- converged 
+ -- repeat = 13 / 20
+ -- latent update [              1]  diff [          5.523] -- latent update [              2]  diff [         0.7071] -- latent update [              3]  diff [              0] -> converged   [         -39.32]
+ -- latent update [              1]  diff [          5.099] -- latent update [              2]  diff [              0] -> converged   [         -39.32]
+ -- converged 
+ -- repeat = 14 / 20
+ -- latent update [              1]  diff [          5.099] -- latent update [              2]  diff [              0] -> converged   [         -40.33]
+ -- latent update [              1]  diff [          5.099] -- latent update [              2]  diff [              0] -> converged   [         -40.33]
+ -- converged 
+ -- repeat = 15 / 20
+ -- latent update [              1]  diff [          4.743] -- latent update [              2]  diff [         0.7071] -- latent update [              3]  diff [              0] -> converged   [         -36.43]
+ -- latent update [              1]  diff [          4.472] -- latent update [              2]  diff [              0] -> converged   [         -36.43]
+ -- converged 
+ -- repeat = 16 / 20
+ -- latent update [              1]  diff [          4.243] -- latent update [              2]  diff [              0] -> converged   [         -31.68]
+ -- latent update [              1]  diff [          4.243] -- latent update [              2]  diff [              0] -> converged   [         -31.68]
+ -- converged 
+ -- repeat = 17 / 20
+ -- latent update [              1]  diff [          4.743] -- latent update [              2]  diff [         0.7071] -- latent update [              3]  diff [              0] -> converged   [         -36.43]
+ -- latent update [              1]  diff [          4.472] -- latent update [              2]  diff [              0] -> converged   [         -36.43]
+ -- converged 
+ -- repeat = 18 / 20
+ -- latent update [              1]  diff [          5.099] -- latent update [              2]  diff [              0] -> converged   [         -39.32]
+ -- latent update [              1]  diff [          5.099] -- latent update [              2]  diff [              0] -> converged   [         -39.32]
+ -- converged 
+ -- repeat = 19 / 20
+ -- latent update [              1]  diff [          4.472] -- latent update [              2]  diff [              0] -> converged   [         -31.41]
+ -- latent update [              1]  diff [          4.472] -- latent update [              2]  diff [              0] -> converged   [         -31.41]
+ -- converged 
+ -- repeat = 20 / 20
+ -- latent update [              1]  diff [          4.301] -- latent update [              2]  diff [         0.7071] -- latent update [              3]  diff [              0] -> converged   [         -31.68]
+ -- latent update [              1]  diff [          4.243] -- latent update [              2]  diff [              0] -> converged   [         -31.68]
+ -- converged 
+ -- collapsing tree
+ -- writing output files
+[Wed Jan  3 15:05:12 2018] fitting with full depth = 7
+[Wed Jan  3 15:05:12 2018] running variational inference with depth = 7
+ -- read full data network ... V=423
+ -- latent update [              1]  diff [          1.198] -- latent update [              2]  diff [         0.2072] -- latent update [              3]  diff [        0.09205] -- latent update [              4]  diff [        0.04379] -- latent update [              5]  diff [        0.02563] -- latent update [              6]  diff [        0.01537] -- latent update [              7]  diff [       0.009065] -> converged   [          -2241]
+ -- latent update [              1]  diff [         0.9273] -- latent update [              2]  diff [        0.04679] -- latent update [              3]  diff [        0.01825] -- latent update [              4]  diff [        0.01204] -- latent update [              5]  diff [       0.008969] -> converged   [          -2305]
+ -- latent update [              1]  diff [         0.8753] -- latent update [              2]  diff [         0.0181] -- latent update [              3]  diff [        0.01136] -- latent update [              4]  diff [       0.006955] -> converged   [          -2336]
+ -- latent update [              1]  diff [         0.8601] -- latent update [              2]  diff [       0.008515] -> converged   [          -2346]
+ -- latent update [              1]  diff [         0.8557] -- latent update [              2]  diff [       0.007422] -> converged   [          -2351]
+ -- converged 
+ -- collapsing tree
+ -- writing output files
+[Wed Jan  3 15:05:13 2018] pruning the full tree
+[Wed Jan  3 15:05:13 2018] Done

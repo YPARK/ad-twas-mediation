@@ -238,6 +238,10 @@ network/factorization/%_argmax.txt.gz: network/data/%_pairData.txt.gz
 	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
 	./netFactorize -pairdata network/data/$*_pairData.txt.gz -pairname network/data/$*_pairNames.txt.gz -vertname network/data/$*_vertNames.txt.gz -out $(dir $@)/$*_ -repeat 20 -a0 1e-4 -dpmalpha 1 -gibbs 100
 
+network/hsblock/%: network/%.pairs
+	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
+	qsub -l h_rt=10:00:00 -l h_vmem=8g -P compbio_lab -V -cwd -o $@/qsub.log -b y -j y ./make_hsblock.sh $< $@
+
 
 ################################################################
 ## simulation analysis

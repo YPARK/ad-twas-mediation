@@ -17,7 +17,6 @@ p.val.tab <- gwas.tab %>% mutate(pval = 2 * pnorm(abs(gwas.z),lower.tail = FALSE
 
 q.obj <- qvalue(p.val.tab$pval)
 
-
 fdr.thres <- c(1e-4, 1e-2, seq(.1, 1, .1))
 pval.cutoff <- sapply(fdr.thres, function(tt) max(q.obj$pvalues[q.obj$qvalues < tt]))
 
@@ -34,3 +33,23 @@ plt <- gg.plot(plt.df, aes(x = fdr.thres, y = pval.cutoff)) +
         xlab('controlled FDR') + ylab('p-value cutoff')
 
 ggsave(filename = 'figures/IGAP_FDR.pdf', plot = plt, width = 4, height = 4, units = 'in')
+
+################################################################
+library(ashr)
+
+ash.out <- ash(betahat = gwas.tab$gwas.theta, sebetahat = gwas.tab$gwas.se)
+
+
+
+
+################################################################
+## igap.tab <- read_tsv('LD/igap-ad.bed.gz',
+##                      col_names = c('chr', 'snp.loc.1', 'snp.loc', 'lead', 'l10.p'))
+## igap.lead <- igap.tab %>% group_by(lead) %>% slice(which.max(l10.p)) %>%
+##     mutate(pval = 10^(-l10.p))
+## qval.ld <- p.adjust(igap.lead$pval, method = 'BH')
+## ## q.obj.ld <- p.(igap.lead$pval)
+## adj.factor <- nrow(igap.lead) / 1477026
+## fdr.thres <- c(1e-4, 1e-2, seq(.1, 1, .1))
+## pval.ld.cutoff <- sapply(fdr.thres, function(tt) max(q.obj.ld$pvalues[qval.ld < tt * adj.factor]))
+## plt.df <- data.frame(fdr.thres, pval.ld.cutoff)

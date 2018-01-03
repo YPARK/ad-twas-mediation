@@ -1,0 +1,5 @@
+Data Network	network/ppi-strict.pairs
+Degree Correction	dsb
+Inference Started	Wed Jan  3 15:05:11 2018
+Inference ended	Wed Jan  3 15:05:13 2018
+Variational Inference	locally collapsed
