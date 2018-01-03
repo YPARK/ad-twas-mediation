@@ -208,6 +208,7 @@ result/null/%.null.gz:
 
 
 ################################################################
+# local views
 step3-figure: jobs/step3-figures.jobs.gz
 
 jobs/step3-figures.jobs.gz: $(foreach d, $(shell ls -1 tables/genes/ 2> /dev/null), jobs/step3/$(d)-figures.jobs.gz)
@@ -218,6 +219,24 @@ jobs/step3/%-figures.jobs.gz: tables/genes/%/significant_LD.txt.gz
 	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
 	@printf "" | gzip > $@
 	zcat $< | tail -n+2 | awk '{ k=$$1 FS $$2 FS $$3; pve = $$(NF - 4); if(!(k in keys) || keys[k] < pve) { keys[k] = pve; gene[k] = $$8} } END { for(k in keys) print k FS keys[k] FS gene[k] }'| sort -k1 -k2n | awk '{ printf "./make.gene.figure.local.R %s %d %d %d figures/genes/local_$*/local_chr%d_%0.0f_%0.0f_%s.pdf\n", "$<", $$1, $$2, $$3, $$1, ($$2/1e6), ($$3/1e6), $$5 }' | awk 'system("[ ! -f " $$NF " ]") == 0' | gzip >> $@
+
+################################################################
+# network analysis
+step3-network: network/ppi-strict.pairs $(foreach net, ppi-strict, network/factorization/$(net)_argmax.txt.gz)
+
+network/ppi-strict.pairs: make.gene.network.R
+	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
+	R --vanilla < make.gene.network.R
+
+network/ppi.pairs: network/ppi-strict.pairs
+
+network/data/%_pairData.txt.gz: network/%.pairs
+	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
+	./netData -data $< -output $(dir $@)/ppi-strict_
+
+network/factorization/%_argmax.txt.gz: network/data/%_pairData.txt.gz
+	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
+	./netFactorize -pairdata network/data/$*_pairData.txt.gz -pairname network/data/$*_pairNames.txt.gz -vertname network/data/$*_vertNames.txt.gz -out $(dir $@)/$*_ -repeat 20 -a0 1e-4 -dpmalpha 1 -gibbs 100
 
 
 ################################################################

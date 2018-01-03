@@ -88,5 +88,5 @@ order.pair <- function(pair.tab) {
     cc <- colnames(M)[-1]
     rr <- M[, 1]
 
-    list(rows = rr[ro], cols = cc[co])
+    list(rows = rr$row[ro], cols = cc[co])
 }
