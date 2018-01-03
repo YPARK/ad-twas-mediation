@@ -132,8 +132,14 @@ net.pairs <- net.dup %>%
     filter(gene.1 %in% cammel.tab$hgnc, gene.2 %in% cammel.tab$hgnc) %>%
     unique()
 
-net.pairs.relaxed <- net.dup %>%
+temp <- net.dup %>%
     filter(gene.1 %in% cammel.tab$hgnc | gene.2 %in% cammel.tab$hgnc) %>%
+    unique()
+
+temp <- union(temp$gene.1, temp$gene.2)
+
+net.pairs.relaxed <- net.dup %>%
+    filter(gene.1 %in% temp, gene.2 %in% temp) %>%
     unique()
 
 ################################################################
