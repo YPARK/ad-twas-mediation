@@ -82,11 +82,12 @@ order.pair <- function(pair.tab) {
 
     require(tidyr)
     require(dplyr)
-    M <- pair.tab %>% tidyr::spread(key = col, value = weight, fill = 0)
+    M <- pair.tab %>%
+        dplyr::select(row, col, weight) %>%
+            tidyr::spread(key = col, value = weight, fill = 0) %>%
+                as.data.frame()
     ro <- row.order(M %>% dplyr::select(-row) %>% as.matrix())
     co <- row.order(t(M %>% dplyr::select(-row) %>% as.matrix()))
     cc <- colnames(M)[-1]
-    rr <- M[, 1]
-
-    list(rows = rr$row[ro], cols = cc[co])
+    list(rows = M[ro, 1], cols = colnames(M)[-1][co])
 }
