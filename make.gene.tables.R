@@ -63,7 +63,8 @@ make.pandoc.tab <- function(med.tab) {
                    format(round(tes/1e3), big.mark=',')),
                ld.gwas.loc = format(round(ld.gwas.loc/1e3), big.mark=','),
                best.qtl.loc = format(round(best.qtl.loc/1e3), big.mark=','),
-               PVE = ifelse(PVE > 0.01, round(100 * PVE, 1), signif(100 * PVE, 2)))
+               PVE.loc = signif(PVE, 2),
+               PVE.glob = signif(PVE.glob, 2))
 
     .out <- .out %>%
         mutate(Mediation = theta %&&% ' (' %&&% theta.se %&&% ', ' %&&% pip %&&% ')')
@@ -72,7 +73,7 @@ make.pandoc.tab <- function(med.tab) {
             mutate(QTL = best.qtl.rs %&&% ' (' %&&% best.qtl.z %&&% ', ' %&&% best.qtl.loc %&&% ')')
 
     .out <- .out %>%
-        dplyr::select(Gene, chr, TSS, TES, Mediation, GWAS, QTL, PVE)
+        dplyr::select(Gene, chr, TSS, Mediation, GWAS, PVE.loc, PVE.glob)
 
     ret <- pandoc.table.return(.out, row.names = FALSE, style = 'simple',
                                split.tables = 200, digits = 2)
@@ -175,8 +176,8 @@ write.tables <- function(qtl.data, qval.cutoff = 1e-2, pve.cutoff = 1e-2) {
 
     out.significant.file <- out.dir %&&% '/significant_genes.txt.gz'
     out.ld.file <- out.dir %&&% '/significant_LD.txt.gz'
-    out.significant.pandoc <- out.dir %&&% '/significant_genes.md'
-    out.significant.xlsx <- out.dir %&&% '/significant_genes.xlsx'
+    out.priority.pandoc <- out.dir %&&% '/priority_genes.md'
+    out.priority.xlsx <- out.dir %&&% '/priority_genes.xlsx'
     out.tot.file <- out.dir %&&% '/total_genes.txt.gz'
 
     out.subthreshold.pandoc <- out.dir %&&% '/subthreshold_genes.md'
@@ -191,10 +192,24 @@ write.tables <- function(qtl.data, qval.cutoff = 1e-2, pve.cutoff = 1e-2) {
     pval <- empPvals(stat = med.tab$lodds, stat0 = null.tab$null.lodds)
     q.obj <- qvalue(pval)
 
+    ## calculate global total variance
+    ld.tab <- med.tab %>% dplyr::group_by(chr, ld.lb, ld.ub) %>%
+        slice(which.max(v.med)) %>%
+            arrange(chr, ld.lb) %>%
+                dplyr::select(chr, ld.lb, ld.ub, v.med, v.med.tot, v.dir, v.resid) %>%
+                    arrange(desc(v.med.tot)) %>%
+                        as.data.frame()
+    
+    sum.tab <- ld.tab %>%
+        summarize(v.med = sum(v.med.tot), v.dir = sum(v.dir), v.resid = sum(v.resid))
+
+    v.tot <- sum(sum.tab)
+
     med.tab <- cbind(med.tab, pval = pval, qval = q.obj$qvalues) %>%
         mutate(gwas.p = pmin(l10.p.two(abs(best.gwas.z)),20)) %>%
             mutate(PVE = signif(v.med / (max(v.med, v.med.tot) + v.dir + v.resid), 2)) %>%
-                left_join(gwas.summary.stat)
+                mutate(PVE.glob = signif(v.med / v.tot, 4)) %>%
+                    left_join(gwas.summary.stat)
 
     pdf(file = out.figure.pval.file)
     hist(pval, 30)
@@ -259,16 +274,16 @@ write.tables <- function(qtl.data, qval.cutoff = 1e-2, pve.cutoff = 1e-2) {
 
     ## priority
     .temp.tab <- med.tab %>%
-        dplyr::filter(qval <= qval.cutoff, PVE > pve.cutoff, ld.gwas.p < 1e-4) %>%
+        dplyr::filter(qval < qval.cutoff, PVE.glob >= pve.cutoff) %>%
             arrange(chr, tss)
 
     .temp <- make.pandoc.tab(.temp.tab)
 
-    cat(.temp, file = out.significant.pandoc)
+    cat(.temp, file = out.priority.pandoc)
 
     if(nrow(.temp.tab) > 0) {
-        write.xlsx(.temp.tab %>% as.data.frame(), out.significant.xlsx,
-                   sheetName = sprintf('PVE > %d%% and GWAS p < 1e-4', 100 * pve.cutoff))
+        write.xlsx(.temp.tab %>% as.data.frame(), out.priority.xlsx,
+                   sheetName = sprintf('Significant q < 1e-4 and PVEg > %e', pve.cutoff))
     }
 
     ## overall subthreshold
@@ -294,7 +309,7 @@ write.tables <- function(qtl.data, qval.cutoff = 1e-2, pve.cutoff = 1e-2) {
     write_tsv(med.tab, path = out.tot.file)
 }
 
-write.tables('full-0', qval.cutoff = 1e-4, pve.cutoff = 5e-2)
+write.tables('full-0', qval.cutoff = 1e-4, pve.cutoff = 5e-4)
 
 ##qtl.data.vec <- c('full-' %&&% c(5, 3, 0), 'hic-' %&&% c(5, 3, 0))
 ##for(qtl.data in qtl.data.vec) {

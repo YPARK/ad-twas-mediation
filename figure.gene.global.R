@@ -19,50 +19,50 @@ draw.plots <- function(qtl.data, p.cutoff = 1e-4) {
     dir.create('figures/genes/', recursive = TRUE, showWarnings = FALSE)
 
     gene.tab <- read_tsv(gene.tab.file, col_names = TRUE) %>% na.omit() %>%
-        group_by(hgnc) %>% slice(which.max(lodds))
+        group_by(hgnc) %>% slice(which.max(PVE.glob))
 
     logit.trans <- trans_new(".logit", function(x) log(x) - log(1-x), function(y) 1/(1+exp(-y)))
 
     ## GWAS vs PIP / PVE
     df <- gene.tab %>%
         mutate(ld.gwas.p = pmin(-log10(ld.gwas.p), 20)) %>%
-            mutate(qtl.p = pmin(-log10(2*pnorm(abs(best.qtl.z), lower.tail = FALSE)), 20)) %>%
+            mutate(qtl.p = pmin(-log10(2*pnorm(abs(best.qtl.z), lower.tail = FALSE)), 10)) %>%
                 mutate(pip = 1/(1+exp(-lodds))) %>%
                     mutate(gene.loc = ifelse(strand == '+', tss, tes)) %>%
                         as.data.frame()
-    
-    df.strict <- df %>% filter(PVE >= 5e-2, qval < 1e-4, ld.gwas.p > 4)
+
+    df.strict <- df %>% filter(PVE.glob >= 5e-4, qval < 1e-4)
 
     scale.grad <- scale_fill_gradientn(colors = c('white', 'gray20', 'gray20'), trans = 'sqrt')
     
-    df.pve.hist <- df %>% mutate(pve.logit = round((log(PVE) - log(1 - PVE)) * 2) / 2 ) %>%
+    df.pve.hist <- df %>% mutate(pve.logit = round((log(PVE.glob) - log(1 - PVE.glob)) * 2) / 2 ) %>%
         group_by(pve.logit) %>% summarize(count = n()) %>%
-            mutate(PVE = 1/(1+exp(-pve.logit )))
+            mutate(PVE.glob = 1/(1+exp(-pve.logit )))
 
     df.pve.hist.sig <- df %>% filter(qval < 1e-4) %>%
-        mutate(pve.logit = round((log(PVE) - log(1 - PVE)) * 2) / 2 ) %>%
+        mutate(pve.logit = round((log(PVE.glob) - log(1 - PVE.glob)) * 2) / 2 ) %>%
             group_by(pve.logit) %>% summarize(count = n()) %>%
-                mutate(PVE = 1/(1+exp(-pve.logit ))) %>%
-                    arrange(desc(PVE))
+                mutate(PVE.glob = 1/(1+exp(-pve.logit ))) %>%
+                    arrange(desc(PVE.glob))
     
-    avg.pve.sig <- df %>% filter(qval < 1e-4) %>% summarize(pve = mean(PVE))
-    avg.pve.strict <- df %>% filter(qval < 1e-4, ld.gwas.p > 4) %>% summarize(pve = mean(PVE))
+    avg.pve.sig <- df %>% filter(qval < 1e-4) %>% summarize(pve = mean(PVE.glob))
+    avg.pve.strict <- df %>% filter(qval < 1e-4, ld.gwas.p > 4) %>% summarize(pve = mean(PVE.glob))
 
     df.pve.hist.strict <- df %>% filter(qval < 1e-4, ld.gwas.p > 4) %>%
-        mutate(pve.logit = round((log(PVE) - log(1 - PVE)) * 2) / 2 ) %>%
+        mutate(pve.logit = round((log(PVE.glob) - log(1 - PVE.glob)) * 2) / 2 ) %>%
             group_by(pve.logit) %>% summarize(count = n()) %>%
-                mutate(PVE = 1/(1+exp(-pve.logit ))) %>%
-                    arrange(desc(PVE))
+                mutate(PVE.glob = 1/(1+exp(-pve.logit ))) %>%
+                    arrange(desc(PVE.glob))
 
     gwas.pve.plot <- function() {
 
-        brk <- c(1e-8, 1e-4, 1e-3, 1e-2, 1e-1, 0.99, round(avg.pve.sig$pve, 2), 5e-2)                 
+        brk <- c(1e-8, 1e-4, 1e-3, 1e-2, 1e-1, 0.99, round(avg.pve.sig$pve, 2), 5e-4)                 
 
         pve.logit.scale <- scale_y_continuous(limits = c(1e-8, 10),
                                               breaks = brk,
                                               trans = logit.trans)
         
-        p1 <- gg.plot(df.pve.hist, aes(y = PVE, yend = PVE, x = 0, xend = count))
+        p1 <- gg.plot(df.pve.hist, aes(y = PVE.glob, yend = PVE.glob, x = 0, xend = count))
 
         ## p1 <- p1 +
         ##     geom_rect(aes(xmin = 0, xmax = max(df.pve.hist$count), ymin = 5e-2, ymax = .99),
@@ -72,7 +72,7 @@ draw.plots <- function(qtl.data, p.cutoff = 1e-4) {
         ##           fill = '#F0F0F0')
 
         p1 <- p1 +
-            geom_hline(yintercept = 5e-2, color = 'red', lty = 'solid', size = .5)
+            geom_hline(yintercept = 5e-4, color = 'red', lty = 'solid', size = .5)
 
         p1 <- p1 + geom_hline(yintercept = avg.pve.sig$pve, color = 'green')
 
@@ -82,16 +82,16 @@ draw.plots <- function(qtl.data, p.cutoff = 1e-4) {
                     pve.logit.scale +
                         ylab('proportion of variance explained by mediation')
         
-        pve.aes <- aes(y = PVE, yend = PVE, x = 0, xend = count)
+        pve.aes <- aes(y = PVE.glob, yend = PVE.glob, x = 0, xend = count)
 
         p1 <- p1 + geom_segment(data = df.pve.hist.sig, pve.aes, size = 1.5, color = 'green')
         p1 <- p1 + geom_segment(data = df.pve.hist.strict, pve.aes, size = 1, color = 'blue') +
-            geom_path(data = df.pve.hist.strict, aes(y = PVE, x = count),
+            geom_path(data = df.pve.hist.strict, aes(y = PVE.glob, x = count),
                       size = 1, color = 'blue')
 
-        p2 <- gg.plot(df, aes(x = ld.gwas.p, y = PVE, label = hgnc))
+        p2 <- gg.plot(df, aes(x = ld.gwas.p, y = PVE.glob, label = hgnc))
 
-        p2 <- p2 + geom_hline(yintercept = 5e-2, color = 'red', lty = 'solid', size = .5)
+        p2 <- p2 + geom_hline(yintercept = 5e-4, color = 'red', lty = 'solid', size = .5)
             
         ## p2 <- p2 + geom_vline(xintercept = 4, color = 'green', lty = 'solid', size = .5) +
         ## p2 <- p2 +geom_vline(xintercept = -log10(5e-8), color = 'green', lty = 'dashed', size = .5)
@@ -111,7 +111,7 @@ draw.plots <- function(qtl.data, p.cutoff = 1e-4) {
         
         p2 <- p2 +
             geom_point(data = df.strict, pch = 21, color = 'black', fill = 'red') +
-                geom_text_repel(data = df.strict, size = 4, segment.color = '#FFDDDD')
+                geom_text_repel(data = df.strict, size = 3, segment.color = '#FFDDDD')
         
         ret <- grid.hcat(list(p1, p2), widths = c(2, 3.5))
         return(ret)
@@ -128,7 +128,7 @@ draw.plots <- function(qtl.data, p.cutoff = 1e-4) {
         
         ret <- ret + scale_y_continuous(breaks = c(0.01, 0.5, 0.99), trans = logit.trans)
         ret <- ret + geom_point(data = df.strict, color = 'black', fill = 'red', pch = 21) +
-            geom_text_repel(data = df.strict, size = 4, segment.color = 'green', segment.alpha = 0.5)
+            geom_text_repel(data = df.strict, size = 3, segment.color = 'green', segment.alpha = 0.5)
 
         return(ret)
     }
@@ -147,7 +147,7 @@ draw.plots <- function(qtl.data, p.cutoff = 1e-4) {
         
         ret <- ret + scale_y_continuous(breaks = c(0.01, 0.5, 0.99), trans = logit.trans)
         ret <- ret + geom_point(data = df.strict, color = 'black', fill = 'red', pch = 21) +
-            geom_text_repel(data = df.strict, size = 4, segment.color = 'green', segment.alpha = 0.5)
+            geom_text_repel(data = df.strict, size = 3, segment.color = 'green', segment.alpha = 0.5)
 
         return(ret)
     }
@@ -173,7 +173,7 @@ draw.plots <- function(qtl.data, p.cutoff = 1e-4) {
 
         ret <- ret + geom_point(data = df.strict, pch = 21, color = 'black', fill = 'red') +
             geom_text_repel(data = df.strict,
-                            size = 4, segment.color = 'green',
+                            size = 3, segment.color = 'green',
                             segment.alpha = 0.5)
 
         if(transpose) {
@@ -190,9 +190,9 @@ draw.plots <- function(qtl.data, p.cutoff = 1e-4) {
     qtl.pve.plot <- function(transpose = FALSE) {
 
         if(transpose) {
-            aes.qtl <- aes(y = qtl.p, x = PVE, label = hgnc)
+            aes.qtl <- aes(y = qtl.p, x = PVE.glob, label = hgnc)
         } else {
-            aes.qtl <- aes(x = qtl.p, y = PVE, label = hgnc)
+            aes.qtl <- aes(x = qtl.p, y = PVE.glob, label = hgnc)
         }
 
         ret <- gg.plot(df, aes.qtl) +
@@ -259,16 +259,17 @@ draw.plots <- function(qtl.data, p.cutoff = 1e-4) {
                   legend.title = element_text(size = 12))
     
     ret <-
-        gg.plot(df %>% filter(ld.gwas.p > 4) %>% arrange(gwas.p),
+        gg.plot(df,
                 aes(x = gene.loc, y = theta, label = hgnc))
 
     ret <- ret +
-        geom_errorbar(data = df %>% filter(ld.gwas.p > 4, pip > .5),
+        geom_errorbar(data = df %>% filter(PVE.glob > 5e-4, pip > .5),
                       aes(ymin = theta - 2*theta.se, ymax = theta + 2*theta.se),
                       color = 'gray40')
 
-    ret <- ret + geom_point(aes(fill = pmin(ld.gwas.p, 8), size = PVE), pch = 21) +
-        scale_size_continuous('proportion of variance explained', range = c(0, 5), breaks = c(1e-2, 1e-1, .99))
+    ret <- ret + geom_point(aes(fill = pmin(ld.gwas.p, 8), size = PVE.glob), pch = 21) +
+        scale_size_continuous('proportion of variance explained', range = c(0, 5),
+                              breaks = c(1e-6, 1e-5, 1e-4, 1e-3, 5e-3))
 
     ret <- ret +
         scale_fill_gradientn('-log10 GWAS p-value', colors = c('gray80', 'gray40', 'purple'))
@@ -285,11 +286,11 @@ draw.plots <- function(qtl.data, p.cutoff = 1e-4) {
 
     ret <- ret + geom_text_repel(data = df.strict.neg, 
                                  aes(y = theta), color = 'blue', segment.alpha = 0.5,
-                                 nudge_y = -.2, size = 3, segment.size = .5, segment.color = 'green')
+                                 nudge_y = -.2, size = 2.5, segment.size = .5, segment.color = 'green')
 
     ret <- ret + geom_text_repel(data = df.strict.pos,
                                  aes(y = theta), color = 'red', segment.alpha = 0.5,
-                                 nudge_y = .2, size = 3, segment.size = .5, segment.color = 'orange')
+                                 nudge_y = .2, size = 2.5, segment.size = .5, segment.color = 'orange')
 
     .ggsave(filename = 'figures/genes/Fig_global_' %&&% qtl.data %&&% '_mediation_effect.pdf',
            plot = ret, width = 12, height = 4, units = 'in',
