@@ -218,7 +218,8 @@ jobs/step3-figures.jobs.gz: $(foreach d, $(shell ls -1 tables/genes/ 2> /dev/nul
 jobs/step3/%-figures.jobs.gz: tables/genes/%/significant_LD.txt.gz 
 	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
 	@printf "" | gzip > $@
-	zcat $< | tail -n+2 | awk '{ k=$$1 FS $$2 FS $$3; pve = $$(NF - 4); if(!(k in keys) || keys[k] < pve) { keys[k] = pve; gene[k] = $$8} } END { for(k in keys) print k FS keys[k] FS gene[k] }'| sort -k1 -k2n | awk '{ printf "./make.gene.figure.local.R %s %d %d %d figures/genes/local_$*/local_chr%d_%0.0f_%0.0f_%s.pdf\n", "$<", $$1, $$2, $$3, $$1, ($$2/1e6), ($$3/1e6), $$5 }' | awk 'system("[ ! -f " $$NF " ]") == 0' | gzip >> $@
+	@zcat $< | tail -n+2 | awk '{ k=$$1 FS $$2 FS $$3; if(!(k in pve) || pve[k] < $$27) { pve[k] = $$27; gene[k] = $$8} } END { for(k in pve) print k FS pve[k] FS gene[k] }' | sort -k1n,2n | awk '{ printf "./make.gene.figure.local.R %s %d %d %d figures/genes/local_$*/local_chr%d_%0.0f_%0.0f_%s.pdf\n", "$<", $$1, $$2, $$3, $$1, ($$2/1e6), ($$3/1e6), $$5; }' | awk 'system("[ ! -f " $$NF " ]") == 0' | gzip >> $@
+
 
 ################################################################
 # network analysis

@@ -3,11 +3,11 @@ argv <- commandArgs(trailingOnly = TRUE)
 
 if(length(argv) < 5) q()
 
-ld.tab.file <- argv[1]        # e.g., ld.tab.file <- 'tables/genes/full-5/significant_LD.txt.gz'
-chr <- as.integer(argv[2])
-ld.lb <- as.integer(argv[3])
-ld.ub <- as.integer(argv[4])
-out.file <- argv[5]
+ld.tab.file <- argv[1]        # e.g., ld.tab.file <- 'tables/genes/full-0/significant_LD.txt.gz'
+chr <- as.integer(argv[2])    # e.g., chr <- 1 
+ld.lb <- as.integer(argv[3])  # e.g., ld.lb <- 64105056
+ld.ub <- as.integer(argv[4])  # e.g., ld.ub <- 65696189
+out.file <- argv[5]           # e.g., out.file <- 'temp.pdf'
 
 if(file.exists(out.file)) q()
 
@@ -19,26 +19,30 @@ library(readr)
 library(zqtl)
 library(dplyr)
 library(tidyr)
+library(broom)
 library(ggplot2)
 library(reshape2)
 library(scales)
+library(ggrepel)
 
 ld.tab <- read.table(ld.tab.file, header = TRUE)
 
-med.cutoff <- ld.tab %>% filter(qval < 1e-2) %>%
-    slice(which.max(pval))
+med.cutoff <- ld.tab %>% filter(qval < 1e-4) %>%
+    slice(which.min(lodds))
 
-med.cutoff <- med.cutoff$pval
+med.cutoff <- med.cutoff$lodds
 
 dir.create(dirname(out.file), recursive = TRUE, showWarnings = FALSE)
 
 plink.hdr <- 'geno/rosmap1709-chr'
 sum.file.dir <- 'stat/IGAP/data/hs-lm/'
+nwas.file <- 'nwas/IGAP_rosmap_eqtl_hs-lm_' %&&% chr %&&% '.nwas.gz'
 
 ld.info <- data.frame(chr = chr, ld.lb = ld.lb, ld.ub = ld.ub)
 gwas.file <- 'IGAP/chr' %&&% chr %&&% '.txt.gz'
 
 ## Draw all genes within the same LD block
+out.dir <- dirname(out.file)
 temp.dir <- system('mktemp -d ' %&&% out.dir %&&% '/temp.XXXX',
                    intern = TRUE, ignore.stderr = TRUE)
 
@@ -53,6 +57,15 @@ sum.stat.obj <- extract.sum.stat(ld.info = ld.info,
 
 sum.stat <- sum.stat.obj$sum.stat
 genes <- sum.stat.obj$mediators
+
+################################################################
+## Read TWAS results for comparison
+nwas.tab <- read_tsv(nwas.file,
+                     col_names = c('med.id', 'twas', 'chr', 'ld.lb', 'ld.ub', 'n.qtl.ld'))
+
+twas.p <- 2 * pnorm(abs(nwas.tab$twas), lower.tail = FALSE)
+twas.q <- p.adjust(twas.p, method = 'fdr')
+twas.cutoff <- max(twas.p[twas.q < 1e-4])
 
 ################################################################
 ## should include additional GWAS SNPs not matched with QTL
@@ -99,8 +112,164 @@ blk.length <- blk.range[2] - blk.range[1]
 .gwas.x.scale.top <- scale_x_continuous(limits = blk.range + c(-1000, 1000), expand = c(0, 0),
                                     labels = .gwas.kb(), position = 'top')
 
+################################################################
+## Combine mediation and TWAS
+
+model.tab.sorted <- model.tab %>%
+    arrange((tss+tes)/2) %>%
+        mutate(.gene.loc = seq(blk.range[1] + blk.width/2, blk.range[2] - blk.width/2, by = blk.length / n()))
+
+model.tab.sorted <- model.tab.sorted %>%
+    left_join(nwas.tab) %>%
+        mutate(twas.p = 2 * pnorm(abs(twas), lower.tail = FALSE))
+        
+top.genes <- model.tab.sorted %>% arrange(desc(PVE.glob)) %>% head(1)
+top.twas.gene <- model.tab.sorted %>% arrange(twas.p) %>% head(1)
+strong.genes <- model.tab.sorted %>% filter(lodds > 0 | twas.p < twas.cutoff)
+show.genes <- unique(c(top.genes$med.id, top.twas.gene$med.id, strong.genes$med.id))
+
+## LD boundary for each gene
+x.bim.matched <- 
+    sum.stat %>% dplyr::select(rs) %>% unique() %>%
+    left_join(x.bim)
+
+svd.out <- take.ld.svd(plink$BED, options = list(do.stdize = TRUE))
+Vd <- sweep(t(svd.out$V.t), 2, svd.out$D, `*`)
+Vd.sub <- Vd %r% (x.bim.matched$x.pos)
+LD <- Vd.sub %*% t(Vd)
+
+take.ld.bound <- function(r) {
+    .temp <- which(abs(LD[r, ]) >= .1)
+    data.frame(r = r, lb = min(.temp), ub = max(.temp))
+}
+
+ld.bound <- do.call(rbind, lapply(1:nrow(LD), take.ld.bound))
+
+.ld.bound.tab <- data.frame(rs = as.character(x.bim.matched$rs),
+                           snp.loc = x.bim.matched$snp.loc,
+                           ld.lb = plink$BIM[ld.bound[, 2], 4],
+                           ld.ub = plink$BIM[ld.bound[, 3], 4])
+
+ld.bound.tab <- sum.stat %>% left_join(.ld.bound.tab) %>% na.omit() %>%
+    group_by(med.id) %>%
+        summarize(snp.lb = min(snp.loc), snp.ub = max(snp.loc),
+                  lb = min(ld.lb), ub = max(ld.ub))
+
+## Gene frequency in 10kb bin
+func.footprint <- function(tab, res = 1e4) {
+    ret <- seq(floor(min(tab$lb)/res), ceiling(max(tab$ub)/res) + 1) * res
+}
+
+take.footprint.freq <- function(tab) {
+    tab %>% group_by(.id) %>%
+        do(footprint = func.footprint(.)) %>%
+            tidy(footprint) %>%
+                dplyr::rename(.bin = x) %>%
+                    group_by(.bin) %>%
+                        summarize(.freq = n())
+}
+
+gene.freq.tab <-
+    model.tab.sorted %>% rename(.id = med.id) %>%
+        select(.id, tss, tes) %>% unique() %>% dplyr::rename(lb = tss, ub = tes) %>%
+            take.footprint.freq()
+
+ld.freq.tab <-
+    ld.bound.tab %>% rename(.id = med.id) %>%
+        take.footprint.freq()
+
+snp.freq.tab <- 
+    sum.stat %>% select(rs, snp.loc) %>% unique() %>%
+        mutate(.id = rs, lb = snp.loc, ub = snp.loc) %>%
+            take.footprint.freq()
+
+
+################################################################
+
+empty.theme <- theme(axis.text = element_blank(), 
+                     line = element_blank(), axis.line = element_blank(),
+                     axis.ticks = element_blank(), panel.border = element_blank(),
+                     legend.position = c(1,1), legend.justification = c(1, 1))
+
+empty.x <- theme(axis.text.x = element_blank(), axis.ticks.x = element_blank(), axis.title.x = element_blank())
+
+color.grad2 <- scale_color_gradient2(low = 'blue', high = 'red', mid = 'gray40', guide = FALSE)
+
+## Fig a. gene frequency
+.freq.aes <- aes(xmin = .bin, xmax = .bin + 1e4, ymin = 0, ymax = .freq)
+
+.tab <- ld.bound.tab %>% filter(med.id %in% show.genes) %>%
+    left_join(model.tab.sorted) %>%
+        as.data.frame() %>%
+            arrange(tss) %>%
+                mutate(y.loc = 1:n()) %>%
+                    mutate(y.loc = -y.loc)
+
+p1.a <-
+    gg.plot() + ylab('LD blks') + .gwas.x.scale +
+    geom_rect(data = ld.freq.tab, .freq.aes, fill = '#99FF66') +
+    geom_segment(data = .tab, aes(x = lb, xend = ub, y = y.loc, yend = y.loc), size = 2, color = '#005500') +
+    geom_text(data = .tab, aes(x = ub, y = y.loc, label = hgnc), hjust = 0, size = 3) +
+    empty.x + scale_y_continuous(breaks = seq(1, max(ld.freq.tab$.freq), 3))
+
+p1.b <-
+    gg.plot() + .gwas.x.scale + ylab('genes') +
+    geom_rect(data = gene.freq.tab, .freq.aes, fill = 'gray50', alpha = .7) +
+    geom_segment(data = .tab, aes(x = snp.lb, xend = snp.ub, y = y.loc, yend = y.loc), size = 1, color = 'gray20') +
+    geom_text(data = .tab, aes(x = snp.ub, y = y.loc, label = hgnc), hjust = 0, size = 3) +
+    empty.x + scale_y_continuous(breaks = seq(1, max(gene.freq.tab$.freq), 2))
+
+## Fig b. PVE 
+.pve.aes <- aes(x = (tss+tes)/2, xend = (tss+tes)/2, y = 0, yend = PVE.glob, color = theta/theta.se)
+.pve.aes.lab <- aes(x = (tss+tes)/2, y = PVE.glob, label = signif(PVE.glob, 2)) 
+
+p2 <-
+    gg.plot() + ylab('var. exp.') + xlab('') + .gwas.x.scale +
+    geom_segment(data = model.tab.sorted, .pve.aes, size = 2) +
+    geom_text_repel(data = model.tab.sorted %>% filter(med.id %in% show.genes), .pve.aes.lab, size = 3) +
+    color.grad2 +
+    empty.x +
+    scale_y_continuous(breaks = c(1e-6, 1e-5, 1e-4, 1e-3), trans = 'sqrt')
+
+## Fig b. mediation posterior probability
+.med.aes <- aes(x = (tss+tes)/2, xend = (tss+tes)/2, y = 0, yend = lodds, color = theta/theta.se)
+
+p3 <- 
+    gg.plot(model.tab.sorted) + ylab('logit mediation prob') + xlab('') + .gwas.x.scale +
+    geom_hline(yintercept = med.cutoff, lty = 2) +
+    geom_hline(yintercept = 0, lty = 1)+
+    geom_segment(.med.aes, size = 2) +
+    geom_text_repel(data = model.tab.sorted %>% filter(med.id %in% show.genes), aes(x = (tss+tes)/2, y = lodds, label = hgnc), size = 3) +
+    color.grad2 +
+    empty.x
+
+## Fig c. TWAS
+.twas.aes <- aes(x = (tss+tes)/2, xend = (tss+tes)/2, y = 0,
+                 yend = pmin(-log10(2 * pnorm(abs(twas), lower.tail = FALSE)), 20),
+                 color = twas, label = hgnc)
+
+.twas.aes.lab <- aes(x = (tss+tes)/2,
+                     y = pmin(-log10(2 * pnorm(abs(twas), lower.tail = FALSE)), 20),
+                     color = twas, label = hgnc)
+
+p4 <-
+    gg.plot(model.tab.sorted) + ylab('-log10 TWAS P') + xlab('') + .gwas.x.scale +
+    geom_hline(yintercept = -log10(twas.cutoff), lty = 2) +
+    geom_segment(.twas.aes, size = 2) +
+    geom_text_repel(data = model.tab.sorted %>% filter(med.id %in% show.genes), .twas.aes.lab, size = 3) +
+    color.grad2 +
+    empty.x
+
+## Fig d. snp frequency
+p5 <- 
+    gg.plot(snp.freq.tab) + ylab('QTLs') +
+    geom_rect(.freq.aes, color = 'gray50') +
+    empty.x  + scale_y_reverse() + .gwas.x.scale.top
+
+
+## Fig e. GWAS
 plt.gwas <-
-    gg.plot() + ylab('-log10 GWAS p-value') +
+    gg.plot() + ylab('-log10 GWAS P') +
     theme(axis.title.x = element_blank()) +
     geom_rect(data=gwas.block.df, aes(xmin=blk.loc, xmax=blk.loc+blk.width, ymin=0, ymax=gwas.p),
               fill = 'gray80') +
@@ -112,107 +281,17 @@ if(max(gwas.df$gwas.p) > -log10(5e-8)) {
 
 plt.gwas <- plt.gwas + scale_y_reverse() + .gwas.x.scale.top
 
-################################################################
-## [1] PVE of genes (uniformly distributed)
-## [2] grid - gene location
-## [3] genes - SNPs
-## [4] SNPs - linked SNPs
-## [5] GWAS upside down
+ld.hh <- (length(show.genes) + max(ld.freq.tab$.freq)) * .05
+gene.hh <- pmin((length(show.genes) + max(gene.freq.tab$.freq)) * .2, .5)
 
-model.tab.sorted <- model.tab %>% arrange((tss+tes)/2) %>%
-    mutate(.gene.loc = seq(blk.range[1] + blk.width/2, blk.range[2] - blk.width/2,
-               by = blk.length / n()))
+hh.vec <- c(ld.hh, gene.hh, 1, 1.5, 1, 1.5, .5)
 
-empty.theme <- theme(axis.text = element_blank(), 
-                     line = element_blank(), axis.line = element_blank(),
-                     axis.ticks = element_blank(), panel.border = element_blank(),
-                     legend.position = c(1,1), legend.justification = c(1, 1))
+hh <- sum(hh.vec)  +  1
+ww <- pmax(pmin(ceiling((gwas.range[2] - gwas.range[1]) / 1e6 * 5), 15), 5)
 
-p1 <- gg.plot(model.tab.sorted) + ylab('% variance explained') + xlab('') + .gwas.x.scale +
-    geom_segment(aes(x = .gene.loc, xend = .gene.loc, y = 0, yend = 100 * PVE, color = theta/theta.se), size = 3) +
-    geom_text(aes(x = .gene.loc, y = 100 * PVE, label = 100 * signif(PVE, 2)), size = 3,
-              hjust=0, vjust=0) +
-    scale_color_gradient2(low = 'blue', high = 'red', mid = 'gray40', guide = FALSE) +
-    theme(axis.text.x = element_blank(), axis.ticks.x = element_blank())
+gg <- grid.vcat(list(p1.a, p1.b, p2, p3, p4, plt.gwas, p5), heights = hh.vec)
 
-top.genes <- model.tab %>% arrange(desc(PVE)) %>% head(1)
-strong.genes <- model.tab %>% filter(PVE > .01 | qval < 5e-2)
-show.genes <- unique(c(top.genes$med.id, strong.genes$med.id))
-
-p2 <- gg.plot(model.tab.sorted) +
-    ylab('') + xlab('') + .gwas.x.scale +
-    geom_segment(aes(x = tss, xend = tes, y=0, yend=0), color = '#005500', size = 3) +
-    geom_segment(aes(x = (tss+tes)/2, xend = .gene.loc, y = 0, yend =1), color = 'gray') +
-    geom_text(aes(x = .gene.loc, y = 1, label = format(pval, digits=2, scientific=TRUE)),
-              vjust = 1, hjust = 0, size = 3) +
-    geom_text(aes(x = .gene.loc, y = 1, label = hgnc),
-              vjust = 0, hjust = 0, size = 3) +
-    empty.theme + ylim(c(0, 2))
-
-.qtl.aes <- aes(x = snp.loc, xend = (tss+tes)/2, y = 0, yend = 1,
-                color = pmin(pmax(qtl.z, -5), 5), size = abs(qtl.z))
-
-sum.stat.significant <- sum.stat %>% filter(med.id %in% show.genes)
-sum.stat.significant$rs <- as.character(sum.stat.significant$rs)
-
-p3 <- gg.plot(sum.stat.significant) + ylab('') + xlab('') + .gwas.x.scale +
-    geom_segment(.qtl.aes) +
-    scale_size_continuous(range = c(0, 1), guide = FALSE) +
-    scale_color_gradientn('QTL', colors = c('blue', 'white', 'red')) +
-    empty.theme +
-    theme(legend.position = c(1,1), legend.justification = c(1, 1))
-
-## Who are significant LD partners?
-x.bim.matched <- 
-    sum.stat.significant %>% dplyr::select(rs) %>% unique() %>%
-    left_join(x.bim)
-
-svd.out <- take.ld.svd(plink$BED, options = list(do.stdize = TRUE))
-
-Vd <- sweep(t(svd.out$V.t), 2, svd.out$D, `*`)
-Vd.sub <- Vd %r% (x.bim.matched$x.pos)
-LD <- Vd.sub %*% t(Vd)
-
-take.ld.bound <- function(r) {
-    .temp <- which(abs(LD[r, ]) > .1)
-    data.frame(r = r, lb = min(.temp), ub = max(.temp))
-}
-
-ld.bound <- do.call(rbind, lapply(1:nrow(LD), take.ld.bound))
-
-.ld.bound.tab <- data.frame(rs = as.character(x.bim.matched$rs),
-                           snp.loc = x.bim.matched$snp.loc,
-                           ld.lb = plink$BIM[ld.bound[, 2], 4],
-                           ld.ub = plink$BIM[ld.bound[, 3], 4])
-
-ld.bound.tab <- sum.stat.significant %>% left_join(.ld.bound.tab) %>% na.omit() %>%
-    group_by(med.id) %>%
-    summarize(snp.lb = min(snp.loc), snp.ub = max(snp.loc),
-              ld.lb = min(ld.lb), ld.ub = max(ld.ub))
-
-ld.poly.tab <- ld.bound.tab %>%
-    gather(key = 'y.loc', value = 'x', -med.id) %>%
-    mutate(y.loc = gsub(y.loc, pattern = '.lb', replacement = '')) %>%
-    mutate(y.loc = gsub(y.loc, pattern = '.ub', replacement = '')) %>%
-    mutate(y = ifelse(y.loc == 'snp', 1, 0)) %>%
-    arrange(x)
-
-p4 <-
-    gg.plot() + empty.theme + .gwas.x.scale +
-    geom_polygon(data = ld.poly.tab,
-                 aes(x = x, y = y, group = med.id),
-                 alpha = 0.25, fill = 'green', show.legend = FALSE) +
-    geom_segment(data = ld.bound.tab,
-                 aes(x = snp.lb, xend = ld.lb, y = 1, yend = 0, color = med.id),
-                 show.legend = FALSE) +
-    geom_segment(data = ld.bound.tab,
-                 aes(x = snp.ub, xend = ld.ub, y = 1, yend = 0, color = med.id),
-                 show.legend = FALSE) +
-    theme(axis.title = element_blank())
-
-gg <- grid.vcat(list(p1, p2, p3, p4, plt.gwas), heights = c(2, .5, .5, .5, 2))
-
-ggsave(filename = out.file, plot = gg, width = 8, height = 8, units = 'in', limitsize = FALSE)
+ggsave(filename = out.file, plot = gg, width = ww, height = hh, units = 'in', limitsize = FALSE)
 
 system('rm -r ' %&&% temp.dir)
 log.msg('Finished figure drawing\n\n\n')
